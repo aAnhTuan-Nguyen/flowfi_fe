@@ -15,7 +15,9 @@ files required by its current behavior.
 ```text
 lib/
   app/                         Application widget and theme
-  core/network/                Shared HTTP client construction
+  core/
+    config/                    Temporary application configuration
+    network/                   Shared HTTP client construction
   di/                          Application dependency composition
   routes/                      GoRouter configuration
   features/example/
@@ -125,10 +127,12 @@ registration function called from it. Widgets do not access the locator.
 
 ### Dio
 
-`createDioClient` currently creates a neutral client because no backend contract
-has been approved. Add base URLs, authentication, timeouts, interceptors, and
-safe logging only when backend integration requires them. Never log sensitive
-financial payloads or secrets.
+`AppConfig.apiBaseUrl` currently uses a temporary Android Emulator local URL.
+Each developer may replace it with the address of their local backend. A
+commented `String.fromEnvironment` alternative is kept next to it for the point
+when the API Gateway and deployment environments are available. Add
+authentication, timeouts, interceptors, and safe logging only when backend
+integration requires them. Never log sensitive financial payloads or secrets.
 
 ### GoRouter
 

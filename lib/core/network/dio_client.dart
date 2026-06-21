@@ -1,3 +1,7 @@
 import 'package:dio/dio.dart';
 
-Dio createDioClient() => Dio();
+import '../config/app_config.dart';
+
+Dio createDioClient() {
+  return Dio(BaseOptions(baseUrl: AppConfig.apiBaseUrl));
+}
