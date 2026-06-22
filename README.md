@@ -20,7 +20,8 @@ when the first real feature is ready.
 - GoRouter for navigation
 
 Detailed design and dependency rules are documented in
-[`ARCHITECTURE.md`](ARCHITECTURE.md). Coding-agent rules are in
+[`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) and
+[`docs/DESIGN.md`](docs/DESIGN.md). Coding-agent rules are in
 [`AGENTS.md`](AGENTS.md).
 
 ## Run locally

@@ -1,7 +1,8 @@
 # FlowFi Agent Rules
 
-These rules apply to the entire repository. Read [`ARCHITECTURE.md`](ARCHITECTURE.md)
-before adding or moving application code.
+These rules apply to the entire repository. Read
+[`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) and
+[`docs/DESIGN.md`](docs/DESIGN.md) before adding or moving application code.
 
 ## Current project state
 
@@ -16,7 +17,7 @@ undecided until code or an approved specification establishes them.
 ## Before changing code
 
 1. Read `pubspec.yaml` and the files relevant to the task.
-2. Check `ARCHITECTURE.md` for dependency and placement rules.
+2. Check `docs/ARCHITECTURE.md` for dependency and placement rules.
 3. Follow the nearest real feature when it is a valid precedent.
 4. Check current official documentation before using an uncertain package API.
 5. Preserve unrelated work and existing public APIs.
