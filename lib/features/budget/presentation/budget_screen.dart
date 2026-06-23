@@ -3,8 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/providers.dart';
 import '../../../routes/app_router.dart';
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_text_styles.dart';
 import '../../../core/widgets/budget_category_card.dart';
 import '../../../core/widgets/glass_card.dart';
 import '../../../core/widgets/goal_card.dart';
@@ -56,7 +54,7 @@ class _BudgetScreenState extends ConsumerState<BudgetScreen> {
   Widget build(BuildContext context) {
     if (_isLoading) {
       return Scaffold(
-        backgroundColor: context.colors.background,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         body: const Center(child: CircularProgressIndicator()),
       );
     }
@@ -70,21 +68,24 @@ class _BudgetScreenState extends ConsumerState<BudgetScreen> {
       (sum, b) => sum + ((b['limitAmount'] as num?)?.toDouble() ?? 0.0),
     );
     final remaining = (totalLimit - totalSpent).clamp(0.0, double.infinity);
-    final progress = totalLimit > 0 ? (totalSpent / totalLimit).clamp(0.0, 1.0) : 0.0;
+    final progress =
+        totalLimit > 0 ? (totalSpent / totalLimit).clamp(0.0, 1.0) : 0.0;
 
     return Scaffold(
-      backgroundColor: context.colors.background,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new, size: 18),
-          color: context.colors.primary,
+          color: Theme.of(context).colorScheme.primary,
           onPressed: () => Navigator.of(context).pop(),
         ),
         title: Text(
           'Budget & Goals',
-          style: AppTextStyles.headlineMd(color: context.colors.primary),
+          style:
+              (Theme.of(context).textTheme.headlineMedium ?? const TextStyle())
+                  .copyWith(color: Theme.of(context).colorScheme.primary),
         ),
         centerTitle: true,
       ),
@@ -110,7 +111,7 @@ class _BudgetScreenState extends ConsumerState<BudgetScreen> {
           final result = await context.push(AppRoutes.createBudget);
           if (result == true) _loadData();
         },
-        backgroundColor: context.colors.primary,
+        backgroundColor: Theme.of(context).colorScheme.primary,
         child: const Icon(Icons.add, color: Colors.white),
       ),
     );
@@ -126,13 +127,17 @@ class _BudgetScreenState extends ConsumerState<BudgetScreen> {
           children: [
             Text(
               'Monthly Overview',
-              style: AppTextStyles.labelMd(
-                color: context.colors.onSurfaceVariant,
+              style:
+                  (Theme.of(context).textTheme.labelMedium ?? const TextStyle())
+                      .copyWith(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
               ),
             ),
             Text(
               'Budget Health',
-              style: AppTextStyles.headlineLg(color: context.colors.onSurface),
+              style: (Theme.of(context).textTheme.headlineLarge ??
+                      const TextStyle())
+                  .copyWith(color: Theme.of(context).colorScheme.onSurface),
             ),
           ],
         ),
@@ -141,13 +146,17 @@ class _BudgetScreenState extends ConsumerState<BudgetScreen> {
           children: [
             Text(
               'Remaining',
-              style: AppTextStyles.labelMd(
-                color: context.colors.onSurfaceVariant,
+              style:
+                  (Theme.of(context).textTheme.labelMedium ?? const TextStyle())
+                      .copyWith(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
               ),
             ),
             Text(
               '\$${remaining.toStringAsFixed(2)}',
-              style: AppTextStyles.headlineMd(color: context.colors.primary),
+              style: (Theme.of(context).textTheme.headlineMedium ??
+                      const TextStyle())
+                  .copyWith(color: Theme.of(context).colorScheme.primary),
             ),
           ],
         ),
@@ -165,21 +174,27 @@ class _BudgetScreenState extends ConsumerState<BudgetScreen> {
             children: [
               Text(
                 'Total Spent',
-                style: AppTextStyles.bodyMd(color: context.colors.onSurface),
+                style: (Theme.of(context).textTheme.bodyMedium ??
+                        const TextStyle())
+                    .copyWith(color: Theme.of(context).colorScheme.onSurface),
               ),
               RichText(
                 text: TextSpan(
                   children: [
                     TextSpan(
                       text: '\$${spent.toStringAsFixed(2)}',
-                      style: AppTextStyles.bodySemibold(
-                        color: context.colors.onSurface,
+                      style: (Theme.of(context).textTheme.titleMedium ??
+                              const TextStyle())
+                          .copyWith(
+                        color: Theme.of(context).colorScheme.onSurface,
                       ),
                     ),
                     TextSpan(
                       text: ' / \$${limit.toStringAsFixed(2)}',
-                      style: AppTextStyles.bodyMd(
-                        color: context.colors.onSurfaceVariant,
+                      style: (Theme.of(context).textTheme.bodyMedium ??
+                              const TextStyle())
+                          .copyWith(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
                       ),
                     ),
                   ],
@@ -190,7 +205,7 @@ class _BudgetScreenState extends ConsumerState<BudgetScreen> {
           const SizedBox(height: 12),
           ProgressBar(
             value: progress,
-            color: context.colors.primaryContainer,
+            color: Theme.of(context).colorScheme.primaryContainer,
             height: 12,
             showGlow: true,
           ),
@@ -200,13 +215,15 @@ class _BudgetScreenState extends ConsumerState<BudgetScreen> {
               Icon(
                 Icons.trending_down,
                 size: 16,
-                color: context.colors.onSurfaceVariant,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
               ),
               const SizedBox(width: 6),
               Text(
                 'Keep tracking your expenses to stay healthy.',
-                style: AppTextStyles.labelSm(
-                  color: context.colors.onSurfaceVariant,
+                style: (Theme.of(context).textTheme.labelSmall ??
+                        const TextStyle())
+                    .copyWith(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
               ),
             ],
@@ -240,8 +257,12 @@ class _BudgetScreenState extends ConsumerState<BudgetScreen> {
           category: b['categoryId'] ?? 'General',
           usagePercent: usagePercent,
           iconData: Icons.category,
-          iconColor: isWarning ? context.colors.error : context.colors.primary,
-          iconBgColor: isWarning ? context.colors.errorContainer : context.colors.surfaceContainerLow,
+          iconColor: isWarning
+              ? Theme.of(context).colorScheme.error
+              : Theme.of(context).colorScheme.primary,
+          iconBgColor: isWarning
+              ? Theme.of(context).colorScheme.errorContainer
+              : Theme.of(context).colorScheme.surfaceContainerLow,
           isWarning: isWarning,
         );
       }).toList(),
@@ -257,18 +278,22 @@ class _BudgetScreenState extends ConsumerState<BudgetScreen> {
           children: [
             Text(
               'Saving Goals',
-              style: AppTextStyles.headlineLg(color: context.colors.onSurface),
+              style: (Theme.of(context).textTheme.headlineLarge ??
+                      const TextStyle())
+                  .copyWith(color: Theme.of(context).colorScheme.onSurface),
             ),
             TextButton.icon(
               onPressed: () {},
               icon: Icon(
                 Icons.arrow_forward,
                 size: 16,
-                color: context.colors.secondary,
+                color: Theme.of(context).colorScheme.secondary,
               ),
               label: Text(
                 'View All',
-                style: AppTextStyles.labelMd(color: context.colors.secondary),
+                style: (Theme.of(context).textTheme.labelMedium ??
+                        const TextStyle())
+                    .copyWith(color: Theme.of(context).colorScheme.secondary),
               ),
               style: TextButton.styleFrom(padding: EdgeInsets.zero),
             ),
@@ -288,7 +313,8 @@ class _BudgetScreenState extends ConsumerState<BudgetScreen> {
               children: _goals.map((g) {
                 final target = (g['targetAmount'] as num?)?.toDouble() ?? 1.0;
                 final current = (g['currentAmount'] as num?)?.toDouble() ?? 0.0;
-                final progress = target > 0 ? (current / target).clamp(0.0, 1.0) : 0.0;
+                final progress =
+                    target > 0 ? (current / target).clamp(0.0, 1.0) : 0.0;
                 return Padding(
                   padding: const EdgeInsets.only(right: 12),
                   child: GoalCard(
@@ -297,12 +323,18 @@ class _BudgetScreenState extends ConsumerState<BudgetScreen> {
                     targetAmount: '\$${target.toStringAsFixed(0)}',
                     progress: progress,
                     iconData: Icons.savings_outlined,
-                    progressColor: context.colors.primaryContainer,
-                    iconColor: context.colors.primary,
-                    iconBgColor: context.colors.primaryContainer.withValues(alpha: 0.15),
+                    progressColor:
+                        Theme.of(context).colorScheme.primaryContainer,
+                    iconColor: Theme.of(context).colorScheme.primary,
+                    iconBgColor: Theme.of(context)
+                        .colorScheme
+                        .primaryContainer
+                        .withValues(alpha: 0.15),
                     badgeLabel: 'Active',
-                    badgeColor: context.colors.surfaceContainerHighest,
-                    badgeTextColor: context.colors.onSurfaceVariant,
+                    badgeColor:
+                        Theme.of(context).colorScheme.surfaceContainerHighest,
+                    badgeTextColor:
+                        Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
                 );
               }).toList(),
@@ -316,9 +348,13 @@ class _BudgetScreenState extends ConsumerState<BudgetScreen> {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: context.colors.surfaceContainerHighest.withValues(alpha: 0.3),
+        color: Theme.of(context)
+            .colorScheme
+            .surfaceContainerHighest
+            .withValues(alpha: 0.3),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: context.colors.surfaceContainerHighest),
+        border: Border.all(
+            color: Theme.of(context).colorScheme.surfaceContainerHighest),
       ),
       child: Column(
         children: [
@@ -328,11 +364,14 @@ class _BudgetScreenState extends ConsumerState<BudgetScreen> {
                 width: 48,
                 height: 48,
                 decoration: BoxDecoration(
-                  color: context.colors.primary,
+                  color: Theme.of(context).colorScheme.primary,
                   shape: BoxShape.circle,
                   boxShadow: [
                     BoxShadow(
-                      color: context.colors.primary.withValues(alpha: 0.4),
+                      color: Theme.of(context)
+                          .colorScheme
+                          .primary
+                          .withValues(alpha: 0.4),
                       blurRadius: 12,
                     ),
                   ],
@@ -350,14 +389,18 @@ class _BudgetScreenState extends ConsumerState<BudgetScreen> {
                   children: [
                     Text(
                       'Points & Badges',
-                      style: AppTextStyles.headlineMd(
-                        color: context.colors.onSurface,
+                      style: (Theme.of(context).textTheme.headlineMedium ??
+                              const TextStyle())
+                          .copyWith(
+                        color: Theme.of(context).colorScheme.onSurface,
                       ),
                     ),
                     Text(
                       "You're in the top 5% of savers this week!",
-                      style: AppTextStyles.bodyMd(
-                        color: context.colors.onSurfaceVariant,
+                      style: (Theme.of(context).textTheme.bodyMedium ??
+                              const TextStyle())
+                          .copyWith(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
                       ),
                     ),
                   ],
@@ -373,13 +416,20 @@ class _BudgetScreenState extends ConsumerState<BudgetScreen> {
                   children: [
                     Text(
                       '2,450',
-                      style: AppTextStyles.displayLg(color: context.colors.primary),
+                      style: (Theme.of(context).textTheme.displayLarge ??
+                              const TextStyle())
+                          .copyWith(
+                              color: Theme.of(context).colorScheme.primary),
                     ),
                     Text(
                       'TOTAL POINTS',
-                      style: AppTextStyles.labelSm(
-                        color: context.colors.onSurfaceVariant,
-                      ).copyWith(letterSpacing: 1.5),
+                      style: (Theme.of(context).textTheme.labelSmall ??
+                              const TextStyle())
+                          .copyWith(
+                            color:
+                                Theme.of(context).colorScheme.onSurfaceVariant,
+                          )
+                          .copyWith(letterSpacing: 1.5),
                     ),
                   ],
                 ),
@@ -387,7 +437,7 @@ class _BudgetScreenState extends ConsumerState<BudgetScreen> {
               Container(
                 width: 1,
                 height: 40,
-                color: context.colors.outlineVariant,
+                color: Theme.of(context).colorScheme.outlineVariant,
               ),
               const SizedBox(width: 20),
               _buildBadgeStack(),
@@ -405,9 +455,18 @@ class _BudgetScreenState extends ConsumerState<BudgetScreen> {
 
   Widget _buildBadgeStack() {
     final badges = [
-      (color: context.colors.secondaryContainer, icon: Icons.star),
-      (color: context.colors.tertiaryContainer, icon: Icons.bolt),
-      (color: context.colors.primaryContainer, icon: Icons.emoji_events),
+      (
+        color: Theme.of(context).colorScheme.secondaryContainer,
+        icon: Icons.star
+      ),
+      (
+        color: Theme.of(context).colorScheme.tertiaryContainer,
+        icon: Icons.bolt
+      ),
+      (
+        color: Theme.of(context).colorScheme.primaryContainer,
+        icon: Icons.emoji_events
+      ),
     ];
 
     return Row(
@@ -430,15 +489,17 @@ class _BudgetScreenState extends ConsumerState<BudgetScreen> {
           height: 36,
           margin: const EdgeInsets.only(left: -8),
           decoration: BoxDecoration(
-            color: context.colors.surfaceContainerHighest,
+            color: Theme.of(context).colorScheme.surfaceContainerHighest,
             shape: BoxShape.circle,
             border: Border.all(color: Colors.white, width: 2),
           ),
           child: Center(
             child: Text(
               '+4',
-              style: AppTextStyles.labelSm(
-                color: context.colors.onSurfaceVariant,
+              style:
+                  (Theme.of(context).textTheme.labelSmall ?? const TextStyle())
+                      .copyWith(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
               ),
             ),
           ),

@@ -20,9 +20,9 @@ class TransactionModel extends Equatable {
   final String id;
   final String userId;
   final String walletId;
-  final String tagId;   // tương ứng TagId từ BE
+  final String tagId; // tương ứng TagId từ BE
   final double amount;
-  final String type;    // "INCOME" | "EXPENSE"
+  final String type; // "INCOME" | "EXPENSE"
   final DateTime transactionDate;
   final String? title;
   final String? note;
@@ -44,7 +44,8 @@ class TransactionModel extends Equatable {
       type: json['type'] as String? ?? 'EXPENSE',
       title: json['title'] as String?,
       transactionDate: json['transactionDate'] != null
-          ? DateTime.tryParse(json['transactionDate'].toString()) ?? DateTime.now()
+          ? DateTime.tryParse(json['transactionDate'].toString()) ??
+              DateTime.now()
           : DateTime.now(),
       note: json['note'] as String?,
       source: json['source'] as String?,

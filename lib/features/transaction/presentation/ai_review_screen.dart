@@ -4,8 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/providers.dart';
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_text_styles.dart';
 import '../../../core/widgets/glass_card.dart';
 import '../../../core/widgets/primary_button.dart';
 import '../../../core/widgets/secondary_button.dart';
@@ -53,18 +51,20 @@ class _AiReviewScreenState extends ConsumerState<AiReviewScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: context.colors.background,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new, size: 18),
-          color: context.colors.primary,
+          color: Theme.of(context).colorScheme.primary,
           onPressed: () => context.pop(),
         ),
         title: Text(
           'AI Review',
-          style: AppTextStyles.headlineMd(color: context.colors.primary),
+          style:
+              (Theme.of(context).textTheme.headlineMedium ?? const TextStyle())
+                  .copyWith(color: Theme.of(context).colorScheme.primary),
         ),
         centerTitle: true,
       ),
@@ -97,7 +97,7 @@ class _AiReviewScreenState extends ConsumerState<AiReviewScreen> {
                       icon: Icon(
                         Icons.edit_outlined,
                         size: 18,
-                        color: context.colors.onSurface,
+                        color: Theme.of(context).colorScheme.onSurface,
                       ),
                     ),
                     const SizedBox(height: 16),
@@ -118,12 +118,15 @@ class _AiReviewScreenState extends ConsumerState<AiReviewScreen> {
             width: 56,
             height: 56,
             decoration: BoxDecoration(
-              color: context.colors.primaryContainer.withValues(alpha: 0.15),
+              color: Theme.of(context)
+                  .colorScheme
+                  .primaryContainer
+                  .withValues(alpha: 0.15),
               shape: BoxShape.circle,
             ),
             child: Icon(
               Icons.smart_toy_outlined,
-              color: context.colors.primary,
+              color: Theme.of(context).colorScheme.primary,
               size: 28,
             ),
           ),
@@ -134,8 +137,10 @@ class _AiReviewScreenState extends ConsumerState<AiReviewScreen> {
               children: [
                 Text(
                   'AI Confidence Score',
-                  style: AppTextStyles.labelMd(
-                    color: context.colors.onSurfaceVariant,
+                  style: (Theme.of(context).textTheme.labelMedium ??
+                          const TextStyle())
+                      .copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
                 ),
                 const SizedBox(height: 4),
@@ -143,8 +148,10 @@ class _AiReviewScreenState extends ConsumerState<AiReviewScreen> {
                   children: [
                     Text(
                       '$confidenceScore%',
-                      style: AppTextStyles.headlineMd(
-                        color: context.colors.primary,
+                      style: (Theme.of(context).textTheme.headlineMedium ??
+                              const TextStyle())
+                          .copyWith(
+                        color: Theme.of(context).colorScheme.primary,
                       ),
                     ),
                     const SizedBox(width: 8),
@@ -154,12 +161,18 @@ class _AiReviewScreenState extends ConsumerState<AiReviewScreen> {
                         vertical: 2,
                       ),
                       decoration: BoxDecoration(
-                        color: context.colors.primaryContainer.withValues(alpha: 0.15),
+                        color: Theme.of(context)
+                            .colorScheme
+                            .primaryContainer
+                            .withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(999),
                       ),
                       child: Text(
                         confidenceScore > 85 ? 'HIGH' : 'LOW',
-                        style: AppTextStyles.labelSm(color: context.colors.primary)
+                        style: (Theme.of(context).textTheme.labelSmall ??
+                                const TextStyle())
+                            .copyWith(
+                                color: Theme.of(context).colorScheme.primary)
                             .copyWith(letterSpacing: 1),
                       ),
                     ),
@@ -182,12 +195,12 @@ class _AiReviewScreenState extends ConsumerState<AiReviewScreen> {
             width: 48,
             height: 48,
             decoration: BoxDecoration(
-              color: context.colors.surfaceContainerLow,
+              color: Theme.of(context).colorScheme.surfaceContainerLow,
               borderRadius: BorderRadius.circular(10),
             ),
             child: Icon(
               Icons.receipt_long_outlined,
-              color: context.colors.primary,
+              color: Theme.of(context).colorScheme.primary,
               size: 24,
             ),
           ),
@@ -198,14 +211,18 @@ class _AiReviewScreenState extends ConsumerState<AiReviewScreen> {
               children: [
                 Text(
                   'Scanned Receipt',
-                  style: AppTextStyles.bodySemibold(
-                    color: context.colors.onSurface,
+                  style: (Theme.of(context).textTheme.titleMedium ??
+                          const TextStyle())
+                      .copyWith(
+                    color: Theme.of(context).colorScheme.onSurface,
                   ),
                 ),
                 Text(
                   '1 page scanned',
-                  style: AppTextStyles.labelSm(
-                    color: context.colors.onSurfaceVariant,
+                  style: (Theme.of(context).textTheme.labelSmall ??
+                          const TextStyle())
+                      .copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
                 ),
               ],
@@ -224,8 +241,10 @@ class _AiReviewScreenState extends ConsumerState<AiReviewScreen> {
                       ClipRRect(
                         borderRadius: BorderRadius.circular(16),
                         child: kIsWeb
-                            ? Image.network(widget.imagePath, fit: BoxFit.contain)
-                            : Image.file(File(widget.imagePath), fit: BoxFit.contain),
+                            ? Image.network(widget.imagePath,
+                                fit: BoxFit.contain)
+                            : Image.file(File(widget.imagePath),
+                                fit: BoxFit.contain),
                       ),
                       IconButton(
                         onPressed: () => Navigator.of(context).pop(),
@@ -241,7 +260,9 @@ class _AiReviewScreenState extends ConsumerState<AiReviewScreen> {
             },
             child: Text(
               'View',
-              style: AppTextStyles.labelMd(color: context.colors.secondary),
+              style:
+                  (Theme.of(context).textTheme.labelMedium ?? const TextStyle())
+                      .copyWith(color: Theme.of(context).colorScheme.secondary),
             ),
           ),
         ],
@@ -250,7 +271,8 @@ class _AiReviewScreenState extends ConsumerState<AiReviewScreen> {
   }
 
   Widget _buildReviewedFields() {
-    final amount = _reviewData?['extractedData']?['amount']?.toString() ?? '0.00';
+    final amount =
+        _reviewData?['extractedData']?['amount']?.toString() ?? '0.00';
     final merchant = _reviewData?['extractedData']?['merchantName'] ?? 'N/A';
     final category = _reviewData?['extractedData']?['category'] ?? 'N/A';
     final dateStr = _reviewData?['extractedData']?['date'] ?? 'N/A';
@@ -260,7 +282,9 @@ class _AiReviewScreenState extends ConsumerState<AiReviewScreen> {
       children: [
         Text(
           'Reviewed Fields',
-          style: AppTextStyles.headlineMd(color: context.colors.onSurface),
+          style:
+              (Theme.of(context).textTheme.headlineMedium ?? const TextStyle())
+                  .copyWith(color: Theme.of(context).colorScheme.onSurface),
         ),
         const SizedBox(height: 16),
         GlassCard(
@@ -272,37 +296,47 @@ class _AiReviewScreenState extends ConsumerState<AiReviewScreen> {
                 value: merchant,
                 icon: Icons.store_outlined,
               ),
-              Divider(height: 24, color: context.colors.outlineVariant),
+              Divider(
+                  height: 24,
+                  color: Theme.of(context).colorScheme.outlineVariant),
               _ReviewField(
                 label: 'Amount',
                 value: '\$$amount',
                 icon: Icons.attach_money,
-                valueColor: context.colors.expense,
+                valueColor: Theme.of(context).colorScheme.error,
               ),
-              Divider(height: 24, color: context.colors.outlineVariant),
+              Divider(
+                  height: 24,
+                  color: Theme.of(context).colorScheme.outlineVariant),
               _ReviewField(
                 label: 'Category',
                 value: category,
                 icon: Icons.restaurant,
               ),
-              Divider(height: 24, color: context.colors.outlineVariant),
+              Divider(
+                  height: 24,
+                  color: Theme.of(context).colorScheme.outlineVariant),
               _ReviewField(
                 label: 'Date',
                 value: dateStr,
                 icon: Icons.access_time,
               ),
-              Divider(height: 24, color: context.colors.outlineVariant),
+              Divider(
+                  height: 24,
+                  color: Theme.of(context).colorScheme.outlineVariant),
               const _ReviewField(
                 label: 'Wallet',
                 value: 'Cash Wallet',
                 icon: Icons.account_balance_wallet_outlined,
               ),
-              Divider(height: 24, color: context.colors.outlineVariant),
+              Divider(
+                  height: 24,
+                  color: Theme.of(context).colorScheme.outlineVariant),
               Row(
                 children: [
                   Icon(
                     Icons.label_outline,
-                    color: context.colors.outline,
+                    color: Theme.of(context).colorScheme.outline,
                     size: 20,
                   ),
                   const SizedBox(width: 12),
@@ -312,8 +346,11 @@ class _AiReviewScreenState extends ConsumerState<AiReviewScreen> {
                       children: [
                         Text(
                           'Tags',
-                          style: AppTextStyles.labelSm(
-                            color: context.colors.onSurfaceVariant,
+                          style: (Theme.of(context).textTheme.labelSmall ??
+                                  const TextStyle())
+                              .copyWith(
+                            color:
+                                Theme.of(context).colorScheme.onSurfaceVariant,
                           ),
                         ),
                         const SizedBox(height: 6),
@@ -353,7 +390,7 @@ class _ReviewField extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Icon(icon, color: context.colors.outline, size: 20),
+        Icon(icon, color: Theme.of(context).colorScheme.outline, size: 20),
         const SizedBox(width: 12),
         Expanded(
           child: Column(
@@ -361,14 +398,18 @@ class _ReviewField extends StatelessWidget {
             children: [
               Text(
                 label,
-                style: AppTextStyles.labelSm(
-                  color: context.colors.onSurfaceVariant,
+                style: (Theme.of(context).textTheme.labelSmall ??
+                        const TextStyle())
+                    .copyWith(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
               ),
               Text(
                 value,
-                style: AppTextStyles.bodySemibold(
-                  color: valueColor ?? context.colors.onSurface,
+                style: (Theme.of(context).textTheme.titleMedium ??
+                        const TextStyle())
+                    .copyWith(
+                  color: valueColor ?? Theme.of(context).colorScheme.onSurface,
                 ),
               ),
             ],
@@ -376,7 +417,7 @@ class _ReviewField extends StatelessWidget {
         ),
         Icon(
           Icons.check_circle,
-          color: context.colors.primaryContainer,
+          color: Theme.of(context).colorScheme.primaryContainer,
           size: 20,
         ),
       ],

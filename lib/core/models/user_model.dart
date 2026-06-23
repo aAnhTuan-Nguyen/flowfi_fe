@@ -53,7 +53,8 @@ class UserModel extends Equatable {
       'email': email,
       if (fullName != null) 'fullName': fullName,
       if (avatarUrl != null) 'avatarUrl': avatarUrl,
-      if (dateOfBirth != null) 'dateOfBirth': dateOfBirth?.toIso8601String().split('T').first,
+      if (dateOfBirth != null)
+        'dateOfBirth': dateOfBirth?.toIso8601String().split('T').first,
       'currencyCode': currencyCode,
       if (monthlyBudgetLimit != null) 'monthlyBudgetLimit': monthlyBudgetLimit,
       'authProvider': authProvider,

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../core/theme/app_text_styles.dart';
 
 /// Small status badge chip — "8 Day Streak", "Active", "Almost There!"
 class BadgeChip extends StatelessWidget {
@@ -33,10 +32,12 @@ class BadgeChip extends StatelessWidget {
           ],
           Text(
             label,
-            style: AppTextStyles.labelSm(color: textColor).copyWith(
-              fontWeight: FontWeight.w700,
-              letterSpacing: 0.5,
-            ),
+            style: (Theme.of(context).textTheme.labelSmall ?? const TextStyle())
+                .copyWith(color: textColor)
+                .copyWith(
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 0.5,
+                ),
           ),
         ],
       ),

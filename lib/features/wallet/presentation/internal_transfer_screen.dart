@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_text_styles.dart';
 import '../../../core/widgets/glass_card.dart';
 import '../../../core/widgets/primary_button.dart';
 
@@ -18,23 +16,37 @@ class _InternalTransferScreenState extends State<InternalTransferScreen> {
   final _noteController = TextEditingController();
   bool _loading = false;
 
-  ({String name, String subtitle, String balance, IconData icon, Color color, Color bgColor}) get _fromWallet => (
-    name: 'Main Account',
-    subtitle: 'FROM WALLET',
-    balance: r'$12,450.00',
-    icon: Icons.account_balance_wallet_outlined,
-    color: context.colors.primary,
-    bgColor: const Color(0x3322C55E),
-  );
+  ({
+    String name,
+    String subtitle,
+    String balance,
+    IconData icon,
+    Color color,
+    Color bgColor
+  }) get _fromWallet => (
+        name: 'Main Account',
+        subtitle: 'FROM WALLET',
+        balance: r'$12,450.00',
+        icon: Icons.account_balance_wallet_outlined,
+        color: Theme.of(context).colorScheme.primary,
+        bgColor: const Color(0x3322C55E),
+      );
 
-  ({String name, String subtitle, String balance, IconData icon, Color color, Color bgColor}) get _toWallet => (
-    name: 'Emergency Fund',
-    subtitle: 'TO WALLET',
-    balance: r'$3,200.00',
-    icon: Icons.savings_outlined,
-    color: context.colors.secondary,
-    bgColor: const Color(0x330051D5),
-  );
+  ({
+    String name,
+    String subtitle,
+    String balance,
+    IconData icon,
+    Color color,
+    Color bgColor
+  }) get _toWallet => (
+        name: 'Emergency Fund',
+        subtitle: 'TO WALLET',
+        balance: r'$3,200.00',
+        icon: Icons.savings_outlined,
+        color: Theme.of(context).colorScheme.secondary,
+        bgColor: const Color(0x330051D5),
+      );
 
   @override
   void dispose() {
@@ -50,17 +62,20 @@ class _InternalTransferScreenState extends State<InternalTransferScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: context.colors.background,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: Icon(Icons.close, color: context.colors.onSurface),
+          icon:
+              Icon(Icons.close, color: Theme.of(context).colorScheme.onSurface),
           onPressed: () => Navigator.of(context).pop(),
         ),
         title: Text(
           'Transfer',
-          style: AppTextStyles.headlineMd(color: context.colors.primary),
+          style:
+              (Theme.of(context).textTheme.headlineMedium ?? const TextStyle())
+                  .copyWith(color: Theme.of(context).colorScheme.primary),
         ),
         centerTitle: true,
       ),
@@ -119,14 +134,20 @@ class _InternalTransferScreenState extends State<InternalTransferScreen> {
                   children: [
                     Text(
                       _fromWallet.subtitle,
-                      style: AppTextStyles.labelSm(
-                        color: context.colors.onSurfaceVariant,
-                      ).copyWith(letterSpacing: 0.5),
+                      style: (Theme.of(context).textTheme.labelSmall ??
+                              const TextStyle())
+                          .copyWith(
+                            color:
+                                Theme.of(context).colorScheme.onSurfaceVariant,
+                          )
+                          .copyWith(letterSpacing: 0.5),
                     ),
                     Text(
                       _fromWallet.name,
-                      style: AppTextStyles.headlineLgMobile(
-                        color: context.colors.onSurface,
+                      style: (Theme.of(context).textTheme.headlineMedium ??
+                              const TextStyle())
+                          .copyWith(
+                        color: Theme.of(context).colorScheme.onSurface,
                       ),
                     ),
                   ],
@@ -137,13 +158,18 @@ class _InternalTransferScreenState extends State<InternalTransferScreen> {
                 children: [
                   Text(
                     'Balance',
-                    style: AppTextStyles.labelSm(
-                      color: context.colors.onSurfaceVariant,
+                    style: (Theme.of(context).textTheme.labelSmall ??
+                            const TextStyle())
+                        .copyWith(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
                   ),
                   Text(
                     _fromWallet.balance,
-                    style: AppTextStyles.numericBold(color: context.colors.onSurface),
+                    style: (Theme.of(context).textTheme.titleMedium ??
+                            const TextStyle())
+                        .copyWith(
+                            color: Theme.of(context).colorScheme.onSurface),
                   ),
                 ],
               ),
@@ -156,11 +182,14 @@ class _InternalTransferScreenState extends State<InternalTransferScreen> {
             width: 40,
             height: 40,
             decoration: BoxDecoration(
-              color: context.colors.primary,
+              color: Theme.of(context).colorScheme.primary,
               shape: BoxShape.circle,
               boxShadow: [
                 BoxShadow(
-                  color: context.colors.primary.withValues(alpha: 0.35),
+                  color: Theme.of(context)
+                      .colorScheme
+                      .primary
+                      .withValues(alpha: 0.35),
                   blurRadius: 10,
                   offset: const Offset(0, 4),
                 ),
@@ -197,14 +226,20 @@ class _InternalTransferScreenState extends State<InternalTransferScreen> {
                   children: [
                     Text(
                       _toWallet.subtitle,
-                      style: AppTextStyles.labelSm(
-                        color: context.colors.onSurfaceVariant,
-                      ).copyWith(letterSpacing: 0.5),
+                      style: (Theme.of(context).textTheme.labelSmall ??
+                              const TextStyle())
+                          .copyWith(
+                            color:
+                                Theme.of(context).colorScheme.onSurfaceVariant,
+                          )
+                          .copyWith(letterSpacing: 0.5),
                     ),
                     Text(
                       _toWallet.name,
-                      style: AppTextStyles.headlineLgMobile(
-                        color: context.colors.onSurface,
+                      style: (Theme.of(context).textTheme.headlineMedium ??
+                              const TextStyle())
+                          .copyWith(
+                        color: Theme.of(context).colorScheme.onSurface,
                       ),
                     ),
                   ],
@@ -215,14 +250,18 @@ class _InternalTransferScreenState extends State<InternalTransferScreen> {
                 children: [
                   Text(
                     'Balance',
-                    style: AppTextStyles.labelSm(
-                      color: context.colors.onSurfaceVariant,
+                    style: (Theme.of(context).textTheme.labelSmall ??
+                            const TextStyle())
+                        .copyWith(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
                   ),
                   Text(
                     _toWallet.balance,
-                    style: AppTextStyles.numericBold(
-                      color: context.colors.onSurface,
+                    style: (Theme.of(context).textTheme.titleMedium ??
+                            const TextStyle())
+                        .copyWith(
+                      color: Theme.of(context).colorScheme.onSurface,
                     ),
                   ),
                 ],
@@ -242,7 +281,10 @@ class _InternalTransferScreenState extends State<InternalTransferScreen> {
         children: [
           Text(
             'Amount',
-            style: AppTextStyles.labelMd(color: context.colors.onSurfaceVariant),
+            style:
+                (Theme.of(context).textTheme.labelMedium ?? const TextStyle())
+                    .copyWith(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant),
           ),
           const SizedBox(height: 12),
           Row(
@@ -250,7 +292,9 @@ class _InternalTransferScreenState extends State<InternalTransferScreen> {
             children: [
               Text(
                 r'$',
-                style: AppTextStyles.headlineLg(color: context.colors.primary),
+                style: (Theme.of(context).textTheme.headlineLarge ??
+                        const TextStyle())
+                    .copyWith(color: Theme.of(context).colorScheme.primary),
               ),
               const SizedBox(width: 4),
               Expanded(
@@ -260,7 +304,9 @@ class _InternalTransferScreenState extends State<InternalTransferScreen> {
                     decimal: true,
                   ),
                   onTap: () {
-                    if (_amountController.text == '0' || _amountController.text == '0.0' || _amountController.text == '0.00') {
+                    if (_amountController.text == '0' ||
+                        _amountController.text == '0.0' ||
+                        _amountController.text == '0.00') {
                       _amountController.clear();
                     }
                   },
@@ -269,7 +315,9 @@ class _InternalTransferScreenState extends State<InternalTransferScreen> {
                       RegExp(r'^\d+\.?\d{0,2}'),
                     ),
                   ],
-                  style: AppTextStyles.displayLg(color: context.colors.onSurface),
+                  style: (Theme.of(context).textTheme.displayLarge ??
+                          const TextStyle())
+                      .copyWith(color: Theme.of(context).colorScheme.onSurface),
                   decoration: const InputDecoration(
                     border: InputBorder.none,
                     enabledBorder: InputBorder.none,
@@ -312,16 +360,22 @@ class _InternalTransferScreenState extends State<InternalTransferScreen> {
         children: [
           Text(
             'Note (Optional)',
-            style: AppTextStyles.labelMd(color: context.colors.onSurfaceVariant),
+            style:
+                (Theme.of(context).textTheme.labelMedium ?? const TextStyle())
+                    .copyWith(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant),
           ),
           const SizedBox(height: 8),
           TextField(
             controller: _noteController,
             maxLines: 3,
-            style: AppTextStyles.bodyMd(color: context.colors.onSurface),
+            style: (Theme.of(context).textTheme.bodyMedium ?? const TextStyle())
+                .copyWith(color: Theme.of(context).colorScheme.onSurface),
             decoration: InputDecoration(
               hintText: "What's this transfer for?",
-              hintStyle: AppTextStyles.bodyMd(color: context.colors.outline),
+              hintStyle:
+                  (Theme.of(context).textTheme.bodyMedium ?? const TextStyle())
+                      .copyWith(color: Theme.of(context).colorScheme.outline),
               border: InputBorder.none,
               enabledBorder: InputBorder.none,
               focusedBorder: InputBorder.none,
@@ -337,21 +391,24 @@ class _InternalTransferScreenState extends State<InternalTransferScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
-        color: context.colors.surfaceContainerLow,
+        color: Theme.of(context).colorScheme.surfaceContainerLow,
         borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
         children: [
           Icon(
             Icons.info_outlined,
-            color: context.colors.secondary,
+            color: Theme.of(context).colorScheme.secondary,
             size: 18,
           ),
           const SizedBox(width: 8),
           Expanded(
             child: Text(
               'Internal transfer is not counted as income or expense',
-              style: AppTextStyles.labelMd(color: context.colors.onSurfaceVariant),
+              style: (Theme.of(context).textTheme.labelMedium ??
+                      const TextStyle())
+                  .copyWith(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant),
             ),
           ),
         ],
@@ -384,13 +441,15 @@ class _QuickAmountChip extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
-          color: context.colors.surfaceContainerLow,
+          color: Theme.of(context).colorScheme.surfaceContainerLow,
           borderRadius: BorderRadius.circular(999),
-          border: Border.all(color: context.colors.outlineVariant),
+          border:
+              Border.all(color: Theme.of(context).colorScheme.outlineVariant),
         ),
         child: Text(
           label,
-          style: AppTextStyles.labelMd(color: context.colors.onSurface),
+          style: (Theme.of(context).textTheme.labelMedium ?? const TextStyle())
+              .copyWith(color: Theme.of(context).colorScheme.onSurface),
         ),
       ),
     );

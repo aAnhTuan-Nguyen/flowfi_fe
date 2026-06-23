@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/providers.dart';
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_text_styles.dart';
 import '../../../core/widgets/custom_text_field.dart';
 import '../../../core/widgets/glass_card.dart';
 import '../../../core/widgets/primary_button.dart';
@@ -19,7 +17,7 @@ class CreateBudgetScreen extends ConsumerStatefulWidget {
 class _CreateBudgetScreenState extends ConsumerState<CreateBudgetScreen> {
   final _nameController = TextEditingController();
   final _amountController = TextEditingController();
-  
+
   DateTime? _startDate;
   DateTime? _endDate;
   bool _isSaving = false;
@@ -35,9 +33,9 @@ class _CreateBudgetScreenState extends ConsumerState<CreateBudgetScreen> {
         return Theme(
           data: Theme.of(context).copyWith(
             colorScheme: ColorScheme.light(
-              primary: context.colors.primary,
+              primary: Theme.of(context).colorScheme.primary,
               onPrimary: Colors.white,
-              onSurface: context.colors.onSurface,
+              onSurface: Theme.of(context).colorScheme.onSurface,
             ),
           ),
           child: child!,
@@ -111,18 +109,20 @@ class _CreateBudgetScreenState extends ConsumerState<CreateBudgetScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: context.colors.background,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new, size: 18),
-          color: context.colors.primary,
+          color: Theme.of(context).colorScheme.primary,
           onPressed: () => context.pop(),
         ),
         title: Text(
           'Create Budget',
-          style: AppTextStyles.headlineMd(color: context.colors.primary),
+          style:
+              (Theme.of(context).textTheme.headlineMedium ?? const TextStyle())
+                  .copyWith(color: Theme.of(context).colorScheme.primary),
         ),
         centerTitle: true,
       ),
@@ -146,7 +146,8 @@ class _CreateBudgetScreenState extends ConsumerState<CreateBudgetScreen> {
                       label: 'Limit Amount',
                       hint: '0.00',
                       controller: _amountController,
-                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                      keyboardType:
+                          const TextInputType.numberWithOptions(decimal: true),
                       prefixIcon: Icons.attach_money,
                     ),
                     const SizedBox(height: 20),
@@ -197,26 +198,35 @@ class _CreateBudgetScreenState extends ConsumerState<CreateBudgetScreen> {
       children: [
         Text(
           label,
-          style: AppTextStyles.labelMd(color: context.colors.onSurfaceVariant),
+          style: (Theme.of(context).textTheme.labelMedium ?? const TextStyle())
+              .copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
         ),
         const SizedBox(height: 8),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
           decoration: BoxDecoration(
-            color: context.colors.surfaceContainerLow,
+            color: Theme.of(context).colorScheme.surfaceContainerLow,
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: context.colors.outlineVariant),
+            border:
+                Border.all(color: Theme.of(context).colorScheme.outlineVariant),
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                date != null ? DateFormat('MMM dd, yyyy').format(date) : 'Select',
-                style: AppTextStyles.bodyMd(
-                  color: date != null ? context.colors.onSurface : context.colors.outline,
+                date != null
+                    ? DateFormat('MMM dd, yyyy').format(date)
+                    : 'Select',
+                style: (Theme.of(context).textTheme.bodyMedium ??
+                        const TextStyle())
+                    .copyWith(
+                  color: date != null
+                      ? Theme.of(context).colorScheme.onSurface
+                      : Theme.of(context).colorScheme.outline,
                 ),
               ),
-              Icon(Icons.calendar_today, size: 16, color: context.colors.outline),
+              Icon(Icons.calendar_today,
+                  size: 16, color: Theme.of(context).colorScheme.outline),
             ],
           ),
         ),

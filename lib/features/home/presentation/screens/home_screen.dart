@@ -129,17 +129,17 @@ class _BalanceCard extends StatelessWidget {
           Text(
             'TOTAL BALANCE',
             style: Theme.of(context).textTheme.labelMedium?.copyWith(
-              color: const Color(0xFFC9EE9F),
-              letterSpacing: 1.1,
-            ),
+                  color: const Color(0xFFC9EE9F),
+                  letterSpacing: 1.1,
+                ),
           ),
           const SizedBox(height: 8),
           Text(
             '+5,000,000 VND',
             style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-              color: Colors.white,
-              fontWeight: FontWeight.w800,
-            ),
+                  color: Colors.white,
+                  fontWeight: FontWeight.w800,
+                ),
           ),
           const SizedBox(height: 12),
           Row(
@@ -162,8 +162,8 @@ class _BalanceCard extends StatelessWidget {
               Text(
                 '+2.4% this month',
                 style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                  color: const Color(0xFFC9EE9F),
-                ),
+                      color: const Color(0xFFC9EE9F),
+                    ),
               ),
             ],
           ),
@@ -473,9 +473,8 @@ class _TransactionTile extends StatelessWidget {
             ),
             child: Icon(
               transaction.icon,
-              color: transaction.isIncome
-                  ? Colors.white
-                  : const Color(0xFF49672A),
+              color:
+                  transaction.isIncome ? Colors.white : const Color(0xFF49672A),
               size: 20,
             ),
           ),
@@ -494,10 +493,10 @@ class _TransactionTile extends StatelessWidget {
                 Text(
                   transaction.subtitle,
                   style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                    color: const Color(0xFF757872),
-                    fontSize: 11,
-                    fontWeight: FontWeight.w500,
-                  ),
+                        color: const Color(0xFF757872),
+                        fontSize: 11,
+                        fontWeight: FontWeight.w500,
+                      ),
                 ),
               ],
             ),
@@ -505,10 +504,10 @@ class _TransactionTile extends StatelessWidget {
           Text(
             transaction.amount,
             style: Theme.of(context).textTheme.labelMedium?.copyWith(
-              color: transaction.isIncome
-                  ? const Color(0xFF49672A)
-                  : const Color(0xFF1B211A),
-            ),
+                  color: transaction.isIncome
+                      ? const Color(0xFF49672A)
+                      : const Color(0xFF1B211A),
+                ),
           ),
         ],
       ),

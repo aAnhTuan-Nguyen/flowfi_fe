@@ -1,5 +1,4 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'network/dio_client.dart';
 import '../features/auth/data/auth_repository.dart';
 import '../features/profile/data/profile_repository.dart';
@@ -9,10 +8,6 @@ import '../features/budget/data/budget_repository.dart';
 import '../features/notification/data/notification_repository.dart';
 import '../features/dashboard/data/dashboard_repository.dart';
 import '../features/analytics/data/analytics_repository.dart';
-
-final sharedPreferencesProvider = Provider<SharedPreferences>((ref) {
-  throw UnimplementedError();
-});
 
 final dioClientProvider = Provider<DioClient>((ref) {
   return DioClient();

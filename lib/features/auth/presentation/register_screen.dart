@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/providers.dart';
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_text_styles.dart';
 import '../../../routes/app_router.dart';
 import '../../../core/widgets/custom_text_field.dart';
 import '../../../core/widgets/primary_button.dart';
@@ -66,7 +64,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: context.colors.background,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -81,7 +79,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 Container(
                   padding: const EdgeInsets.all(24),
                   decoration: BoxDecoration(
-                    color: context.colors.surfaceContainerLowest,
+                    color: Theme.of(context).colorScheme.surfaceContainerLowest,
                     borderRadius: BorderRadius.circular(20),
                     boxShadow: [
                       BoxShadow(
@@ -133,7 +131,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                             _obscurePassword
                                 ? Icons.visibility_outlined
                                 : Icons.visibility_off_outlined,
-                            color: context.colors.outline,
+                            color: Theme.of(context).colorScheme.outline,
                             size: 20,
                           ),
                           onPressed: () => setState(
@@ -159,7 +157,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                             _obscureConfirm
                                 ? Icons.visibility_outlined
                                 : Icons.visibility_off_outlined,
-                            color: context.colors.outline,
+                            color: Theme.of(context).colorScheme.outline,
                             size: 20,
                           ),
                           onPressed: () => setState(
@@ -203,15 +201,20 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   children: [
                     Text(
                       'Already have an account? ',
-                      style: AppTextStyles.bodyMd(
-                        color: context.colors.onSurfaceVariant,
+                      style: (Theme.of(context).textTheme.bodyMedium ??
+                              const TextStyle())
+                          .copyWith(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
                       ),
                     ),
                     GestureDetector(
                       onTap: () => context.pop(),
                       child: Text(
                         'Login',
-                        style: AppTextStyles.bodyMd(color: context.colors.primary)
+                        style: (Theme.of(context).textTheme.bodyMedium ??
+                                const TextStyle())
+                            .copyWith(
+                                color: Theme.of(context).colorScheme.primary)
                             .copyWith(fontWeight: FontWeight.w700),
                       ),
                     ),
@@ -233,7 +236,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           width: 72,
           height: 72,
           decoration: BoxDecoration(
-            color: context.colors.primaryContainer,
+            color: Theme.of(context).colorScheme.primaryContainer,
             shape: BoxShape.circle,
           ),
           child: const Center(
@@ -250,13 +253,16 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         const SizedBox(height: 24),
         Text(
           'Create Account',
-          style: AppTextStyles.headlineLgMobile(color: context.colors.onSurface),
+          style:
+              (Theme.of(context).textTheme.headlineMedium ?? const TextStyle())
+                  .copyWith(color: Theme.of(context).colorScheme.onSurface),
           textAlign: TextAlign.center,
         ),
         const SizedBox(height: 8),
         Text(
           'Join FlowFi to take control of your finances',
-          style: AppTextStyles.bodyMd(color: context.colors.onSurfaceVariant),
+          style: (Theme.of(context).textTheme.bodyMedium ?? const TextStyle())
+              .copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
           textAlign: TextAlign.center,
         ),
       ],
@@ -266,15 +272,20 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   Widget _buildDivider() {
     return Row(
       children: [
-        Expanded(child: Divider(color: context.colors.outlineVariant)),
+        Expanded(
+            child:
+                Divider(color: Theme.of(context).colorScheme.outlineVariant)),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 12),
           child: Text(
             'OR',
-            style: AppTextStyles.labelSm(color: context.colors.outline),
+            style: (Theme.of(context).textTheme.labelSmall ?? const TextStyle())
+                .copyWith(color: Theme.of(context).colorScheme.outline),
           ),
         ),
-        Expanded(child: Divider(color: context.colors.outlineVariant)),
+        Expanded(
+            child:
+                Divider(color: Theme.of(context).colorScheme.outlineVariant)),
       ],
     );
   }

@@ -32,7 +32,8 @@ class WalletRepositoryImpl implements WalletRepository {
   Future<Map<String, dynamic>> createWallet(
     Map<String, dynamic> data,
   ) async {
-    final response = await _dioClient.dio.post('/finance/api/wallets', data: data);
+    final response =
+        await _dioClient.dio.post('/finance/api/wallets', data: data);
     return response.data as Map<String, dynamic>;
   }
 

@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../core/theme/app_colors.dart';
-import '../../core/theme/app_text_styles.dart';
 
 /// Styled text input field matching the FlowFi design system
 class CustomTextField extends StatelessWidget {
@@ -42,7 +40,8 @@ class CustomTextField extends StatelessWidget {
       children: [
         Text(
           label,
-          style: AppTextStyles.labelMd(color: context.colors.onSurfaceVariant),
+          style: (Theme.of(context).textTheme.labelMedium ?? const TextStyle())
+              .copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
         ),
         const SizedBox(height: 8),
         TextFormField(
@@ -55,38 +54,45 @@ class CustomTextField extends StatelessWidget {
           onTap: onTap,
           maxLines: obscureText ? 1 : maxLines,
           autofocus: autofocus,
-          style: AppTextStyles.bodyMd(color: context.colors.onSurface),
+          style: (Theme.of(context).textTheme.bodyMedium ?? const TextStyle())
+              .copyWith(color: Theme.of(context).colorScheme.onSurface),
           decoration: InputDecoration(
             hintText: hint,
-            hintStyle: AppTextStyles.bodyMd(color: context.colors.outline),
+            hintStyle:
+                (Theme.of(context).textTheme.bodyMedium ?? const TextStyle())
+                    .copyWith(color: Theme.of(context).colorScheme.outline),
             prefixIcon: prefixIcon != null
-                ? Icon(prefixIcon, color: context.colors.outline, size: 20)
+                ? Icon(prefixIcon,
+                    color: Theme.of(context).colorScheme.outline, size: 20)
                 : null,
             suffixIcon: suffixIcon,
             filled: true,
-            fillColor: context.colors.surfaceContainerLow,
+            fillColor: Theme.of(context).colorScheme.surfaceContainerLow,
             contentPadding: const EdgeInsets.symmetric(
               horizontal: 16,
               vertical: 16,
             ),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: context.colors.outlineVariant),
+              borderSide: BorderSide(
+                  color: Theme.of(context).colorScheme.outlineVariant),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: context.colors.outlineVariant),
+              borderSide: BorderSide(
+                  color: Theme.of(context).colorScheme.outlineVariant),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide: BorderSide(
-                color: context.colors.primary,
+                color: Theme.of(context).colorScheme.primary,
                 width: 2,
               ),
             ),
             errorBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: context.colors.error),
+              borderSide:
+                  BorderSide(color: Theme.of(context).colorScheme.error),
             ),
           ),
         ),

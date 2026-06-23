@@ -6,10 +6,10 @@ budgets, reports, financial insights, and offline synchronization.
 
 ## Current status
 
-The repository contains the application foundation and a disposable `example`
-feature that demonstrates the intended dependency flow. It is teaching code,
-not a FlowFi product feature. Copy the relevant pattern and delete the example
-when the first real feature is ready.
+The repository contains the application foundation plus temporary product UI
+screens for the current frontend direction. Backend contracts, persistence,
+authentication, AI/OCR providers, and offline synchronization are still being
+defined.
 
 ## Foundation stack
 

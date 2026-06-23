@@ -24,7 +24,8 @@ class NotificationModel extends Equatable {
       id: json['id']?.toString() ?? '',
       title: json['title'] as String? ?? '',
       body: json['content'] as String? ?? '', // Maps from BE Content
-      type: json['notificationType'] as String? ?? 'system', // Maps from BE NotificationType
+      type: json['notificationType'] as String? ??
+          'system', // Maps from BE NotificationType
       createdAt: json['createdAt'] != null
           ? DateTime.tryParse(json['createdAt'].toString()) ?? DateTime.now()
           : DateTime.now(),
@@ -46,5 +47,6 @@ class NotificationModel extends Equatable {
   }
 
   @override
-  List<Object?> get props => [id, title, body, type, createdAt, isRead, actionUrl];
+  List<Object?> get props =>
+      [id, title, body, type, createdAt, isRead, actionUrl];
 }

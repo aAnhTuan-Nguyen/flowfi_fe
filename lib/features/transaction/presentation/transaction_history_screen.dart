@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/providers.dart';
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_text_styles.dart';
 import '../../../routes/app_router.dart';
 import '../../../core/widgets/glass_card.dart';
 import '../../../core/widgets/transaction_tile.dart';
@@ -17,7 +15,8 @@ class TransactionHistoryScreen extends ConsumerStatefulWidget {
       _TransactionHistoryScreenState();
 }
 
-class _TransactionHistoryScreenState extends ConsumerState<TransactionHistoryScreen> {
+class _TransactionHistoryScreenState
+    extends ConsumerState<TransactionHistoryScreen> {
   final _searchController = TextEditingController();
   int _selectedFilter = 0;
   bool _isLoading = true;
@@ -57,23 +56,26 @@ class _TransactionHistoryScreenState extends ConsumerState<TransactionHistoryScr
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: context.colors.background,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new, size: 18),
-          color: context.colors.primary,
+          color: Theme.of(context).colorScheme.primary,
           onPressed: () => context.pop(),
         ),
         title: Text(
           'Transaction History',
-          style: AppTextStyles.headlineMd(color: context.colors.primary),
+          style:
+              (Theme.of(context).textTheme.headlineMedium ?? const TextStyle())
+                  .copyWith(color: Theme.of(context).colorScheme.primary),
         ),
         centerTitle: true,
         actions: [
           IconButton(
-            icon: Icon(Icons.tune_outlined, color: context.colors.primary),
+            icon: Icon(Icons.tune_outlined,
+                color: Theme.of(context).colorScheme.primary),
             onPressed: () {},
           ),
         ],
@@ -102,12 +104,14 @@ class _TransactionHistoryScreenState extends ConsumerState<TransactionHistoryScr
                               _buildGroupHeader('ALL TRANSACTIONS'),
                               GlassCard(
                                 padding: EdgeInsets.zero,
-                                margin: const EdgeInsets.symmetric(horizontal: 20),
+                                margin:
+                                    const EdgeInsets.symmetric(horizontal: 20),
                                 child: Column(
                                   children: _transactions.map((t) {
                                     final isExpense = t['type'] == 'EXPENSE';
                                     return TransactionTile(
-                                      merchantName: t['tag']?['name'] ?? 'Unknown',
+                                      merchantName:
+                                          t['tag']?['name'] ?? 'Unknown',
                                       timestamp: t['date'] ?? 'Unknown date',
                                       amount: '\$${t['amount']}',
                                       isExpense: isExpense,
@@ -125,8 +129,8 @@ class _TransactionHistoryScreenState extends ConsumerState<TransactionHistoryScr
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => context.push(AppRoutes.addTransaction),
-        backgroundColor: context.colors.primary,
-        child: Icon(Icons.add, color: context.colors.onPrimary),
+        backgroundColor: Theme.of(context).colorScheme.primary,
+        child: Icon(Icons.add, color: Theme.of(context).colorScheme.onPrimary),
       ),
     );
   }
@@ -134,19 +138,22 @@ class _TransactionHistoryScreenState extends ConsumerState<TransactionHistoryScr
   Widget _buildSearchBar() {
     return Container(
       decoration: BoxDecoration(
-        color: context.colors.surfaceContainerLowest,
+        color: Theme.of(context).colorScheme.surfaceContainerLowest,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: context.colors.outlineVariant),
+        border: Border.all(color: Theme.of(context).colorScheme.outlineVariant),
       ),
       child: TextField(
         controller: _searchController,
-        style: AppTextStyles.bodyMd(color: context.colors.onSurface),
+        style: (Theme.of(context).textTheme.bodyMedium ?? const TextStyle())
+            .copyWith(color: Theme.of(context).colorScheme.onSurface),
         decoration: InputDecoration(
           hintText: 'Search transactions...',
-          hintStyle: AppTextStyles.bodyMd(color: context.colors.outline),
+          hintStyle:
+              (Theme.of(context).textTheme.bodyMedium ?? const TextStyle())
+                  .copyWith(color: Theme.of(context).colorScheme.outline),
           prefixIcon: Icon(
             Icons.search,
-            color: context.colors.outline,
+            color: Theme.of(context).colorScheme.outline,
             size: 20,
           ),
           suffixIcon: _searchController.text.isNotEmpty
@@ -181,21 +188,23 @@ class _TransactionHistoryScreenState extends ConsumerState<TransactionHistoryScr
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               decoration: BoxDecoration(
                 color: isSelected
-                    ? context.colors.primary
-                    : context.colors.surfaceContainerLowest,
+                    ? Theme.of(context).colorScheme.primary
+                    : Theme.of(context).colorScheme.surfaceContainerLowest,
                 borderRadius: BorderRadius.circular(999),
                 border: Border.all(
                   color: isSelected
-                      ? context.colors.primary
-                      : context.colors.outlineVariant,
+                      ? Theme.of(context).colorScheme.primary
+                      : Theme.of(context).colorScheme.outlineVariant,
                 ),
               ),
               child: Text(
                 _filters[i],
-                style: AppTextStyles.labelMd(
+                style: (Theme.of(context).textTheme.labelMedium ??
+                        const TextStyle())
+                    .copyWith(
                   color: isSelected
-                      ? context.colors.onPrimary
-                      : context.colors.onSurfaceVariant,
+                      ? Theme.of(context).colorScheme.onPrimary
+                      : Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
               ),
             ),
@@ -210,9 +219,11 @@ class _TransactionHistoryScreenState extends ConsumerState<TransactionHistoryScr
       padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
       child: Text(
         label,
-        style: AppTextStyles.labelSm(
-          color: context.colors.onSurfaceVariant,
-        ).copyWith(letterSpacing: 1.5),
+        style: (Theme.of(context).textTheme.labelSmall ?? const TextStyle())
+            .copyWith(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            )
+            .copyWith(letterSpacing: 1.5),
       ),
     );
   }

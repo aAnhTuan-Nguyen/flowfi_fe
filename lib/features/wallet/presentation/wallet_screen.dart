@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/providers.dart';
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_text_styles.dart';
 import '../../../routes/app_router.dart';
 import '../../../core/widgets/flowfi_app_bar.dart';
 import '../../../core/widgets/glass_card.dart';
@@ -50,7 +48,7 @@ class _WalletScreenState extends ConsumerState<WalletScreen> {
   Widget build(BuildContext context) {
     if (_isLoading) {
       return Scaffold(
-        backgroundColor: context.colors.background,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         body: const Center(child: CircularProgressIndicator()),
       );
     }
@@ -61,7 +59,7 @@ class _WalletScreenState extends ConsumerState<WalletScreen> {
     );
 
     return Scaffold(
-      backgroundColor: context.colors.background,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       extendBodyBehindAppBar: true,
       appBar: const FlowFiAppBar(title: 'FlowFi'),
       body: RefreshIndicator(
@@ -97,8 +95,11 @@ class _WalletScreenState extends ConsumerState<WalletScreen> {
                     subtitle: w['currencyCode'] ?? 'USD',
                     balance: '\$${(w['balance'] ?? 0.0).toStringAsFixed(2)}',
                     iconData: Icons.account_balance_wallet,
-                    accentColor: context.colors.primary,
-                    iconBgColor: context.colors.primaryContainer.withValues(alpha: 0.2),
+                    accentColor: Theme.of(context).colorScheme.primary,
+                    iconBgColor: Theme.of(context)
+                        .colorScheme
+                        .primaryContainer
+                        .withValues(alpha: 0.2),
                   ),
                 ),
               ),
@@ -118,25 +119,32 @@ class _WalletScreenState extends ConsumerState<WalletScreen> {
         children: [
           Text(
             'Total Assets',
-            style: AppTextStyles.labelMd(color: context.colors.onSurfaceVariant),
+            style:
+                (Theme.of(context).textTheme.labelMedium ?? const TextStyle())
+                    .copyWith(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant),
           ),
           const SizedBox(height: 4),
           Text(
             '\$${totalAssets.toStringAsFixed(2)}',
-            style: AppTextStyles.displayLg(color: context.colors.primary),
+            style:
+                (Theme.of(context).textTheme.displayLarge ?? const TextStyle())
+                    .copyWith(color: Theme.of(context).colorScheme.primary),
           ),
           const SizedBox(height: 8),
           Row(
             children: [
               Icon(
                 Icons.trending_up,
-                color: context.colors.primary,
+                color: Theme.of(context).colorScheme.primary,
                 size: 16,
               ),
               const SizedBox(width: 4),
               Text(
                 '+0.0% from last month',
-                style: AppTextStyles.labelSm(color: context.colors.primary),
+                style: (Theme.of(context).textTheme.labelSmall ??
+                        const TextStyle())
+                    .copyWith(color: Theme.of(context).colorScheme.primary),
               ),
             ],
           ),
@@ -154,8 +162,8 @@ class _WalletScreenState extends ConsumerState<WalletScreen> {
             icon: const Icon(Icons.add_circle_outline, size: 20),
             label: const Text('Create Wallet'),
             style: FilledButton.styleFrom(
-              backgroundColor: context.colors.primary,
-              foregroundColor: context.colors.onPrimary,
+              backgroundColor: Theme.of(context).colorScheme.primary,
+              foregroundColor: Theme.of(context).colorScheme.onPrimary,
               padding: const EdgeInsets.symmetric(vertical: 14),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
@@ -170,9 +178,10 @@ class _WalletScreenState extends ConsumerState<WalletScreen> {
             icon: const Icon(Icons.swap_horiz, size: 20),
             label: const Text('Transfer'),
             style: OutlinedButton.styleFrom(
-              foregroundColor: context.colors.primary,
+              foregroundColor: Theme.of(context).colorScheme.primary,
               padding: const EdgeInsets.symmetric(vertical: 14),
-              side: BorderSide(color: context.colors.outlineVariant),
+              side: BorderSide(
+                  color: Theme.of(context).colorScheme.outlineVariant),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
               ),
@@ -191,8 +200,10 @@ class _WalletScreenState extends ConsumerState<WalletScreen> {
         children: [
           Text(
             'Portfolio Growth',
-            style: AppTextStyles.labelMd(color: context.colors.onSurface)
-                .copyWith(fontWeight: FontWeight.w700),
+            style:
+                (Theme.of(context).textTheme.labelMedium ?? const TextStyle())
+                    .copyWith(color: Theme.of(context).colorScheme.onSurface)
+                    .copyWith(fontWeight: FontWeight.w700),
           ),
           const SizedBox(height: 16),
           const PortfolioLineChart(),

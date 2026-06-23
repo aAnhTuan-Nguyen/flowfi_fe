@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../core/theme/app_colors.dart';
 
 /// Category icon container with colored background
 /// Maps transaction categories to icons
@@ -28,7 +27,8 @@ class CategoryIcon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final config = getCategoryConfig(context)[category] ?? getCategoryConfig(context)[TransactionCategory.other]!;
+    final config = getCategoryConfig(context)[category] ??
+        getCategoryConfig(context)[TransactionCategory.other]!;
     return Container(
       width: size,
       height: size,
@@ -40,58 +40,60 @@ class CategoryIcon extends StatelessWidget {
     );
   }
 
-  static Map<TransactionCategory, CategoryConfig> getCategoryConfig(BuildContext context) => {
-    TransactionCategory.food: CategoryConfig(
-      icon: Icons.restaurant,
-      bgColor: context.colors.surfaceContainerLow,
-      iconColor: context.colors.primary,
-    ),
-    TransactionCategory.shop: CategoryConfig(
-      icon: Icons.shopping_cart_outlined,
-      bgColor: context.colors.surfaceContainerLow,
-      iconColor: context.colors.primary,
-    ),
-    TransactionCategory.transport: CategoryConfig(
-      icon: Icons.directions_car_outlined,
-      bgColor: context.colors.surfaceContainerLow,
-      iconColor: context.colors.secondary,
-    ),
-    TransactionCategory.rent: CategoryConfig(
-      icon: Icons.home_outlined,
-      bgColor: context.colors.surfaceContainerLow,
-      iconColor: context.colors.primary,
-    ),
-    TransactionCategory.fun: CategoryConfig(
-      icon: Icons.movie_outlined,
-      bgColor: context.colors.surfaceContainerLow,
-      iconColor: context.colors.tertiary,
-    ),
-    TransactionCategory.health: CategoryConfig(
-      icon: Icons.health_and_safety_outlined,
-      bgColor: context.colors.surfaceContainerLow,
-      iconColor: context.colors.primary,
-    ),
-    TransactionCategory.salary: CategoryConfig(
-      icon: Icons.payments_outlined,
-      bgColor: const Color(0x3322C55E),
-      iconColor: context.colors.primary,
-    ),
-    TransactionCategory.coffee: CategoryConfig(
-      icon: Icons.coffee,
-      bgColor: context.colors.surfaceContainerLow,
-      iconColor: context.colors.primary,
-    ),
-    TransactionCategory.groceries: CategoryConfig(
-      icon: Icons.shopping_basket_outlined,
-      bgColor: context.colors.surfaceContainerLow,
-      iconColor: context.colors.primary,
-    ),
-    TransactionCategory.other: CategoryConfig(
-      icon: Icons.receipt_outlined,
-      bgColor: context.colors.surfaceContainerLow,
-      iconColor: context.colors.onSurfaceVariant,
-    ),
-  };
+  static Map<TransactionCategory, CategoryConfig> getCategoryConfig(
+          BuildContext context) =>
+      {
+        TransactionCategory.food: CategoryConfig(
+          icon: Icons.restaurant,
+          bgColor: Theme.of(context).colorScheme.surfaceContainerLow,
+          iconColor: Theme.of(context).colorScheme.primary,
+        ),
+        TransactionCategory.shop: CategoryConfig(
+          icon: Icons.shopping_cart_outlined,
+          bgColor: Theme.of(context).colorScheme.surfaceContainerLow,
+          iconColor: Theme.of(context).colorScheme.primary,
+        ),
+        TransactionCategory.transport: CategoryConfig(
+          icon: Icons.directions_car_outlined,
+          bgColor: Theme.of(context).colorScheme.surfaceContainerLow,
+          iconColor: Theme.of(context).colorScheme.secondary,
+        ),
+        TransactionCategory.rent: CategoryConfig(
+          icon: Icons.home_outlined,
+          bgColor: Theme.of(context).colorScheme.surfaceContainerLow,
+          iconColor: Theme.of(context).colorScheme.primary,
+        ),
+        TransactionCategory.fun: CategoryConfig(
+          icon: Icons.movie_outlined,
+          bgColor: Theme.of(context).colorScheme.surfaceContainerLow,
+          iconColor: Theme.of(context).colorScheme.tertiary,
+        ),
+        TransactionCategory.health: CategoryConfig(
+          icon: Icons.health_and_safety_outlined,
+          bgColor: Theme.of(context).colorScheme.surfaceContainerLow,
+          iconColor: Theme.of(context).colorScheme.primary,
+        ),
+        TransactionCategory.salary: CategoryConfig(
+          icon: Icons.payments_outlined,
+          bgColor: const Color(0x3322C55E),
+          iconColor: Theme.of(context).colorScheme.primary,
+        ),
+        TransactionCategory.coffee: CategoryConfig(
+          icon: Icons.coffee,
+          bgColor: Theme.of(context).colorScheme.surfaceContainerLow,
+          iconColor: Theme.of(context).colorScheme.primary,
+        ),
+        TransactionCategory.groceries: CategoryConfig(
+          icon: Icons.shopping_basket_outlined,
+          bgColor: Theme.of(context).colorScheme.surfaceContainerLow,
+          iconColor: Theme.of(context).colorScheme.primary,
+        ),
+        TransactionCategory.other: CategoryConfig(
+          icon: Icons.receipt_outlined,
+          bgColor: Theme.of(context).colorScheme.surfaceContainerLow,
+          iconColor: Theme.of(context).colorScheme.onSurfaceVariant,
+        ),
+      };
 }
 
 class CategoryConfig {

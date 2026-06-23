@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_text_styles.dart';
 
 /// Grouped bar chart for Income vs Expense by week
 class CashFlowBarChart extends StatelessWidget {
@@ -19,13 +17,16 @@ class CashFlowBarChart extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return CustomPaint(
       painter: _CashFlowPainter(
         incomeValues: incomeValues,
         expenseValues: expenseValues,
         labels: labels,
         activeIndex: activeIndex,
-        colors: context.colors,
+        colorScheme: theme.colorScheme,
+        labelStyle: theme.textTheme.labelSmall ?? const TextStyle(),
       ),
       child: const SizedBox(height: 192),
     );
@@ -38,14 +39,16 @@ class _CashFlowPainter extends CustomPainter {
     required this.expenseValues,
     required this.labels,
     required this.activeIndex,
-    required this.colors,
+    required this.colorScheme,
+    required this.labelStyle,
   });
 
   final List<double> incomeValues;
   final List<double> expenseValues;
   final List<String> labels;
   final int activeIndex;
-  final AppColors colors;
+  final ColorScheme colorScheme;
+  final TextStyle labelStyle;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -70,7 +73,7 @@ class _CashFlowPainter extends CustomPainter {
           const Radius.circular(4),
         ),
         Paint()
-          ..color = colors.primary.withValues(alpha: opacity)
+          ..color = colorScheme.primary.withValues(alpha: opacity)
           ..style = PaintingStyle.fill,
       );
 
@@ -86,7 +89,7 @@ class _CashFlowPainter extends CustomPainter {
           const Radius.circular(4),
         ),
         Paint()
-          ..color = colors.secondary.withValues(alpha: opacity)
+          ..color = colorScheme.secondary.withValues(alpha: opacity)
           ..style = PaintingStyle.fill,
       );
 
@@ -94,15 +97,14 @@ class _CashFlowPainter extends CustomPainter {
       final tp = TextPainter(
         text: TextSpan(
           text: labels[i],
-          style: AppTextStyles.labelSm(
-            color: isActive
-                ? colors.onSurface
-                : colors.outline,
-          ).copyWith(
-            fontSize: 10,
-            fontWeight:
-                isActive ? FontWeight.w700 : FontWeight.w600,
-          ),
+          style: labelStyle
+              .copyWith(
+                color: isActive ? colorScheme.onSurface : colorScheme.outline,
+              )
+              .copyWith(
+                fontSize: 10,
+                fontWeight: isActive ? FontWeight.w700 : FontWeight.w600,
+              ),
         ),
         textDirection: TextDirection.ltr,
       )..layout();

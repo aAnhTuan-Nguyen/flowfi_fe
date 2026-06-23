@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_text_styles.dart';
 
 /// Weekly bar chart — 7 day columns with one highlighted active day
 class WeeklyBarChart extends StatelessWidget {
@@ -17,12 +15,15 @@ class WeeklyBarChart extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return CustomPaint(
       painter: _WeeklyBarPainter(
         values: values,
         activeIndex: activeIndex,
         labels: labels,
-        colors: context.colors,
+        colorScheme: theme.colorScheme,
+        labelStyle: theme.textTheme.labelSmall ?? const TextStyle(),
       ),
       child: const SizedBox(height: 160),
     );
@@ -34,13 +35,15 @@ class _WeeklyBarPainter extends CustomPainter {
     required this.values,
     required this.activeIndex,
     required this.labels,
-    required this.colors,
+    required this.colorScheme,
+    required this.labelStyle,
   });
 
   final List<double> values;
   final int activeIndex;
   final List<String> labels;
-  final AppColors colors;
+  final ColorScheme colorScheme;
+  final TextStyle labelStyle;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -57,8 +60,8 @@ class _WeeklyBarPainter extends CustomPainter {
 
       final paint = Paint()
         ..color = isActive
-            ? colors.primaryContainer
-            : colors.surfaceContainerHigh
+            ? colorScheme.primaryContainer
+            : colorScheme.surfaceContainerHigh
         ..style = PaintingStyle.fill;
 
       final rrect = RRect.fromLTRBR(
@@ -74,11 +77,13 @@ class _WeeklyBarPainter extends CustomPainter {
       final tp = TextPainter(
         text: TextSpan(
           text: labels[i],
-          style: AppTextStyles.labelSm(
-            color: isActive
-                ? colors.onSurface
-                : colors.onSurfaceVariant,
-          ).copyWith(fontSize: 10),
+          style: labelStyle
+              .copyWith(
+                color: isActive
+                    ? colorScheme.onSurface
+                    : colorScheme.onSurfaceVariant,
+              )
+              .copyWith(fontSize: 10),
         ),
         textDirection: TextDirection.ltr,
       )..layout();

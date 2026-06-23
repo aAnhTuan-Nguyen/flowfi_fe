@@ -2,9 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/providers.dart';
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_text_styles.dart';
-import '../../../core/theme/theme_provider.dart';
 import '../../../routes/app_router.dart';
 import '../../../core/widgets/glass_card.dart';
 
@@ -19,12 +16,6 @@ class ProfileScreen extends ConsumerStatefulWidget {
 class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   bool _isLoading = true;
   Map<String, dynamic>? _profileData;
-
-  static const _themes = [
-    (color: Color(0xFF006E2F), label: 'Green'),
-    (color: Color(0xFF0051D5), label: 'Blue'),
-    (color: Color(0xFF9D4300), label: 'Orange'),
-  ];
 
   @override
   void initState() {
@@ -52,13 +43,13 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   Widget build(BuildContext context) {
     if (_isLoading) {
       return Scaffold(
-        backgroundColor: context.colors.background,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         body: const Center(child: CircularProgressIndicator()),
       );
     }
 
     return Scaffold(
-      backgroundColor: context.colors.background,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: CustomScrollView(
         slivers: [
           _buildSliverAppBar(),
@@ -87,14 +78,16 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   }
 
   Widget _buildSliverAppBar() {
-    final name = _profileData?['fullName'] ?? _profileData?['email']?.split('@')[0] ?? 'User';
+    final name = _profileData?['fullName'] ??
+        _profileData?['email']?.split('@')[0] ??
+        'User';
     final email = _profileData?['email'] ?? '';
     final avatarInitials = name.isNotEmpty ? name[0].toUpperCase() : 'U';
 
     return SliverAppBar(
       expandedHeight: 200,
       pinned: true,
-      backgroundColor: context.colors.background,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       elevation: 0,
       flexibleSpace: FlexibleSpaceBar(
         background: Container(
@@ -103,8 +96,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
               colors: [
-                context.colors.primaryContainer.withValues(alpha: 0.3),
-                context.colors.surfaceContainerLow,
+                Theme.of(context)
+                    .colorScheme
+                    .primaryContainer
+                    .withValues(alpha: 0.3),
+                Theme.of(context).colorScheme.surfaceContainerLow,
               ],
             ),
           ),
@@ -121,15 +117,19 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         border: Border.all(
-                          color: context.colors.primaryContainer,
+                          color: Theme.of(context).colorScheme.primaryContainer,
                           width: 3,
                         ),
-                        color: context.colors.surfaceContainerLow,
+                        color:
+                            Theme.of(context).colorScheme.surfaceContainerLow,
                       ),
                       child: Center(
                         child: Text(
                           avatarInitials,
-                          style: AppTextStyles.headlineLgMobile(color: context.colors.primary),
+                          style: (Theme.of(context).textTheme.headlineMedium ??
+                                  const TextStyle())
+                              .copyWith(
+                                  color: Theme.of(context).colorScheme.primary),
                         ),
                       ),
                     ),
@@ -140,7 +140,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                         width: 28,
                         height: 28,
                         decoration: BoxDecoration(
-                          color: context.colors.primary,
+                          color: Theme.of(context).colorScheme.primary,
                           shape: BoxShape.circle,
                         ),
                         child: const Icon(
@@ -155,12 +155,16 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 const SizedBox(height: 12),
                 Text(
                   name,
-                  style: AppTextStyles.headlineMd(color: context.colors.onSurface),
+                  style: (Theme.of(context).textTheme.headlineMedium ??
+                          const TextStyle())
+                      .copyWith(color: Theme.of(context).colorScheme.onSurface),
                 ),
                 Text(
                   email,
-                  style: AppTextStyles.bodyMd(
-                    color: context.colors.onSurfaceVariant,
+                  style: (Theme.of(context).textTheme.bodyMedium ??
+                          const TextStyle())
+                      .copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
                 ),
               ],
@@ -188,8 +192,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           label: 'Currency & Language',
           trailing: Text(
             '${_profileData?['currencyCode'] ?? 'USD'} • EN',
-            style: AppTextStyles.labelMd(
-              color: context.colors.onSurfaceVariant,
+            style:
+                (Theme.of(context).textTheme.labelMedium ?? const TextStyle())
+                    .copyWith(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
             ),
           ),
           onTap: () async {
@@ -222,7 +228,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           trailing: Switch(
             value: true,
             onChanged: (_) {},
-            activeThumbColor: context.colors.primary,
+            activeThumbColor: Theme.of(context).colorScheme.primary,
           ),
           onTap: null,
         ),
@@ -240,79 +246,19 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     return _SettingsSection(
       title: 'Appearance',
       children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Row(
-                children: [
-                  Icon(
-                    Icons.dark_mode_outlined,
-                    color: context.colors.onSurfaceVariant,
-                    size: 20,
-                  ),
-                  const SizedBox(width: 12),
-                  Text(
-                    'Dark Mode',
-                    style: AppTextStyles.bodyMd(color: context.colors.onSurface),
-                  ),
-                ],
-              ),
-                Switch(
-                  value: ref.watch(themeProvider).themeMode == ThemeMode.dark ||
-                      (ref.watch(themeProvider).themeMode == ThemeMode.system &&
-                          MediaQuery.platformBrightnessOf(context) == Brightness.dark),
-                  onChanged: (v) => ref.read(themeProvider.notifier).toggleTheme(v),
-                  activeThumbColor: context.colors.primary,
-                ),
-            ],
+        _SettingsTile(
+          icon: Icons.palette_outlined,
+          label: 'Theme',
+          trailing: Text(
+            'FlowFi default',
+            style:
+                (Theme.of(context).textTheme.labelMedium ?? const TextStyle())
+                    .copyWith(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
           ),
-        ),
-        Divider(
-          height: 1,
-          color: context.colors.surfaceContainerLow,
-          indent: 16,
-          endIndent: 16,
-        ),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Theme Color',
-                style: AppTextStyles.bodyMd(color: context.colors.onSurface),
-              ),
-              const SizedBox(height: 12),
-              Row(
-                children: _themes.map((entry) {
-                  final isSelected = entry.color == ref.watch(themeProvider).seedColor;
-                  return GestureDetector(
-                    onTap: () => ref.read(themeProvider.notifier).setSeedColor(entry.color),
-                    child: Padding(
-                      padding: const EdgeInsets.only(right: 10),
-                      child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 200),
-                        width: 40,
-                        height: 40,
-                        decoration: BoxDecoration(
-                          color: entry.color,
-                          shape: BoxShape.circle,
-                          border: isSelected
-                              ? Border.all(
-                                  color: context.colors.onSurface,
-                                  width: 3,
-                                )
-                              : null,
-                        ),
-                      ),
-                    ),
-                  );
-                }).toList(),
-              ),
-            ],
-          ),
+          onTap: null,
+          showDivider: false,
         ),
       ],
     );
@@ -327,8 +273,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           label: 'App Version',
           trailing: Text(
             '1.0.0',
-            style: AppTextStyles.labelMd(
-              color: context.colors.onSurfaceVariant,
+            style:
+                (Theme.of(context).textTheme.labelMedium ?? const TextStyle())
+                    .copyWith(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
             ),
           ),
           onTap: null,
@@ -358,7 +306,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         width: double.infinity,
         padding: const EdgeInsets.symmetric(vertical: 16),
         decoration: BoxDecoration(
-          color: context.colors.errorContainer,
+          color: Theme.of(context).colorScheme.errorContainer,
           borderRadius: BorderRadius.circular(12),
         ),
         child: Row(
@@ -366,13 +314,15 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           children: [
             Icon(
               Icons.logout,
-              color: context.colors.error,
+              color: Theme.of(context).colorScheme.error,
               size: 20,
             ),
             const SizedBox(width: 8),
             Text(
               'Sign Out',
-              style: AppTextStyles.bodySemibold(color: context.colors.error),
+              style:
+                  (Theme.of(context).textTheme.titleMedium ?? const TextStyle())
+                      .copyWith(color: Theme.of(context).colorScheme.error),
             ),
           ],
         ),
@@ -399,9 +349,11 @@ class _SettingsSection extends StatelessWidget {
           padding: const EdgeInsets.only(left: 4, bottom: 8),
           child: Text(
             title,
-            style: AppTextStyles.labelSm(
-              color: context.colors.onSurfaceVariant,
-            ).copyWith(letterSpacing: 0.8),
+            style: (Theme.of(context).textTheme.labelSmall ?? const TextStyle())
+                .copyWith(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                )
+                .copyWith(letterSpacing: 0.8),
           ),
         ),
         GlassCard(
@@ -442,12 +394,17 @@ class _SettingsTile extends StatelessWidget {
             ),
             child: Row(
               children: [
-                Icon(icon, color: context.colors.onSurfaceVariant, size: 20),
+                Icon(icon,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    size: 20),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
                     label,
-                    style: AppTextStyles.bodyMd(color: context.colors.onSurface),
+                    style: (Theme.of(context).textTheme.bodyMedium ??
+                            const TextStyle())
+                        .copyWith(
+                            color: Theme.of(context).colorScheme.onSurface),
                   ),
                 ),
                 if (trailing != null)
@@ -456,7 +413,7 @@ class _SettingsTile extends StatelessWidget {
                   Icon(
                     Icons.arrow_forward_ios,
                     size: 14,
-                    color: context.colors.outline,
+                    color: Theme.of(context).colorScheme.outline,
                   ),
               ],
             ),
@@ -465,7 +422,7 @@ class _SettingsTile extends StatelessWidget {
         if (showDivider)
           Divider(
             height: 1,
-            color: context.colors.surfaceContainerLow,
+            color: Theme.of(context).colorScheme.surfaceContainerLow,
             indent: 16,
             endIndent: 16,
           ),

@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_text_styles.dart';
 
 /// Portfolio growth line chart with gradient fill and month labels
 class PortfolioLineChart extends StatelessWidget {
@@ -13,10 +11,12 @@ class PortfolioLineChart extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Container(
       height: 160,
       decoration: BoxDecoration(
-        color: context.colors.surfaceContainerLow,
+        color: colorScheme.surfaceContainerLow,
         borderRadius: BorderRadius.circular(12),
       ),
       child: ClipRRect(
@@ -24,7 +24,7 @@ class PortfolioLineChart extends StatelessWidget {
         child: CustomPaint(
           painter: _PortfolioPainter(
             dataPoints: const [0.75, 0.72, 0.68, 0.55, 0.35, 0.1],
-            colors: context.colors,
+            primaryContainer: colorScheme.primaryContainer,
           ),
           child: Padding(
             padding: const EdgeInsets.only(bottom: 12, left: 12, right: 12),
@@ -37,9 +37,15 @@ class PortfolioLineChart extends StatelessWidget {
                       .map(
                         (l) => Text(
                           l,
-                          style: AppTextStyles.labelSm(
-                            color: context.colors.onSurfaceVariant,
-                          ).copyWith(fontSize: 9, fontWeight: FontWeight.w700),
+                          style: (Theme.of(context).textTheme.labelSmall ??
+                                  const TextStyle())
+                              .copyWith(
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .onSurfaceVariant,
+                              )
+                              .copyWith(
+                                  fontSize: 9, fontWeight: FontWeight.w700),
                         ),
                       )
                       .toList(),
@@ -56,11 +62,11 @@ class PortfolioLineChart extends StatelessWidget {
 class _PortfolioPainter extends CustomPainter {
   _PortfolioPainter({
     required this.dataPoints,
-    required this.colors,
+    required this.primaryContainer,
   });
 
   final List<double> dataPoints;
-  final AppColors colors;
+  final Color primaryContainer;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -108,8 +114,8 @@ class _PortfolioPainter extends CustomPainter {
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
           colors: [
-            colors.primaryContainer.withValues(alpha: 0.3),
-            colors.primaryContainer.withValues(alpha: 0),
+            primaryContainer.withValues(alpha: 0.3),
+            primaryContainer.withValues(alpha: 0),
           ],
         ).createShader(Rect.fromLTWH(0, 0, size.width, chartH)),
     );
@@ -118,7 +124,7 @@ class _PortfolioPainter extends CustomPainter {
     canvas.drawPath(
       path,
       Paint()
-        ..color = colors.primaryContainer
+        ..color = primaryContainer
         ..style = PaintingStyle.stroke
         ..strokeWidth = 3
         ..strokeCap = StrokeCap.round

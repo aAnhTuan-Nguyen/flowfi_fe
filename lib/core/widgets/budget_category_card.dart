@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../core/theme/app_colors.dart';
-import '../../core/theme/app_text_styles.dart';
 import 'progress_bar.dart';
 
 /// Budget category card with icon, usage percentage, and progress bar
@@ -25,16 +23,19 @@ class BudgetCategoryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final progressColor = isWarning ? context.colors.error : context.colors.primary;
+    final progressColor = isWarning
+        ? Theme.of(context).colorScheme.error
+        : Theme.of(context).colorScheme.primary;
 
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: context.colors.surfaceContainerLow,
+        color: Theme.of(context).colorScheme.surfaceContainerLow,
         borderRadius: BorderRadius.circular(16),
         border: isWarning
             ? Border.all(
-                color: context.colors.error.withValues(alpha: 0.25),
+                color:
+                    Theme.of(context).colorScheme.error.withValues(alpha: 0.25),
                 width: 1,
               )
             : null,
@@ -59,16 +60,20 @@ class BudgetCategoryCard extends StatelessWidget {
                   children: [
                     Text(
                       category,
-                      style: AppTextStyles.bodySemibold(
-                        color: context.colors.onSurface,
+                      style: (Theme.of(context).textTheme.titleMedium ??
+                              const TextStyle())
+                          .copyWith(
+                        color: Theme.of(context).colorScheme.onSurface,
                       ),
                     ),
                     Text(
                       '${(usagePercent * 100).toInt()}% of budget used',
-                      style: AppTextStyles.labelSm(
+                      style: (Theme.of(context).textTheme.labelSmall ??
+                              const TextStyle())
+                          .copyWith(
                         color: isWarning
-                            ? context.colors.error
-                            : context.colors.onSurfaceVariant,
+                            ? Theme.of(context).colorScheme.error
+                            : Theme.of(context).colorScheme.onSurfaceVariant,
                       ),
                     ),
                   ],
@@ -77,7 +82,7 @@ class BudgetCategoryCard extends StatelessWidget {
               if (isWarning)
                 Icon(
                   Icons.warning_amber_rounded,
-                  color: context.colors.error,
+                  color: Theme.of(context).colorScheme.error,
                   size: 20,
                 ),
             ],

@@ -11,7 +11,10 @@ abstract interface class AuthRepository {
   });
   Future<void> loginWithGoogle();
   Future<void> logout();
-  Future<void> changePassword({required String currentPassword, required String newPassword, required String userId});
+  Future<void> changePassword(
+      {required String currentPassword,
+      required String newPassword,
+      required String userId});
   Future<void> forgotPassword(String email);
   Future<bool> hasActiveSession();
 }
@@ -28,11 +31,13 @@ class AuthRepositoryImpl implements AuthRepository {
     if (tokens != null) {
       final accessToken = tokens['accessToken'];
       if (accessToken != null) {
-        await _storage.write(key: AppConstants.keyAccessToken, value: accessToken);
+        await _storage.write(
+            key: AppConstants.keyAccessToken, value: accessToken);
       }
       final refreshToken = tokens['refreshToken'];
       if (refreshToken != null) {
-        await _storage.write(key: AppConstants.keyRefreshToken, value: refreshToken);
+        await _storage.write(
+            key: AppConstants.keyRefreshToken, value: refreshToken);
       }
     }
   }
@@ -112,4 +117,3 @@ class AuthRepositoryImpl implements AuthRepository {
     }
   }
 }
-

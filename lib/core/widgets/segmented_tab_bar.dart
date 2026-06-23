@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../core/theme/app_colors.dart';
-import '../../core/theme/app_text_styles.dart';
 
 /// Segmented tab bar for time periods (Day/Week/Month/Year)
 /// and transaction type toggles (Manual/Voice/Scan, Expense/Income)
@@ -21,7 +19,7 @@ class SegmentedTabBar extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
-        color: context.colors.surfaceContainerLow,
+        color: Theme.of(context).colorScheme.surfaceContainerLow,
         borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
@@ -35,7 +33,7 @@ class SegmentedTabBar extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(vertical: 8),
                 decoration: BoxDecoration(
                   color: isSelected
-                      ? context.colors.surfaceContainerLowest
+                      ? Theme.of(context).colorScheme.surfaceContainerLowest
                       : Colors.transparent,
                   borderRadius: BorderRadius.circular(8),
                   boxShadow: isSelected
@@ -51,15 +49,17 @@ class SegmentedTabBar extends StatelessWidget {
                 child: Text(
                   entry.value,
                   textAlign: TextAlign.center,
-                  style: AppTextStyles.labelMd(
-                    color: isSelected
-                        ? context.colors.primary
-                        : context.colors.onSurfaceVariant,
-                  ).copyWith(
-                    fontWeight: isSelected
-                        ? FontWeight.w700
-                        : FontWeight.w500,
-                  ),
+                  style: (Theme.of(context).textTheme.labelMedium ??
+                          const TextStyle())
+                      .copyWith(
+                        color: isSelected
+                            ? Theme.of(context).colorScheme.primary
+                            : Theme.of(context).colorScheme.onSurfaceVariant,
+                      )
+                      .copyWith(
+                        fontWeight:
+                            isSelected ? FontWeight.w700 : FontWeight.w500,
+                      ),
                 ),
               ),
             ),

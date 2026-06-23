@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/providers.dart';
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_text_styles.dart';
 import '../../../core/widgets/custom_text_field.dart';
 import '../../../core/widgets/glass_card.dart';
 import '../../../core/widgets/primary_button.dart';
@@ -61,7 +59,9 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
       final repo = ref.read(profileRepositoryProvider);
       await repo.updateProfile({
         'fullName': _nameController.text.trim(),
-        'dateOfBirth': _dobController.text.trim().isNotEmpty ? _dobController.text.trim() : null,
+        'dateOfBirth': _dobController.text.trim().isNotEmpty
+            ? _dobController.text.trim()
+            : null,
       });
       if (mounted) {
         context.pop(true); // Return true to signal refresh needed
@@ -89,18 +89,20 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: context.colors.background,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new, size: 18),
-          color: context.colors.primary,
+          color: Theme.of(context).colorScheme.primary,
           onPressed: () => context.pop(),
         ),
         title: Text(
           'Edit Profile',
-          style: AppTextStyles.headlineMd(color: context.colors.primary),
+          style:
+              (Theme.of(context).textTheme.headlineMedium ?? const TextStyle())
+                  .copyWith(color: Theme.of(context).colorScheme.primary),
         ),
         centerTitle: true,
       ),

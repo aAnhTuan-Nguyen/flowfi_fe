@@ -3,9 +3,10 @@
 ## Status
 
 FlowFi uses feature-first Clean Architecture, scaled to the behavior that exists
-today. The repository currently contains an application shell and a disposable
-`example` feature. The example exists only to show how the layers connect; it is
-not a product requirement or a permanent module.
+today. The repository currently contains the application shell, shared
+infrastructure, and temporary product UI screens. Keep planned backend,
+storage, AI/OCR, and offline behavior out of code until a confirmed contract or
+approved specification exists.
 
 Do not create every possible layer in advance. A feature should contain only the
 files required by its current behavior.
@@ -17,13 +18,16 @@ lib/
   app/                         Application widget and theme
   core/
     config/                    Temporary application configuration
+    constants/                 Shared constants
+    models/                    Shared transport/domain-adjacent models
     network/                   Shared HTTP client construction
+    providers/                 Shared Riverpod composition
+    storage/                   Shared secure storage wrapper
+    utils/                     Shared formatting utilities
+    widgets/                   Reusable presentation widgets
   di/                          Application dependency composition
   routes/                      GoRouter configuration
-  features/example/
-    domain/                    Entity, repository contract, use case
-    data/                      Model, data source, repository implementation
-    presentation/              Riverpod state and screen
+  features/<feature>/          Feature-specific behavior and screens
   main.dart                    Application bootstrap
 ```
 
@@ -56,15 +60,15 @@ presentation -> domain <- data
              composition in di
 ```
 
-The example request flow is:
+The intended request flow for a feature with all three layers is:
 
 ```text
-ExampleScreen
-  -> exampleItemsProvider
-  -> GetExampleItemsUseCase
-  -> ExampleRepository
-  -> ExampleRepositoryImpl
-  -> ExampleInMemoryDataSource
+FeatureScreen
+  -> featureProvider
+  -> FeatureUseCase
+  -> FeatureRepository
+  -> FeatureRepositoryImpl
+  -> FeatureDataSource
 ```
 
 Values return through the same boundaries in reverse. The application shell
@@ -96,8 +100,8 @@ Data code implements domain contracts and owns external I/O details.
   distinct recovery behavior.
 - UI state, widgets, navigation, and user-facing messages do not belong here.
 
-The example uses an in-memory source deliberately. It does not pretend that a
-FlowFi backend or storage schema exists.
+Temporary UI code must not pretend that a FlowFi backend or storage schema
+exists. Add data sources only against confirmed contracts.
 
 ### Presentation
 
@@ -185,22 +189,6 @@ resolution, and user-visible sync state.
 6. Bridge the use case into Riverpod state.
 7. Add the screen and route only when the slice needs navigation.
 8. Test each boundary and the visible async states.
-
-Do not copy `ExampleItem` names into product code. Copy the dependency pattern
-and use language from the actual FlowFi feature.
-
-## Removing the example
-
-Once the first real feature can serve as the architecture reference:
-
-1. Point `/` to the real entry screen.
-2. Remove example registrations from `lib/di/injection.dart`.
-3. Delete `lib/features/example` and its mirrored tests.
-4. Remove example-specific text from `README.md` and this document.
-5. Run formatting, analysis, and the full test suite.
-
-No other application code should depend on the example feature, so removal stays
-localized to routing, dependency composition, and the example directories.
 
 ## Testing strategy
 

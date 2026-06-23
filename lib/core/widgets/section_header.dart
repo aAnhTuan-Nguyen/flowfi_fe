@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../core/theme/app_colors.dart';
-import '../../core/theme/app_text_styles.dart';
 
 /// Section header with title + optional trailing action button
 class SectionHeader extends StatelessWidget {
@@ -24,14 +22,18 @@ class SectionHeader extends StatelessWidget {
         children: [
           Text(
             title,
-            style: AppTextStyles.headlineMd(color: context.colors.onSurface),
+            style: (Theme.of(context).textTheme.headlineMedium ??
+                    const TextStyle())
+                .copyWith(color: Theme.of(context).colorScheme.onSurface),
           ),
           if (actionLabel != null && onAction != null)
             GestureDetector(
               onTap: onAction,
               child: Text(
                 actionLabel!,
-                style: AppTextStyles.labelMd(color: context.colors.secondary),
+                style: (Theme.of(context).textTheme.labelMedium ??
+                        const TextStyle())
+                    .copyWith(color: Theme.of(context).colorScheme.secondary),
               ),
             ),
         ],

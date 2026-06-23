@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../core/theme/app_colors.dart';
-import '../../core/theme/app_text_styles.dart';
 
 /// Ghost/outline secondary button — white background with border
 class SecondaryButton extends StatelessWidget {
@@ -25,9 +23,9 @@ class SecondaryButton extends StatelessWidget {
       child: OutlinedButton(
         onPressed: onPressed,
         style: OutlinedButton.styleFrom(
-          foregroundColor: context.colors.onSurface,
-          backgroundColor: context.colors.surfaceContainerLowest,
-          side: BorderSide(color: context.colors.outlineVariant),
+          foregroundColor: Theme.of(context).colorScheme.onSurface,
+          backgroundColor: Theme.of(context).colorScheme.surfaceContainerLowest,
+          side: BorderSide(color: Theme.of(context).colorScheme.outlineVariant),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),
@@ -42,8 +40,10 @@ class SecondaryButton extends StatelessWidget {
             ],
             Text(
               label,
-              style: AppTextStyles.bodySemibold(
-                color: context.colors.onSurface,
+              style:
+                  (Theme.of(context).textTheme.titleMedium ?? const TextStyle())
+                      .copyWith(
+                color: Theme.of(context).colorScheme.onSurface,
               ),
             ),
           ],

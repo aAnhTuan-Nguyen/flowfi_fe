@@ -20,14 +20,11 @@ abstract final class CurrencyFormatter {
     decimalDigits: 0,
   );
 
-
-
   /// Format as USD: $24,562.00
   static String formatUsd(double amount) => _usd.format(amount);
 
   /// Format as USD compact (no decimals): $24,562
-  static String formatUsdCompact(double amount) =>
-      _usdCompact.format(amount);
+  static String formatUsdCompact(double amount) => _usdCompact.format(amount);
 
   /// Format as VND: ₫2,850,000
   static String formatVnd(double amount) => _vnd.format(amount);

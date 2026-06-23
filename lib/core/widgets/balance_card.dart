@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../core/theme/app_colors.dart';
-import '../../core/theme/app_text_styles.dart';
 
 /// Main balance hero card (green) for the Dashboard screen
 /// Displays total balance, income, and expenses
@@ -20,11 +18,14 @@ class BalanceCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: context.colors.primaryContainer,
+        color: Theme.of(context).colorScheme.primaryContainer,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: context.colors.primaryContainer.withValues(alpha: 0.4),
+            color: Theme.of(context)
+                .colorScheme
+                .primaryContainer
+                .withValues(alpha: 0.4),
             blurRadius: 20,
             offset: const Offset(0, 8),
           ),
@@ -36,15 +37,22 @@ class BalanceCard extends StatelessWidget {
         children: [
           Text(
             'Total Balance',
-            style: AppTextStyles.labelMd(
-              color: context.colors.onPrimaryContainer.withValues(alpha: 0.85),
+            style:
+                (Theme.of(context).textTheme.labelMedium ?? const TextStyle())
+                    .copyWith(
+              color: Theme.of(context)
+                  .colorScheme
+                  .onPrimaryContainer
+                  .withValues(alpha: 0.85),
             ),
           ),
           const SizedBox(height: 4),
           Text(
             totalBalance,
-            style: AppTextStyles.displayLg(
-              color: context.colors.onPrimaryContainer,
+            style:
+                (Theme.of(context).textTheme.displayLarge ?? const TextStyle())
+                    .copyWith(
+              color: Theme.of(context).colorScheme.onPrimaryContainer,
             ),
           ),
           const SizedBox(height: 24),
@@ -114,13 +122,17 @@ class _SummaryTile extends StatelessWidget {
               children: [
                 Text(
                   label,
-                  style: AppTextStyles.labelSm(
+                  style: (Theme.of(context).textTheme.labelSmall ??
+                          const TextStyle())
+                      .copyWith(
                     color: Colors.white.withValues(alpha: 0.8),
                   ),
                 ),
                 Text(
                   positive ? '+$value' : '-$value',
-                  style: AppTextStyles.numericBold(color: Colors.white),
+                  style: (Theme.of(context).textTheme.titleMedium ??
+                          const TextStyle())
+                      .copyWith(color: Colors.white),
                   overflow: TextOverflow.ellipsis,
                 ),
               ],

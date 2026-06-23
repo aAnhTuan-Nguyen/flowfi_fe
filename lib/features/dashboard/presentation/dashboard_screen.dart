@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/providers.dart';
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_text_styles.dart';
 import '../../../routes/app_router.dart';
 import '../../../core/widgets/balance_card.dart';
 import '../../../core/widgets/flowfi_app_bar.dart';
@@ -68,7 +66,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   Widget build(BuildContext context) {
     if (_isLoading) {
       return Scaffold(
-        backgroundColor: context.colors.background,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         body: const Center(child: CircularProgressIndicator()),
       );
     }
@@ -78,7 +76,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     final expenses = _summary?['expense'] ?? 0.0;
 
     return Scaffold(
-      backgroundColor: context.colors.background,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       extendBodyBehindAppBar: true,
       appBar: FlowFiAppBar(
         showAvatar: true,
@@ -130,12 +128,12 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               Container(
                 padding: const EdgeInsets.all(6),
                 decoration: BoxDecoration(
-                  color: context.colors.errorContainer,
+                  color: Theme.of(context).colorScheme.errorContainer,
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Icon(
                   Icons.warning_amber_rounded,
-                  color: context.colors.error,
+                  color: Theme.of(context).colorScheme.error,
                   size: 18,
                 ),
               ),
@@ -143,8 +141,10 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               Expanded(
                 child: Text(
                   'Budget Warning',
-                  style: AppTextStyles.bodySemibold(
-                    color: context.colors.onSurface,
+                  style: (Theme.of(context).textTheme.titleMedium ??
+                          const TextStyle())
+                      .copyWith(
+                    color: Theme.of(context).colorScheme.onSurface,
                   ),
                 ),
               ),
@@ -156,7 +156,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                 ),
                 child: Text(
                   'View Budget',
-                  style: AppTextStyles.labelMd(color: context.colors.secondary),
+                  style: (Theme.of(context).textTheme.labelMedium ??
+                          const TextStyle())
+                      .copyWith(color: Theme.of(context).colorScheme.secondary),
                 ),
               ),
             ],
@@ -164,12 +166,14 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
           const SizedBox(height: 8),
           Text(
             'Food & Dining is at 88% of your monthly budget.',
-            style: AppTextStyles.bodyMd(color: context.colors.onSurfaceVariant),
+            style: (Theme.of(context).textTheme.bodyMedium ?? const TextStyle())
+                .copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant),
           ),
           const SizedBox(height: 10),
           ProgressBar(
             value: 0.88,
-            color: context.colors.error,
+            color: Theme.of(context).colorScheme.error,
             height: 6,
           ),
           const SizedBox(height: 4),
@@ -178,13 +182,17 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
             children: [
               Text(
                 r'$880 / $1,000',
-                style: AppTextStyles.labelSm(
-                  color: context.colors.onSurfaceVariant,
+                style: (Theme.of(context).textTheme.labelSmall ??
+                        const TextStyle())
+                    .copyWith(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
               ),
               Text(
                 '88% used',
-                style: AppTextStyles.labelSm(color: context.colors.error)
+                style: (Theme.of(context).textTheme.labelSmall ??
+                        const TextStyle())
+                    .copyWith(color: Theme.of(context).colorScheme.error)
                     .copyWith(fontWeight: FontWeight.w700),
               ),
             ],
@@ -208,14 +216,22 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                 children: [
                   Text(
                     'WEEKLY SPENDING',
-                    style: AppTextStyles.labelSm(
-                      color: context.colors.onSurfaceVariant,
-                    ).copyWith(letterSpacing: 1),
+                    style: (Theme.of(context).textTheme.labelSmall ??
+                            const TextStyle())
+                        .copyWith(
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        )
+                        .copyWith(letterSpacing: 1),
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    weeklySpending != null ? '\$${weeklySpending.reduce((a, b) => a + b).toStringAsFixed(2)}' : '\$0.00',
-                    style: AppTextStyles.headlineMd(color: context.colors.onSurface),
+                    weeklySpending != null
+                        ? '\$${weeklySpending.reduce((a, b) => a + b).toStringAsFixed(2)}'
+                        : '\$0.00',
+                    style: (Theme.of(context).textTheme.headlineMedium ??
+                            const TextStyle())
+                        .copyWith(
+                            color: Theme.of(context).colorScheme.onSurface),
                   ),
                 ],
               ),
@@ -225,20 +241,26 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                   vertical: 4,
                 ),
                 decoration: BoxDecoration(
-                  color: context.colors.primaryContainer.withValues(alpha: 0.15),
+                  color: Theme.of(context)
+                      .colorScheme
+                      .primaryContainer
+                      .withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(999),
                 ),
                 child: Row(
                   children: [
                     Icon(
                       Icons.trending_down,
-                      color: context.colors.primary,
+                      color: Theme.of(context).colorScheme.primary,
                       size: 14,
                     ),
                     const SizedBox(width: 4),
                     Text(
                       '-0%',
-                      style: AppTextStyles.labelSm(color: context.colors.primary),
+                      style: (Theme.of(context).textTheme.labelSmall ??
+                              const TextStyle())
+                          .copyWith(
+                              color: Theme.of(context).colorScheme.primary),
                     ),
                   ],
                 ),
@@ -256,7 +278,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     );
   }
 
-  Widget _buildRecentTransactions(BuildContext context, List<Map<String, dynamic>>? transactions) {
+  Widget _buildRecentTransactions(
+      BuildContext context, List<Map<String, dynamic>>? transactions) {
     if (transactions == null || transactions.isEmpty) {
       return const Padding(
         padding: EdgeInsets.all(20.0),
@@ -299,7 +322,10 @@ class _GreetingBadge extends StatelessWidget {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
           decoration: BoxDecoration(
-            color: context.colors.primaryContainer.withValues(alpha: 0.15),
+            color: Theme.of(context)
+                .colorScheme
+                .primaryContainer
+                .withValues(alpha: 0.15),
             borderRadius: BorderRadius.circular(999),
           ),
           child: Row(
@@ -308,7 +334,9 @@ class _GreetingBadge extends StatelessWidget {
               const SizedBox(width: 6),
               Text(
                 greeting,
-                style: AppTextStyles.labelMd(color: context.colors.primary),
+                style: (Theme.of(context).textTheme.labelMedium ??
+                        const TextStyle())
+                    .copyWith(color: Theme.of(context).colorScheme.primary),
               ),
             ],
           ),

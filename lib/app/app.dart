@@ -1,25 +1,20 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
-import '../core/theme/app_theme.dart';
-import '../core/theme/theme_provider.dart';
 import '../core/constants/app_constants.dart';
-import '../routes/app_router.dart';
+import 'app_theme.dart';
 
-class FlowFiApp extends ConsumerWidget {
-  const FlowFiApp({super.key});
+class FlowFiApp extends StatelessWidget {
+  const FlowFiApp({super.key, required this.router});
+
+  final GoRouter router;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final router = ref.watch(appRouterProvider);
-    final themeState = ref.watch(themeProvider);
-
+  Widget build(BuildContext context) {
     return MaterialApp.router(
       title: AppConstants.appName,
       debugShowCheckedModeBanner: false,
-      theme: AppTheme.getTheme(false, themeState.seedColor),
-      darkTheme: AppTheme.getTheme(true, themeState.seedColor),
-      themeMode: themeState.themeMode,
+      theme: buildAppTheme(),
       routerConfig: router,
     );
   }

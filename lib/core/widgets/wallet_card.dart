@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../core/theme/app_colors.dart';
-import '../../core/theme/app_text_styles.dart';
 import 'glass_card.dart';
 
 /// Wallet list item card — icon, name, subtitle, balance, color accent bar
@@ -49,14 +47,19 @@ class WalletCard extends StatelessWidget {
                 children: [
                   Text(
                     name,
-                    style: AppTextStyles.labelMd(color: context.colors.onSurface)
+                    style: (Theme.of(context).textTheme.labelMedium ??
+                            const TextStyle())
+                        .copyWith(
+                            color: Theme.of(context).colorScheme.onSurface)
                         .copyWith(fontWeight: FontWeight.w700),
                   ),
                   const SizedBox(height: 2),
                   Text(
                     subtitle,
-                    style: AppTextStyles.labelSm(
-                      color: context.colors.onSurfaceVariant,
+                    style: (Theme.of(context).textTheme.labelSmall ??
+                            const TextStyle())
+                        .copyWith(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
                   ),
                 ],
@@ -67,7 +70,9 @@ class WalletCard extends StatelessWidget {
               children: [
                 Text(
                   balance,
-                  style: AppTextStyles.labelMd(color: context.colors.onSurface)
+                  style: (Theme.of(context).textTheme.labelMedium ??
+                          const TextStyle())
+                      .copyWith(color: Theme.of(context).colorScheme.onSurface)
                       .copyWith(fontWeight: FontWeight.w700),
                 ),
                 const SizedBox(height: 6),

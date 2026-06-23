@@ -34,8 +34,7 @@ class SecureStorageService {
   Future<void> saveUserId(String userId) =>
       _storage.write(key: AppConstants.keyUserId, value: userId);
 
-  Future<String?> getUserId() =>
-      _storage.read(key: AppConstants.keyUserId);
+  Future<String?> getUserId() => _storage.read(key: AppConstants.keyUserId);
 
   Future<bool> hasValidSession() async {
     final token = await getAccessToken();

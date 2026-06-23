@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../core/theme/app_colors.dart';
-import '../../core/theme/app_text_styles.dart';
 
 /// Notification list tile with icon, title, body text, and timestamp
 class NotificationTile extends StatelessWidget {
@@ -61,8 +59,10 @@ class NotificationTile extends StatelessWidget {
                       Expanded(
                         child: Text(
                           title,
-                          style: AppTextStyles.bodySemibold(
-                            color: context.colors.onSurface,
+                          style: (Theme.of(context).textTheme.titleMedium ??
+                                  const TextStyle())
+                              .copyWith(
+                            color: Theme.of(context).colorScheme.onSurface,
                           ),
                         ),
                       ),
@@ -70,8 +70,12 @@ class NotificationTile extends StatelessWidget {
                         children: [
                           Text(
                             timeAgo,
-                            style: AppTextStyles.labelSm(
-                              color: context.colors.onSurfaceVariant,
+                            style: (Theme.of(context).textTheme.labelSmall ??
+                                    const TextStyle())
+                                .copyWith(
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onSurfaceVariant,
                             ),
                           ),
                           if (isUnread) ...[
@@ -80,7 +84,9 @@ class NotificationTile extends StatelessWidget {
                               width: 8,
                               height: 8,
                               decoration: BoxDecoration(
-                                color: context.colors.primaryContainer,
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .primaryContainer,
                                 shape: BoxShape.circle,
                               ),
                             ),
@@ -92,8 +98,10 @@ class NotificationTile extends StatelessWidget {
                   const SizedBox(height: 4),
                   Text(
                     body,
-                    style: AppTextStyles.bodyMd(
-                      color: context.colors.onSurfaceVariant,
+                    style: (Theme.of(context).textTheme.bodyMedium ??
+                            const TextStyle())
+                        .copyWith(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
@@ -109,16 +117,20 @@ class NotificationTile extends StatelessWidget {
                         ),
                         minimumSize: Size.zero,
                         tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                        side: BorderSide(color: context.colors.secondary),
-                        foregroundColor: context.colors.secondary,
+                        side: BorderSide(
+                            color: Theme.of(context).colorScheme.secondary),
+                        foregroundColor:
+                            Theme.of(context).colorScheme.secondary,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(8),
                         ),
                       ),
                       child: Text(
                         actionLabel!,
-                        style: AppTextStyles.labelMd(
-                          color: context.colors.secondary,
+                        style: (Theme.of(context).textTheme.labelMedium ??
+                                const TextStyle())
+                            .copyWith(
+                          color: Theme.of(context).colorScheme.secondary,
                         ),
                       ),
                     ),

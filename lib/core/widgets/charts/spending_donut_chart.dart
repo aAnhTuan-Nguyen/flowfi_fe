@@ -1,7 +1,5 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_text_styles.dart';
 
 /// Donut chart for spending category breakdown
 class SpendingDonutChart extends StatelessWidget {
@@ -18,6 +16,8 @@ class SpendingDonutChart extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return SizedBox(
       width: 160,
       height: 160,
@@ -25,7 +25,10 @@ class SpendingDonutChart extends StatelessWidget {
         alignment: Alignment.center,
         children: [
           CustomPaint(
-            painter: _DonutPainter(segments: segments, colors: context.colors),
+            painter: _DonutPainter(
+              segments: segments,
+              trackColor: colorScheme.surfaceContainer,
+            ),
             child: const SizedBox(width: 160, height: 160),
           ),
           Column(
@@ -33,11 +36,15 @@ class SpendingDonutChart extends StatelessWidget {
             children: [
               Text(
                 centerLabel,
-                style: AppTextStyles.labelSm(color: context.colors.outline),
+                style: (Theme.of(context).textTheme.labelSmall ??
+                        const TextStyle())
+                    .copyWith(color: Theme.of(context).colorScheme.outline),
               ),
               Text(
                 centerValue,
-                style: AppTextStyles.headlineMd(color: context.colors.onSurface),
+                style: (Theme.of(context).textTheme.headlineMedium ??
+                        const TextStyle())
+                    .copyWith(color: Theme.of(context).colorScheme.onSurface),
               ),
             ],
           ),
@@ -60,10 +67,10 @@ class DonutSegment {
 }
 
 class _DonutPainter extends CustomPainter {
-  _DonutPainter({required this.segments, required this.colors});
+  _DonutPainter({required this.segments, required this.trackColor});
 
   final List<DonutSegment> segments;
-  final AppColors colors;
+  final Color trackColor;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -77,7 +84,7 @@ class _DonutPainter extends CustomPainter {
       center,
       radius,
       Paint()
-        ..color = colors.surfaceContainer
+        ..color = trackColor
         ..style = PaintingStyle.stroke
         ..strokeWidth = strokeWidth,
     );

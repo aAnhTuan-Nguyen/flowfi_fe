@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../core/theme/app_colors.dart';
-import '../../core/theme/app_text_styles.dart';
 
 /// Transaction list item with icon, merchant name, timestamp, and signed amount
 class TransactionTile extends StatelessWidget {
@@ -48,12 +46,13 @@ class TransactionTile extends StatelessWidget {
                   width: 48,
                   height: 48,
                   decoration: BoxDecoration(
-                    color: iconBgColor ?? context.colors.surfaceContainerLow,
+                    color: iconBgColor ??
+                        Theme.of(context).colorScheme.surfaceContainerLow,
                     shape: BoxShape.circle,
                   ),
                   child: Icon(
                     iconData,
-                    color: context.colors.primary,
+                    color: Theme.of(context).colorScheme.primary,
                     size: 22,
                   ),
                 ),
@@ -64,8 +63,10 @@ class TransactionTile extends StatelessWidget {
                     children: [
                       Text(
                         merchantName,
-                        style: AppTextStyles.bodySemibold(
-                          color: context.colors.onSurface,
+                        style: (Theme.of(context).textTheme.titleMedium ??
+                                const TextStyle())
+                            .copyWith(
+                          color: Theme.of(context).colorScheme.onSurface,
                         ),
                       ),
                       const SizedBox(height: 2),
@@ -77,8 +78,13 @@ class TransactionTile extends StatelessWidget {
                               const SizedBox(width: 4),
                               Text(
                                 '• $walletName',
-                                style: AppTextStyles.labelSm(
-                                  color: context.colors.onSurfaceVariant,
+                                style:
+                                    (Theme.of(context).textTheme.labelSmall ??
+                                            const TextStyle())
+                                        .copyWith(
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .onSurfaceVariant,
                                 ),
                               ),
                             ],
@@ -87,8 +93,11 @@ class TransactionTile extends StatelessWidget {
                       else
                         Text(
                           timestamp,
-                          style: AppTextStyles.labelSm(
-                            color: context.colors.onSurfaceVariant,
+                          style: (Theme.of(context).textTheme.labelSmall ??
+                                  const TextStyle())
+                              .copyWith(
+                            color:
+                                Theme.of(context).colorScheme.onSurfaceVariant,
                           ),
                         ),
                       if (category != null)
@@ -96,8 +105,12 @@ class TransactionTile extends StatelessWidget {
                           padding: const EdgeInsets.only(top: 2),
                           child: Text(
                             timestamp,
-                            style: AppTextStyles.labelSm(
-                              color: context.colors.onSurfaceVariant,
+                            style: (Theme.of(context).textTheme.labelSmall ??
+                                    const TextStyle())
+                                .copyWith(
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onSurfaceVariant,
                             ),
                           ),
                         ),
@@ -106,8 +119,12 @@ class TransactionTile extends StatelessWidget {
                 ),
                 Text(
                   isExpense ? '-$amount' : '+$amount',
-                  style: AppTextStyles.numericBold(
-                    color: isExpense ? context.colors.expense : context.colors.income,
+                  style: (Theme.of(context).textTheme.titleMedium ??
+                          const TextStyle())
+                      .copyWith(
+                    color: isExpense
+                        ? Theme.of(context).colorScheme.error
+                        : Theme.of(context).colorScheme.secondary,
                   ),
                 ),
               ],
@@ -118,7 +135,7 @@ class TransactionTile extends StatelessWidget {
           Divider(
             height: 1,
             thickness: 1,
-            color: context.colors.surfaceContainer,
+            color: Theme.of(context).colorScheme.surfaceContainer,
             indent: 76,
           ),
       ],
@@ -136,12 +153,13 @@ class _CategoryTag extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
       decoration: BoxDecoration(
-        color: context.colors.surfaceContainerLow,
+        color: Theme.of(context).colorScheme.surfaceContainerLow,
         borderRadius: BorderRadius.circular(999),
       ),
       child: Text(
         label,
-        style: AppTextStyles.labelSm(color: context.colors.onSurfaceVariant),
+        style: (Theme.of(context).textTheme.labelSmall ?? const TextStyle())
+            .copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
       ),
     );
   }

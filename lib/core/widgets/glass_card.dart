@@ -1,6 +1,5 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
-import '../../core/theme/app_colors.dart';
 
 /// Glassmorphic card container — backdrop blur + semi-transparent white
 /// Used throughout the app for card-style containers
@@ -34,10 +33,10 @@ class GlassCard extends StatelessWidget {
           child: Container(
             padding: padding ?? const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: color ?? context.colors.glassWhite,
+              color: color ?? Colors.white.withValues(alpha: 0.8),
               borderRadius: radius,
               border: Border.all(
-                color: context.colors.glassBorder,
+                color: Colors.white.withValues(alpha: 0.3),
                 width: 1,
               ),
               boxShadow: elevation

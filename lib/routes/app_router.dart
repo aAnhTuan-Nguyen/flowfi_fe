@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../features/auth/presentation/splash_screen.dart';
 import '../features/auth/presentation/login_screen.dart';
@@ -25,12 +23,9 @@ import '../features/profile/presentation/change_password_screen.dart';
 import '../features/auth/presentation/forgot_password_screen.dart';
 import '../core/widgets/app_scaffold.dart';
 
-part 'app_router.g.dart';
-
 final rootNavigatorKey = GlobalKey<NavigatorState>();
 
-@riverpod
-GoRouter appRouter(Ref ref) {
+GoRouter createAppRouter() {
   return GoRouter(
     navigatorKey: rootNavigatorKey,
     initialLocation: AppRoutes.splash,

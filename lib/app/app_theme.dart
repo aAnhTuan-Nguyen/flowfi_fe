@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 ThemeData buildAppTheme() {
   const canvas = Color(0xFFFFF8F3);
@@ -7,27 +8,86 @@ ThemeData buildAppTheme() {
   const accentGreen = Color(0xFF8BAE66);
   const warmSurface = Color(0xFFFFF1E3);
 
-  final colorScheme =
-      ColorScheme.fromSeed(
-        seedColor: primaryGreen,
-        brightness: Brightness.light,
-        surface: canvas,
-        primary: primaryGreen,
-        secondary: accentGreen,
-      ).copyWith(
-        onSurface: primaryDark,
-        surfaceContainerLowest: Colors.white,
-        surfaceContainerLow: warmSurface,
-        surfaceContainer: const Color(0xFFFFEBD3),
-        surfaceContainerHigh: const Color(0xFFFFE4C2),
-        primaryContainer: primaryDark,
-        onPrimaryContainer: Colors.white,
-      );
+  final colorScheme = ColorScheme.fromSeed(
+    seedColor: primaryGreen,
+    brightness: Brightness.light,
+    surface: canvas,
+    primary: primaryGreen,
+    secondary: accentGreen,
+  ).copyWith(
+    onSurface: primaryDark,
+    surfaceContainerLowest: Colors.white,
+    surfaceContainerLow: warmSurface,
+    surfaceContainer: const Color(0xFFFFEBD3),
+    surfaceContainerHigh: const Color(0xFFFFE4C2),
+    primaryContainer: primaryDark,
+    onPrimaryContainer: Colors.white,
+  );
+
+  const baseTextTheme = TextTheme(
+    displayLarge: TextStyle(
+      fontSize: 48,
+      fontWeight: FontWeight.w700,
+      letterSpacing: -0.96,
+      height: 56 / 48,
+      color: primaryDark,
+    ),
+    headlineLarge: TextStyle(
+      fontSize: 32,
+      fontWeight: FontWeight.w600,
+      letterSpacing: -0.32,
+      height: 40 / 32,
+      color: primaryDark,
+    ),
+    headlineMedium: TextStyle(
+      fontSize: 24,
+      fontWeight: FontWeight.w600,
+      height: 32 / 24,
+      color: primaryDark,
+    ),
+    titleLarge: TextStyle(
+      fontSize: 20,
+      fontWeight: FontWeight.w700,
+      height: 1.3,
+      color: primaryDark,
+    ),
+    titleMedium: TextStyle(
+      fontSize: 16,
+      fontWeight: FontWeight.w600,
+      height: 24 / 16,
+      color: primaryDark,
+    ),
+    bodyLarge: TextStyle(
+      fontSize: 18,
+      fontWeight: FontWeight.w400,
+      height: 28 / 18,
+      color: primaryDark,
+    ),
+    bodyMedium: TextStyle(
+      fontSize: 16,
+      fontWeight: FontWeight.w400,
+      height: 24 / 16,
+      color: primaryDark,
+    ),
+    labelMedium: TextStyle(
+      fontSize: 14,
+      fontWeight: FontWeight.w600,
+      letterSpacing: 0.14,
+      height: 20 / 14,
+      color: primaryDark,
+    ),
+    labelSmall: TextStyle(
+      fontSize: 12,
+      fontWeight: FontWeight.w500,
+      letterSpacing: 0.24,
+      height: 16 / 12,
+      color: primaryDark,
+    ),
+  );
 
   return ThemeData(
     colorScheme: colorScheme,
     scaffoldBackgroundColor: canvas,
-    fontFamily: 'Plus Jakarta Sans',
     appBarTheme: const AppBarTheme(
       backgroundColor: canvas,
       foregroundColor: primaryDark,
@@ -68,38 +128,7 @@ ThemeData buildAppTheme() {
         );
       }),
     ),
-    textTheme: const TextTheme(
-      headlineMedium: TextStyle(
-        fontSize: 24,
-        fontWeight: FontWeight.w700,
-        height: 1.25,
-        color: primaryDark,
-      ),
-      titleLarge: TextStyle(
-        fontSize: 20,
-        fontWeight: FontWeight.w700,
-        height: 1.3,
-        color: primaryDark,
-      ),
-      titleMedium: TextStyle(
-        fontSize: 16,
-        fontWeight: FontWeight.w700,
-        height: 1.35,
-        color: primaryDark,
-      ),
-      bodyMedium: TextStyle(
-        fontSize: 14,
-        fontWeight: FontWeight.w500,
-        height: 1.45,
-        color: primaryDark,
-      ),
-      labelMedium: TextStyle(
-        fontSize: 12,
-        fontWeight: FontWeight.w700,
-        height: 1.25,
-        color: primaryDark,
-      ),
-    ),
+    textTheme: GoogleFonts.plusJakartaSansTextTheme(baseTextTheme),
     useMaterial3: true,
   );
 }

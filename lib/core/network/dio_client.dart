@@ -59,7 +59,7 @@ class _AuthInterceptor extends Interceptor {
     if (err.response?.statusCode == 401) {
       _storage.delete(key: AppConstants.keyAccessToken);
       _storage.delete(key: AppConstants.keyRefreshToken);
-      
+
       final context = rootNavigatorKey.currentContext;
       if (context != null) {
         context.go(AppRoutes.login);
@@ -68,4 +68,3 @@ class _AuthInterceptor extends Interceptor {
     handler.next(err);
   }
 }
-

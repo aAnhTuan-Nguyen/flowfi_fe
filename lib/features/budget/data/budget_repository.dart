@@ -32,7 +32,8 @@ class BudgetRepositoryImpl implements BudgetRepository {
 
   @override
   Future<Map<String, dynamic>> createBudget(Map<String, dynamic> data) async {
-    final response = await _dioClient.dio.post('/analytics/budgets', data: data);
+    final response =
+        await _dioClient.dio.post('/analytics/budgets', data: data);
     return response.data as Map<String, dynamic>;
   }
 }

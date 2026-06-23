@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../core/theme/app_colors.dart';
-import '../../core/theme/app_text_styles.dart';
 
 /// Hashtag chip used for transaction tagging (#Vacation, #Work)
 class TagChip extends StatelessWidget {
@@ -26,13 +24,19 @@ class TagChip extends StatelessWidget {
       ),
       decoration: BoxDecoration(
         color: selected
-            ? context.colors.primaryContainer.withValues(alpha: 0.15)
-            : context.colors.surfaceContainerLow,
+            ? Theme.of(context)
+                .colorScheme
+                .primaryContainer
+                .withValues(alpha: 0.15)
+            : Theme.of(context).colorScheme.surfaceContainerLow,
         borderRadius: BorderRadius.circular(999),
         border: Border.all(
           color: selected
-              ? context.colors.primaryContainer.withValues(alpha: 0.4)
-              : context.colors.outlineVariant,
+              ? Theme.of(context)
+                  .colorScheme
+                  .primaryContainer
+                  .withValues(alpha: 0.4)
+              : Theme.of(context).colorScheme.outlineVariant,
           width: 1,
         ),
       ),
@@ -41,8 +45,11 @@ class TagChip extends StatelessWidget {
         children: [
           Text(
             '#$label',
-            style: AppTextStyles.labelSm(
-              color: selected ? context.colors.primary : context.colors.onSurfaceVariant,
+            style: (Theme.of(context).textTheme.labelSmall ?? const TextStyle())
+                .copyWith(
+              color: selected
+                  ? Theme.of(context).colorScheme.primary
+                  : Theme.of(context).colorScheme.onSurfaceVariant,
             ),
           ),
           if (onRemove != null) ...[
@@ -53,8 +60,8 @@ class TagChip extends StatelessWidget {
                 Icons.close,
                 size: 14,
                 color: selected
-                    ? context.colors.primary
-                    : context.colors.onSurfaceVariant,
+                    ? Theme.of(context).colorScheme.primary
+                    : Theme.of(context).colorScheme.onSurfaceVariant,
               ),
             ),
           ],

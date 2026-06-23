@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/providers.dart';
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_text_styles.dart';
 import '../../../core/widgets/notification_tile.dart';
 
 /// Notification Center screen — filter chips + grouped notification list
@@ -62,18 +60,20 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: context.colors.background,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new, size: 18),
-          color: context.colors.primary,
+          color: Theme.of(context).colorScheme.primary,
           onPressed: () => Navigator.of(context).pop(),
         ),
         title: Text(
           'Notifications',
-          style: AppTextStyles.headlineMd(color: context.colors.primary),
+          style:
+              (Theme.of(context).textTheme.headlineMedium ?? const TextStyle())
+                  .copyWith(color: Theme.of(context).colorScheme.primary),
         ),
         centerTitle: true,
         actions: [
@@ -81,7 +81,9 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
             onPressed: _markAllAsRead,
             child: Text(
               'Mark all read',
-              style: AppTextStyles.labelMd(color: context.colors.secondary),
+              style:
+                  (Theme.of(context).textTheme.labelMedium ?? const TextStyle())
+                      .copyWith(color: Theme.of(context).colorScheme.secondary),
             ),
           ),
         ],
@@ -108,21 +110,25 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
                       ),
                       decoration: BoxDecoration(
                         color: isSelected
-                            ? context.colors.primary
-                            : context.colors.surfaceContainerLowest,
+                            ? Theme.of(context).colorScheme.primary
+                            : Theme.of(context)
+                                .colorScheme
+                                .surfaceContainerLowest,
                         borderRadius: BorderRadius.circular(999),
                         border: Border.all(
                           color: isSelected
-                              ? context.colors.primary
-                              : context.colors.outlineVariant,
+                              ? Theme.of(context).colorScheme.primary
+                              : Theme.of(context).colorScheme.outlineVariant,
                         ),
                       ),
                       child: Text(
                         _filters[i],
-                        style: AppTextStyles.labelMd(
+                        style: (Theme.of(context).textTheme.labelMedium ??
+                                const TextStyle())
+                            .copyWith(
                           color: isSelected
-                              ? context.colors.onPrimary
-                              : context.colors.onSurfaceVariant,
+                              ? Theme.of(context).colorScheme.onPrimary
+                              : Theme.of(context).colorScheme.onSurfaceVariant,
                         ),
                       ),
                     ),
@@ -148,11 +154,19 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
                                     body: n['message'] ?? '',
                                     timeAgo: n['createdAt'] ?? 'Recently',
                                     iconData: Icons.notifications_active,
-                                    iconBgColor: context.colors.primaryContainer.withValues(alpha: 0.2),
-                                    iconColor: context.colors.primary,
+                                    iconBgColor: Theme.of(context)
+                                        .colorScheme
+                                        .primaryContainer
+                                        .withValues(alpha: 0.2),
+                                    iconColor:
+                                        Theme.of(context).colorScheme.primary,
                                     isUnread: !(n['isRead'] ?? false),
                                   ),
-                                  Divider(height: 1, color: context.colors.surfaceContainerLow),
+                                  Divider(
+                                      height: 1,
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .surfaceContainerLow),
                                 ],
                               );
                             }).toList(),

@@ -24,11 +24,13 @@ class ProfileRepositoryImpl implements ProfileRepository {
     final response = await _dioClient.dio.put('/users/me', data: data);
     return response.data['data'] as Map<String, dynamic>;
   }
+
   @override
   Future<Map<String, dynamic>> updatePreferences(
     Map<String, dynamic> data,
   ) async {
-    final response = await _dioClient.dio.put('/users/me/preferences', data: data);
+    final response =
+        await _dioClient.dio.put('/users/me/preferences', data: data);
     return response.data['data'] as Map<String, dynamic>;
   }
 }

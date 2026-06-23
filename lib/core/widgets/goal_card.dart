@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../core/theme/app_colors.dart';
-import '../../core/theme/app_text_styles.dart';
 import 'glass_card.dart';
 import 'progress_bar.dart';
 import 'badge_chip.dart';
@@ -62,23 +60,28 @@ class GoalCard extends StatelessWidget {
                   if (badgeLabel != null)
                     BadgeChip(
                       label: badgeLabel!,
-                      color: badgeColor ?? context.colors.tertiaryContainer,
-                      textColor:
-                          badgeTextColor ?? context.colors.onTertiaryContainer,
+                      color: badgeColor ??
+                          Theme.of(context).colorScheme.tertiaryContainer,
+                      textColor: badgeTextColor ??
+                          Theme.of(context).colorScheme.onTertiaryContainer,
                     ),
                 ],
               ),
               const SizedBox(height: 16),
               Text(
                 goalName,
-                style: AppTextStyles.bodyLg(color: context.colors.onSurface)
+                style: (Theme.of(context).textTheme.bodyLarge ??
+                        const TextStyle())
+                    .copyWith(color: Theme.of(context).colorScheme.onSurface)
                     .copyWith(fontWeight: FontWeight.w700),
               ),
               const SizedBox(height: 4),
               Text(
                 '$currentAmount of $targetAmount',
-                style: AppTextStyles.labelMd(
-                  color: context.colors.onSurfaceVariant,
+                style: (Theme.of(context).textTheme.labelMedium ??
+                        const TextStyle())
+                    .copyWith(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
               ),
               const SizedBox(height: 12),
@@ -92,7 +95,9 @@ class GoalCard extends StatelessWidget {
                 alignment: Alignment.centerRight,
                 child: Text(
                   '${(progress * 100).toInt()}%',
-                  style: AppTextStyles.labelSm(color: progressColor)
+                  style: (Theme.of(context).textTheme.labelSmall ??
+                          const TextStyle())
+                      .copyWith(color: progressColor)
                       .copyWith(fontWeight: FontWeight.w700),
                 ),
               ),

@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/providers.dart';
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_text_styles.dart';
 import '../../../core/widgets/custom_text_field.dart';
 import '../../../core/widgets/glass_card.dart';
 import '../../../core/widgets/primary_button.dart';
@@ -37,7 +35,7 @@ class _PreferencesScreenState extends ConsumerState<PreferencesScreen> {
         setState(() {
           _selectedCurrency = data['currencyCode'] ?? 'USD';
           if (!_currencies.contains(_selectedCurrency)) {
-             _selectedCurrency = 'USD';
+            _selectedCurrency = 'USD';
           }
           final limit = data['monthlyBudgetLimit'];
           if (limit != null) {
@@ -90,18 +88,20 @@ class _PreferencesScreenState extends ConsumerState<PreferencesScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: context.colors.background,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new, size: 18),
-          color: context.colors.primary,
+          color: Theme.of(context).colorScheme.primary,
           onPressed: () => context.pop(),
         ),
         title: Text(
           'Currency & Preferences',
-          style: AppTextStyles.headlineMd(color: context.colors.primary),
+          style:
+              (Theme.of(context).textTheme.headlineMedium ?? const TextStyle())
+                  .copyWith(color: Theme.of(context).colorScheme.primary),
         ),
         centerTitle: true,
       ),
@@ -119,8 +119,12 @@ class _PreferencesScreenState extends ConsumerState<PreferencesScreen> {
                         children: [
                           Text(
                             'Display Currency',
-                            style: AppTextStyles.labelMd(
-                              color: context.colors.onSurfaceVariant,
+                            style: (Theme.of(context).textTheme.labelMedium ??
+                                    const TextStyle())
+                                .copyWith(
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onSurfaceVariant,
                             ),
                           ),
                           const SizedBox(height: 8),
@@ -130,20 +134,29 @@ class _PreferencesScreenState extends ConsumerState<PreferencesScreen> {
                               vertical: 4,
                             ),
                             decoration: BoxDecoration(
-                              color: context.colors.surfaceContainerLow,
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .surfaceContainerLow,
                               borderRadius: BorderRadius.circular(12),
-                              border: Border.all(color: context.colors.outlineVariant),
+                              border: Border.all(
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .outlineVariant),
                             ),
                             child: DropdownButtonHideUnderline(
                               child: DropdownButton<String>(
                                 value: _selectedCurrency,
                                 isExpanded: true,
-                                style: AppTextStyles.bodyMd(
-                                  color: context.colors.onSurface,
+                                style:
+                                    (Theme.of(context).textTheme.bodyMedium ??
+                                            const TextStyle())
+                                        .copyWith(
+                                  color:
+                                      Theme.of(context).colorScheme.onSurface,
                                 ),
                                 icon: Icon(
                                   Icons.keyboard_arrow_down,
-                                  color: context.colors.outline,
+                                  color: Theme.of(context).colorScheme.outline,
                                 ),
                                 items: _currencies
                                     .map(
@@ -153,8 +166,8 @@ class _PreferencesScreenState extends ConsumerState<PreferencesScreen> {
                                       ),
                                     )
                                     .toList(),
-                                onChanged: (v) =>
-                                    setState(() => _selectedCurrency = v ?? 'USD'),
+                                onChanged: (v) => setState(
+                                    () => _selectedCurrency = v ?? 'USD'),
                               ),
                             ),
                           ),
@@ -164,7 +177,8 @@ class _PreferencesScreenState extends ConsumerState<PreferencesScreen> {
                             hint: 'e.g. 1000',
                             controller: _budgetController,
                             prefixIcon: Icons.account_balance_wallet_outlined,
-                            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                            keyboardType: const TextInputType.numberWithOptions(
+                                decimal: true),
                           ),
                         ],
                       ),

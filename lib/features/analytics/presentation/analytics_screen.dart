@@ -1,8 +1,6 @@
-  import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/providers.dart';
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_text_styles.dart';
 import '../../../core/widgets/flowfi_app_bar.dart';
 import '../../../core/widgets/glass_card.dart';
 import '../../../core/widgets/segmented_tab_bar.dart';
@@ -32,8 +30,14 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
     try {
       final dashboardRepo = ref.read(dashboardRepositoryProvider);
       final analyticsRepo = ref.read(analyticsRepositoryProvider);
-      final periodString = _timePeriod == 0 ? 'day' : _timePeriod == 1 ? 'week' : _timePeriod == 2 ? 'month' : 'year';
-      
+      final periodString = _timePeriod == 0
+          ? 'day'
+          : _timePeriod == 1
+              ? 'week'
+              : _timePeriod == 2
+                  ? 'month'
+                  : 'year';
+
       final results = await Future.wait([
         dashboardRepo.getSummary(),
         analyticsRepo.getCategoryBreakdown(period: periodString),
@@ -57,7 +61,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: context.colors.background,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       extendBodyBehindAppBar: true,
       appBar: const FlowFiAppBar(title: 'FlowFi'),
       body: ListView(
@@ -108,21 +112,23 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                 children: [
                   Icon(
                     Icons.smart_toy_outlined,
-                    color: context.colors.primary,
+                    color: Theme.of(context).colorScheme.primary,
                     size: 22,
                   ),
                   const SizedBox(width: 8),
                   Text(
                     'AI Insights',
-                    style: AppTextStyles.headlineMd(color: context.colors.primary),
+                    style: (Theme.of(context).textTheme.headlineMedium ??
+                            const TextStyle())
+                        .copyWith(color: Theme.of(context).colorScheme.primary),
                   ),
                 ],
               ),
               const SizedBox(height: 16),
               _InsightRow(
                 icon: Icons.info_outline,
-                color: context.colors.primary,
-                bgColor: context.colors.primaryContainer,
+                color: Theme.of(context).colorScheme.primary,
+                bgColor: Theme.of(context).colorScheme.primaryContainer,
                 text: 'No AI insights available for this period. ',
                 highlight: 'Try another period',
                 rest: ' or add more transactions.',
@@ -137,7 +143,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
               child: Icon(
                 Icons.auto_awesome,
                 size: 80,
-                color: context.colors.primary,
+                color: Theme.of(context).colorScheme.primary,
               ),
             ),
           ),
@@ -160,9 +166,12 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                 children: [
                   Text(
                     'CASH FLOW',
-                    style: AppTextStyles.labelSm(
-                      color: context.colors.onSurfaceVariant,
-                    ).copyWith(letterSpacing: 1),
+                    style: (Theme.of(context).textTheme.labelSmall ??
+                            const TextStyle())
+                        .copyWith(
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        )
+                        .copyWith(letterSpacing: 1),
                   ),
                   const SizedBox(height: 4),
                   Row(
@@ -170,14 +179,21 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                     textBaseline: TextBaseline.alphabetic,
                     children: [
                       Text(
-                        _summary?['balance'] != null ? '\$${_summary!['balance']}' : '\$0.00',
-                        style:
-                            AppTextStyles.headlineLg(color: context.colors.onSurface),
+                        _summary?['balance'] != null
+                            ? '\$${_summary!['balance']}'
+                            : '\$0.00',
+                        style: (Theme.of(context).textTheme.headlineLarge ??
+                                const TextStyle())
+                            .copyWith(
+                                color: Theme.of(context).colorScheme.onSurface),
                       ),
                       const SizedBox(width: 6),
                       Text(
                         '0%',
-                        style: AppTextStyles.labelSm(color: context.colors.primary),
+                        style: (Theme.of(context).textTheme.labelSmall ??
+                                const TextStyle())
+                            .copyWith(
+                                color: Theme.of(context).colorScheme.primary),
                       ),
                     ],
                   ),
@@ -185,9 +201,13 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
               ),
               Row(
                 children: [
-                  _LegendDot(color: context.colors.primary, label: 'Income'),
+                  _LegendDot(
+                      color: Theme.of(context).colorScheme.primary,
+                      label: 'Income'),
                   const SizedBox(width: 12),
-                  _LegendDot(color: context.colors.secondary, label: 'Expense'),
+                  _LegendDot(
+                      color: Theme.of(context).colorScheme.secondary,
+                      label: 'Expense'),
                 ],
               ),
             ],
@@ -212,9 +232,11 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
         children: [
           Text(
             'TOP SPENDING',
-            style: AppTextStyles.labelSm(
-              color: context.colors.onSurfaceVariant,
-            ).copyWith(letterSpacing: 1),
+            style: (Theme.of(context).textTheme.labelSmall ?? const TextStyle())
+                .copyWith(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                )
+                .copyWith(letterSpacing: 1),
           ),
           const SizedBox(height: 16),
           Row(
@@ -223,7 +245,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                 segments: [
                   DonutSegment(
                     value: 1.0,
-                    color: context.colors.surfaceContainerHigh,
+                    color: Theme.of(context).colorScheme.surfaceContainerHigh,
                     label: 'No Data',
                   ),
                 ],
@@ -235,7 +257,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                 child: Column(
                   children: [
                     _SpendingLegendRow(
-                      color: context.colors.surfaceContainerHigh,
+                      color: Theme.of(context).colorScheme.surfaceContainerHigh,
                       label: 'No Data',
                       percent: '0%',
                     ),
@@ -261,7 +283,9 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
               children: [
                 Text(
                   'Monthly Breakdown',
-                  style: AppTextStyles.headlineMd(color: context.colors.onSurface),
+                  style: (Theme.of(context).textTheme.headlineMedium ??
+                          const TextStyle())
+                      .copyWith(color: Theme.of(context).colorScheme.onSurface),
                 ),
                 const Row(
                   children: [
@@ -279,12 +303,16 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
               ],
             ),
           ),
-          Divider(height: 1, color: context.colors.outlineVariant),
+          Divider(
+              height: 1, color: Theme.of(context).colorScheme.outlineVariant),
           Padding(
             padding: const EdgeInsets.all(20),
             child: Text(
               'No breakdown data available',
-              style: AppTextStyles.bodyMd(color: context.colors.onSurfaceVariant),
+              style: (Theme.of(context).textTheme.bodyMedium ??
+                      const TextStyle())
+                  .copyWith(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant),
             ),
           ),
         ],
@@ -327,7 +355,9 @@ class _InsightRow extends StatelessWidget {
           Expanded(
             child: RichText(
               text: TextSpan(
-                style: AppTextStyles.bodyMd(color: context.colors.onSurface),
+                style: (Theme.of(context).textTheme.bodyMedium ??
+                        const TextStyle())
+                    .copyWith(color: Theme.of(context).colorScheme.onSurface),
                 children: [
                   TextSpan(text: text),
                   TextSpan(
@@ -366,7 +396,8 @@ class _LegendDot extends StatelessWidget {
         const SizedBox(width: 4),
         Text(
           label,
-          style: AppTextStyles.labelSm(color: context.colors.onSurfaceVariant),
+          style: (Theme.of(context).textTheme.labelSmall ?? const TextStyle())
+              .copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
         ),
       ],
     );
@@ -402,13 +433,16 @@ class _SpendingLegendRow extends StatelessWidget {
             const SizedBox(width: 8),
             Text(
               label,
-              style: AppTextStyles.bodyMd(color: context.colors.onSurface),
+              style:
+                  (Theme.of(context).textTheme.bodyMedium ?? const TextStyle())
+                      .copyWith(color: Theme.of(context).colorScheme.onSurface),
             ),
           ],
         ),
         Text(
           percent,
-          style: AppTextStyles.bodySemibold(color: context.colors.onSurface),
+          style: (Theme.of(context).textTheme.titleMedium ?? const TextStyle())
+              .copyWith(color: Theme.of(context).colorScheme.onSurface),
         ),
       ],
     );
@@ -426,20 +460,21 @@ class _ExportButton extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
-        color: context.colors.surfaceContainerLow,
+        color: Theme.of(context).colorScheme.surfaceContainerLow,
         borderRadius: BorderRadius.circular(8),
       ),
       child: Row(
         children: [
-          Icon(icon, size: 14, color: context.colors.onSurface),
+          Icon(icon, size: 14, color: Theme.of(context).colorScheme.onSurface),
           const SizedBox(width: 4),
           Text(
             label,
-            style: AppTextStyles.labelMd(color: context.colors.onSurface),
+            style:
+                (Theme.of(context).textTheme.labelMedium ?? const TextStyle())
+                    .copyWith(color: Theme.of(context).colorScheme.onSurface),
           ),
         ],
       ),
     );
   }
 }
-

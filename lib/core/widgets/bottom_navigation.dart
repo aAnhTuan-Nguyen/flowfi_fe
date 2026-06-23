@@ -1,8 +1,6 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import '../../core/theme/app_colors.dart';
-import '../../core/theme/app_text_styles.dart';
 import '../../routes/app_router.dart';
 
 /// Bottom navigation bar with 4 tabs + centered FAB
@@ -58,7 +56,8 @@ class BottomNavigation extends StatelessWidget {
         filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
         child: Container(
           decoration: BoxDecoration(
-            color: context.colors.surface.withValues(alpha: 0.85),
+            color:
+                Theme.of(context).colorScheme.surface.withValues(alpha: 0.85),
             borderRadius: const BorderRadius.vertical(
               top: Radius.circular(20),
             ),
@@ -128,17 +127,19 @@ class BottomNavigation extends StatelessWidget {
               Icon(
                 isActive ? item.activeIcon : item.icon,
                 color: isActive
-                    ? context.colors.primary
-                    : context.colors.onSurfaceVariant,
+                    ? Theme.of(context).colorScheme.primary
+                    : Theme.of(context).colorScheme.onSurfaceVariant,
                 size: 24,
               ),
               const SizedBox(height: 4),
               Text(
                 item.label,
-                style: AppTextStyles.labelSm(
+                style: (Theme.of(context).textTheme.labelSmall ??
+                        const TextStyle())
+                    .copyWith(
                   color: isActive
-                      ? context.colors.primary
-                      : context.colors.onSurfaceVariant,
+                      ? Theme.of(context).colorScheme.primary
+                      : Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
               ),
             ],
@@ -156,11 +157,12 @@ class BottomNavigation extends StatelessWidget {
         height: 56,
         margin: const EdgeInsets.only(bottom: 8),
         decoration: BoxDecoration(
-          color: context.colors.primary,
+          color: Theme.of(context).colorScheme.primary,
           shape: BoxShape.circle,
           boxShadow: [
             BoxShadow(
-              color: context.colors.primary.withValues(alpha: 0.4),
+              color:
+                  Theme.of(context).colorScheme.primary.withValues(alpha: 0.4),
               blurRadius: 12,
               offset: const Offset(0, 4),
             ),
@@ -168,7 +170,7 @@ class BottomNavigation extends StatelessWidget {
         ),
         child: Icon(
           Icons.add,
-          color: context.colors.onPrimary,
+          color: Theme.of(context).colorScheme.onPrimary,
           size: 32,
         ),
       ),

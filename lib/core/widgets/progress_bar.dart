@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../core/theme/app_colors.dart';
 
 /// Animated pill-shaped progress bar
 class ProgressBar extends StatelessWidget {
@@ -25,7 +24,8 @@ class ProgressBar extends StatelessWidget {
       child: Container(
         height: height,
         decoration: BoxDecoration(
-          color: backgroundColor ?? context.colors.surfaceContainer,
+          color:
+              backgroundColor ?? Theme.of(context).colorScheme.surfaceContainer,
           borderRadius: BorderRadius.circular(999),
         ),
         child: FractionallySizedBox(
@@ -33,12 +33,14 @@ class ProgressBar extends StatelessWidget {
           widthFactor: value.clamp(0.0, 1.0),
           child: Container(
             decoration: BoxDecoration(
-              color: color ?? context.colors.primaryContainer,
+              color: color ?? Theme.of(context).colorScheme.primaryContainer,
               borderRadius: BorderRadius.circular(999),
               boxShadow: showGlow
                   ? [
                       BoxShadow(
-                        color: (color ?? context.colors.primaryContainer).withValues(alpha: 0.4),
+                        color: (color ??
+                                Theme.of(context).colorScheme.primaryContainer)
+                            .withValues(alpha: 0.4),
                         blurRadius: 8,
                         spreadRadius: 1,
                       ),

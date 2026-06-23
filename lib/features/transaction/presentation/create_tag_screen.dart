@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_text_styles.dart';
 import '../../../core/widgets/custom_text_field.dart';
 import '../../../core/widgets/glass_card.dart';
 import '../../../core/widgets/primary_button.dart';
@@ -29,10 +27,20 @@ class _CreateTagScreenState extends State<CreateTagScreen> {
   ];
 
   static const List<String> _suggestedTags = [
-    'Coffee', 'Subway', 'Gym', 'Rent', 'Netflix',
+    'Coffee',
+    'Subway',
+    'Gym',
+    'Rent',
+    'Netflix',
   ];
 
-  static const List<String> _groups = ['None', 'Food', 'Transport', 'Lifestyle', 'Bills'];
+  static const List<String> _groups = [
+    'None',
+    'Food',
+    'Transport',
+    'Lifestyle',
+    'Bills'
+  ];
 
   @override
   void dispose() {
@@ -43,18 +51,20 @@ class _CreateTagScreenState extends State<CreateTagScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: context.colors.background,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new, size: 18),
-          color: context.colors.primary,
+          color: Theme.of(context).colorScheme.primary,
           onPressed: () => context.pop(),
         ),
         title: Text(
           'Create New Tag',
-          style: AppTextStyles.headlineMd(color: context.colors.primary),
+          style:
+              (Theme.of(context).textTheme.headlineMedium ?? const TextStyle())
+                  .copyWith(color: Theme.of(context).colorScheme.primary),
         ),
         centerTitle: true,
         actions: [
@@ -62,10 +72,11 @@ class _CreateTagScreenState extends State<CreateTagScreen> {
             padding: const EdgeInsets.only(right: 16),
             child: CircleAvatar(
               radius: 18,
-              backgroundColor: context.colors.surfaceContainerLow,
+              backgroundColor:
+                  Theme.of(context).colorScheme.surfaceContainerLow,
               child: Icon(
                 Icons.person,
-                color: context.colors.primary,
+                color: Theme.of(context).colorScheme.primary,
                 size: 20,
               ),
             ),
@@ -91,8 +102,10 @@ class _CreateTagScreenState extends State<CreateTagScreen> {
                     const SizedBox(height: 20),
                     Text(
                       'Select Tag Color',
-                      style: AppTextStyles.labelMd(
-                        color: context.colors.onSurfaceVariant,
+                      style: (Theme.of(context).textTheme.labelMedium ??
+                              const TextStyle())
+                          .copyWith(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
                       ),
                     ),
                     const SizedBox(height: 12),
@@ -114,7 +127,9 @@ class _CreateTagScreenState extends State<CreateTagScreen> {
                               shape: BoxShape.circle,
                               border: isSelected
                                   ? Border.all(
-                                      color: context.colors.onSurface,
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .onSurface,
                                       width: 3,
                                     )
                                   : null,
@@ -126,8 +141,10 @@ class _CreateTagScreenState extends State<CreateTagScreen> {
                     const SizedBox(height: 20),
                     Text(
                       'Category Grouping (Optional)',
-                      style: AppTextStyles.labelMd(
-                        color: context.colors.onSurfaceVariant,
+                      style: (Theme.of(context).textTheme.labelMedium ??
+                              const TextStyle())
+                          .copyWith(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
                       ),
                     ),
                     const SizedBox(height: 8),
@@ -137,20 +154,25 @@ class _CreateTagScreenState extends State<CreateTagScreen> {
                         vertical: 4,
                       ),
                       decoration: BoxDecoration(
-                        color: context.colors.surfaceContainerLow,
+                        color:
+                            Theme.of(context).colorScheme.surfaceContainerLow,
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: context.colors.outlineVariant),
+                        border: Border.all(
+                            color:
+                                Theme.of(context).colorScheme.outlineVariant),
                       ),
                       child: DropdownButtonHideUnderline(
                         child: DropdownButton<String>(
                           value: _selectedGroup,
                           isExpanded: true,
-                          style: AppTextStyles.bodyMd(
-                            color: context.colors.onSurface,
+                          style: (Theme.of(context).textTheme.bodyMedium ??
+                                  const TextStyle())
+                              .copyWith(
+                            color: Theme.of(context).colorScheme.onSurface,
                           ),
                           icon: Icon(
                             Icons.keyboard_arrow_down,
-                            color: context.colors.outline,
+                            color: Theme.of(context).colorScheme.outline,
                           ),
                           items: _groups
                               .map(
@@ -171,8 +193,10 @@ class _CreateTagScreenState extends State<CreateTagScreen> {
               const SizedBox(height: 20),
               Text(
                 'Suggested Tags',
-                style: AppTextStyles.labelMd(
-                  color: context.colors.onSurfaceVariant,
+                style: (Theme.of(context).textTheme.labelMedium ??
+                        const TextStyle())
+                    .copyWith(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
               ),
               const SizedBox(height: 12),
@@ -191,16 +215,23 @@ class _CreateTagScreenState extends State<CreateTagScreen> {
                             vertical: 8,
                           ),
                           decoration: BoxDecoration(
-                            color: context.colors.surfaceContainerLowest,
+                            color: Theme.of(context)
+                                .colorScheme
+                                .surfaceContainerLowest,
                             borderRadius: BorderRadius.circular(999),
                             border: Border.all(
-                              color: context.colors.outlineVariant,
+                              color:
+                                  Theme.of(context).colorScheme.outlineVariant,
                             ),
                           ),
                           child: Text(
                             '# #$tag',
-                            style: AppTextStyles.labelMd(
-                              color: context.colors.onSurfaceVariant,
+                            style: (Theme.of(context).textTheme.labelMedium ??
+                                    const TextStyle())
+                                .copyWith(
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onSurfaceVariant,
                             ),
                           ),
                         ),
@@ -228,10 +259,10 @@ class _CreateTagScreenState extends State<CreateTagScreen> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: context.colors.surfaceContainerLowest,
+        color: Theme.of(context).colorScheme.surfaceContainerLowest,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: context.colors.outlineVariant,
+          color: Theme.of(context).colorScheme.outlineVariant,
           style: BorderStyle.solid,
         ),
       ),
@@ -240,12 +271,15 @@ class _CreateTagScreenState extends State<CreateTagScreen> {
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: context.colors.primaryContainer.withValues(alpha: 0.1),
+              color: Theme.of(context)
+                  .colorScheme
+                  .primaryContainer
+                  .withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(10),
             ),
             child: Icon(
               Icons.info_outlined,
-              color: context.colors.primary,
+              color: Theme.of(context).colorScheme.primary,
               size: 22,
             ),
           ),
@@ -256,15 +290,19 @@ class _CreateTagScreenState extends State<CreateTagScreen> {
               children: [
                 Text(
                   'Smart Tags',
-                  style: AppTextStyles.bodySemibold(
-                    color: context.colors.onSurface,
+                  style: (Theme.of(context).textTheme.titleMedium ??
+                          const TextStyle())
+                      .copyWith(
+                    color: Theme.of(context).colorScheme.onSurface,
                   ),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   'FlowFi will automatically group future transactions that match this tag name for easier budgeting.',
-                  style: AppTextStyles.bodyMd(
-                    color: context.colors.onSurfaceVariant,
+                  style: (Theme.of(context).textTheme.bodyMedium ??
+                          const TextStyle())
+                      .copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
                 ),
               ],

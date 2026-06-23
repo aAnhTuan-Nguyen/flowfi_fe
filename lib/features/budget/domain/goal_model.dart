@@ -19,12 +19,10 @@ class GoalModel extends Equatable {
   final int streakDays;
   final GoalStatus status;
 
-  double get progress =>
-      targetAmount > 0 ? currentAmount / targetAmount : 0;
+  double get progress => targetAmount > 0 ? currentAmount / targetAmount : 0;
 
   @override
-  List<Object?> get props =>
-      [id, name, targetAmount, currentAmount, status];
+  List<Object?> get props => [id, name, targetAmount, currentAmount, status];
 }
 
 enum GoalStatus { active, completed, paused }

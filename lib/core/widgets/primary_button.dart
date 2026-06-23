@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../core/theme/app_colors.dart';
-import '../../core/theme/app_text_styles.dart';
 
 /// Full-width primary filled button with green background
 class PrimaryButton extends StatelessWidget {
@@ -27,7 +25,7 @@ class PrimaryButton extends StatelessWidget {
             height: 24,
             child: CircularProgressIndicator(
               strokeWidth: 2.5,
-              color: context.colors.onPrimary,
+              color: Theme.of(context).colorScheme.onPrimary,
             ),
           )
         : Row(
@@ -39,8 +37,10 @@ class PrimaryButton extends StatelessWidget {
               ],
               Text(
                 label,
-                style: AppTextStyles.bodySemibold(
-                  color: context.colors.onPrimary,
+                style: (Theme.of(context).textTheme.titleMedium ??
+                        const TextStyle())
+                    .copyWith(
+                  color: Theme.of(context).colorScheme.onPrimary,
                 ),
               ),
             ],
@@ -52,8 +52,8 @@ class PrimaryButton extends StatelessWidget {
       child: FilledButton(
         onPressed: loading ? null : onPressed,
         style: FilledButton.styleFrom(
-          backgroundColor: context.colors.primary,
-          foregroundColor: context.colors.onPrimary,
+          backgroundColor: Theme.of(context).colorScheme.primary,
+          foregroundColor: Theme.of(context).colorScheme.onPrimary,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),

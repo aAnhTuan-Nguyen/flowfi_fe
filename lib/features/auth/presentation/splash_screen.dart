@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_text_styles.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../routes/app_router.dart';
 
@@ -83,7 +81,9 @@ class _SplashScreenState extends State<SplashScreen>
                 opacity: _fadeAnim,
                 child: Text(
                   AppConstants.appName,
-                  style: AppTextStyles.headlineLg(color: Colors.white),
+                  style: (Theme.of(context).textTheme.headlineLarge ??
+                          const TextStyle())
+                      .copyWith(color: Colors.white),
                 ),
               ),
               const SizedBox(height: 8),
@@ -91,7 +91,9 @@ class _SplashScreenState extends State<SplashScreen>
                 opacity: _fadeAnim,
                 child: Text(
                   'Smart Finance Management',
-                  style: AppTextStyles.bodyMd(
+                  style: (Theme.of(context).textTheme.bodyMedium ??
+                          const TextStyle())
+                      .copyWith(
                     color: Colors.white.withValues(alpha: 0.85),
                   ),
                 ),
@@ -108,7 +110,7 @@ class _SplashScreenState extends State<SplashScreen>
       width: 100,
       height: 100,
       decoration: BoxDecoration(
-        color: context.colors.primaryContainer,
+        color: Theme.of(context).colorScheme.primaryContainer,
         shape: BoxShape.circle,
       ),
       child: Center(
