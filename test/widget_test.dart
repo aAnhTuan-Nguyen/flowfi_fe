@@ -1,5 +1,5 @@
 import 'package:flowfi_fe/app/app.dart';
-import 'package:flowfi_fe/routes/app_router.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -84,7 +84,5 @@ void main() {
 }
 
 Future<void> _pumpApp(WidgetTester tester) async {
-  final router = createAppRouter();
-  addTearDown(router.dispose);
-  await tester.pumpWidget(ProviderScope(child: FlowFiApp(router: router)));
+  await tester.pumpWidget(const ProviderScope(child: FlowFiApp()));
 }
