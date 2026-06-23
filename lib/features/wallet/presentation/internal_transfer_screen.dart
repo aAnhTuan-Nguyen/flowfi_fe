@@ -1,52 +1,66 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/providers.dart';
+import '../../../core/storage/secure_storage.dart';
+
+
 import '../../../core/widgets/glass_card.dart';
 import '../../../core/widgets/primary_button.dart';
 
 /// Internal Transfer screen — From/To wallet selector, Amount, Note
-class InternalTransferScreen extends StatefulWidget {
+class InternalTransferScreen extends ConsumerStatefulWidget {
   const InternalTransferScreen({super.key});
 
   @override
-  State<InternalTransferScreen> createState() => _InternalTransferScreenState();
+  ConsumerState<InternalTransferScreen> createState() => _InternalTransferScreenState();
 }
 
-class _InternalTransferScreenState extends State<InternalTransferScreen> {
+class _InternalTransferScreenState extends ConsumerState<InternalTransferScreen> {
   final _amountController = TextEditingController(text: '0.00');
   final _noteController = TextEditingController();
   bool _loading = false;
+  List<Map<String, dynamic>> _wallets = [];
+  String? _fromWalletId;
+  String? _toWalletId;
 
-  ({
-    String name,
-    String subtitle,
-    String balance,
-    IconData icon,
-    Color color,
-    Color bgColor
-  }) get _fromWallet => (
-        name: 'Main Account',
-        subtitle: 'FROM WALLET',
-        balance: r'$12,450.00',
-        icon: Icons.account_balance_wallet_outlined,
-        color: Theme.of(context).colorScheme.primary,
-        bgColor: const Color(0x3322C55E),
-      );
+  @override
+  void initState() {
+    super.initState();
+    _loadWallets();
+  }
 
-  ({
-    String name,
-    String subtitle,
-    String balance,
-    IconData icon,
-    Color color,
-    Color bgColor
-  }) get _toWallet => (
-        name: 'Emergency Fund',
-        subtitle: 'TO WALLET',
-        balance: r'$3,200.00',
-        icon: Icons.savings_outlined,
-        color: Theme.of(context).colorScheme.secondary,
-        bgColor: const Color(0x330051D5),
-      );
+  Future<void> _loadWallets() async {
+    try {
+      final repo = ref.read(walletRepositoryProvider);
+      final wallets = await repo.getWallets();
+      if (mounted) {
+        setState(() {
+          _wallets = wallets;
+          if (wallets.isNotEmpty) {
+            _fromWalletId = wallets.first['id'];
+            _toWalletId = wallets.length > 1 ? wallets[1]['id'] : wallets.first['id'];
+          }
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to load wallets: $e')),
+        );
+      }
+    }
+  }
+
+  Map<String, dynamic>? _getWallet(String? id) {
+    if (id == null) return null;
+    try {
+      return _wallets.firstWhere((w) => w['id'] == id);
+    } catch (_) {
+      return null;
+    }
+  }
 
   @override
   void dispose() {
@@ -62,119 +76,66 @@ class _InternalTransferScreenState extends State<InternalTransferScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      backgroundColor: Theme.of(context).colorScheme.surface,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon:
-              Icon(Icons.close, color: Theme.of(context).colorScheme.onSurface),
+          icon: Icon(Icons.close, color: Theme.of(context).colorScheme.onSurface),
           onPressed: () => Navigator.of(context).pop(),
         ),
         title: Text(
           'Transfer',
-          style:
-              (Theme.of(context).textTheme.headlineMedium ?? const TextStyle())
-                  .copyWith(color: Theme.of(context).colorScheme.primary),
+          style: (Theme.of(context).textTheme.headlineMedium ?? const TextStyle()).copyWith(color: Theme.of(context).colorScheme.primary),
         ),
         centerTitle: true,
       ),
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: Column(
-            children: [
-              const SizedBox(height: 16),
-              _buildWalletSelector(),
-              const SizedBox(height: 24),
-              _buildAmountSection(),
-              const SizedBox(height: 20),
-              _buildNoteSection(),
-              const SizedBox(height: 16),
-              _buildInfoBanner(),
-              const SizedBox(height: 24),
-              PrimaryButton(
-                label: 'Transfer',
-                onPressed: _onTransfer,
-                loading: _loading,
-                icon: Icons.swap_horiz,
+        child: _wallets.isEmpty
+            ? const Center(child: CircularProgressIndicator())
+            : SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Column(
+                  children: [
+                    const SizedBox(height: 16),
+                    _buildWalletSelector(),
+                    const SizedBox(height: 24),
+                    _buildAmountSection(),
+                    const SizedBox(height: 20),
+                    _buildNoteSection(),
+                    const SizedBox(height: 16),
+                    _buildInfoBanner(),
+                    const SizedBox(height: 24),
+                    PrimaryButton(
+                      label: 'Transfer',
+                      onPressed: _onTransfer,
+                      loading: _loading,
+                      icon: Icons.swap_horiz,
+                    ),
+                    const SizedBox(height: 16),
+                  ],
+                ),
               ),
-              const SizedBox(height: 16),
-            ],
-          ),
-        ),
       ),
     );
   }
 
   Widget _buildWalletSelector() {
+    final fromW = _getWallet(_fromWalletId);
+    final toW = _getWallet(_toWalletId);
+
     return Column(
       children: [
-        GlassCard(
-          padding: const EdgeInsets.all(16),
-          child: Row(
-            children: [
-              Container(
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(
-                  color: _fromWallet.bgColor,
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  _fromWallet.icon,
-                  color: _fromWallet.color,
-                  size: 22,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      _fromWallet.subtitle,
-                      style: (Theme.of(context).textTheme.labelSmall ??
-                              const TextStyle())
-                          .copyWith(
-                            color:
-                                Theme.of(context).colorScheme.onSurfaceVariant,
-                          )
-                          .copyWith(letterSpacing: 0.5),
-                    ),
-                    Text(
-                      _fromWallet.name,
-                      style: (Theme.of(context).textTheme.headlineMedium ??
-                              const TextStyle())
-                          .copyWith(
-                        color: Theme.of(context).colorScheme.onSurface,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text(
-                    'Balance',
-                    style: (Theme.of(context).textTheme.labelSmall ??
-                            const TextStyle())
-                        .copyWith(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                  Text(
-                    _fromWallet.balance,
-                    style: (Theme.of(context).textTheme.titleMedium ??
-                            const TextStyle())
-                        .copyWith(
-                            color: Theme.of(context).colorScheme.onSurface),
-                  ),
-                ],
-              ),
-            ],
-          ),
+        _buildWalletCard(
+          title: 'FROM WALLET',
+          wallet: fromW,
+          selectedValue: _fromWalletId,
+          onChanged: (val) {
+            if (val != null) setState(() => _fromWalletId = val);
+          },
+          icon: Icons.account_balance_wallet_outlined,
+          color: Theme.of(context).colorScheme.primary,
+          bgColor: const Color(0x3322C55E),
         ),
         Padding(
           padding: const EdgeInsets.symmetric(vertical: 4),
@@ -186,10 +147,7 @@ class _InternalTransferScreenState extends State<InternalTransferScreen> {
               shape: BoxShape.circle,
               boxShadow: [
                 BoxShadow(
-                  color: Theme.of(context)
-                      .colorScheme
-                      .primary
-                      .withValues(alpha: 0.35),
+                  color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.35),
                   blurRadius: 10,
                   offset: const Offset(0, 4),
                 ),
@@ -202,74 +160,92 @@ class _InternalTransferScreenState extends State<InternalTransferScreen> {
             ),
           ),
         ),
-        GlassCard(
-          padding: const EdgeInsets.all(16),
-          child: Row(
-            children: [
-              Container(
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(
-                  color: _toWallet.bgColor,
-                  shape: BoxShape.circle,
+        _buildWalletCard(
+          title: 'TO WALLET',
+          wallet: toW,
+          selectedValue: _toWalletId,
+          onChanged: (val) {
+            if (val != null) setState(() => _toWalletId = val);
+          },
+          icon: Icons.savings_outlined,
+          color: Theme.of(context).colorScheme.secondary,
+          bgColor: const Color(0x330051D5),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildWalletCard({
+    required String title,
+    required Map<String, dynamic>? wallet,
+    required String? selectedValue,
+    required ValueChanged<String?> onChanged,
+    required IconData icon,
+    required Color color,
+    required Color bgColor,
+  }) {
+    final balance = wallet != null ? '\$${(wallet['balance'] ?? 0.0).toStringAsFixed(2)}' : '\$0.00';
+    return GlassCard(
+      padding: const EdgeInsets.all(16),
+      child: Row(
+        children: [
+          Container(
+            width: 44,
+            height: 44,
+            decoration: BoxDecoration(
+              color: bgColor,
+              shape: BoxShape.circle,
+            ),
+            child: Icon(icon, color: color, size: 22),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: (Theme.of(context).textTheme.labelSmall ?? const TextStyle()).copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ).copyWith(letterSpacing: 0.5),
                 ),
-                child: Icon(
-                  _toWallet.icon,
-                  color: _toWallet.color,
-                  size: 22,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      _toWallet.subtitle,
-                      style: (Theme.of(context).textTheme.labelSmall ??
-                              const TextStyle())
-                          .copyWith(
-                            color:
-                                Theme.of(context).colorScheme.onSurfaceVariant,
-                          )
-                          .copyWith(letterSpacing: 0.5),
-                    ),
-                    Text(
-                      _toWallet.name,
-                      style: (Theme.of(context).textTheme.headlineMedium ??
-                              const TextStyle())
-                          .copyWith(
-                        color: Theme.of(context).colorScheme.onSurface,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text(
-                    'Balance',
-                    style: (Theme.of(context).textTheme.labelSmall ??
-                            const TextStyle())
-                        .copyWith(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                  Text(
-                    _toWallet.balance,
-                    style: (Theme.of(context).textTheme.titleMedium ??
-                            const TextStyle())
-                        .copyWith(
+                DropdownButtonHideUnderline(
+                  child: DropdownButton<String>(
+                    value: selectedValue,
+                    isExpanded: true,
+                    isDense: true,
+                    icon: const Icon(Icons.arrow_drop_down),
+                    style: (Theme.of(context).textTheme.headlineMedium ?? const TextStyle()).copyWith(
                       color: Theme.of(context).colorScheme.onSurface,
                     ),
+                    items: _wallets.map((w) {
+                      return DropdownMenuItem<String>(
+                        value: w['id'],
+                        child: Text(w['name'] ?? 'Wallet', overflow: TextOverflow.ellipsis),
+                      );
+                    }).toList(),
+                    onChanged: onChanged,
                   ),
-                ],
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(
+                'Balance',
+                style: (Theme.of(context).textTheme.labelSmall ?? const TextStyle()).copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
+              ),
+              Text(
+                balance,
+                style: (Theme.of(context).textTheme.headlineSmall ?? const TextStyle()).copyWith(color: Theme.of(context).colorScheme.onSurface),
               ),
             ],
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
@@ -281,10 +257,7 @@ class _InternalTransferScreenState extends State<InternalTransferScreen> {
         children: [
           Text(
             'Amount',
-            style:
-                (Theme.of(context).textTheme.labelMedium ?? const TextStyle())
-                    .copyWith(
-                        color: Theme.of(context).colorScheme.onSurfaceVariant),
+            style: (Theme.of(context).textTheme.labelMedium ?? const TextStyle()).copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
           ),
           const SizedBox(height: 12),
           Row(
@@ -292,9 +265,7 @@ class _InternalTransferScreenState extends State<InternalTransferScreen> {
             children: [
               Text(
                 r'$',
-                style: (Theme.of(context).textTheme.headlineLarge ??
-                        const TextStyle())
-                    .copyWith(color: Theme.of(context).colorScheme.primary),
+                style: (Theme.of(context).textTheme.headlineLarge ?? const TextStyle()).copyWith(color: Theme.of(context).colorScheme.primary),
               ),
               const SizedBox(width: 4),
               Expanded(
@@ -304,9 +275,7 @@ class _InternalTransferScreenState extends State<InternalTransferScreen> {
                     decimal: true,
                   ),
                   onTap: () {
-                    if (_amountController.text == '0' ||
-                        _amountController.text == '0.0' ||
-                        _amountController.text == '0.00') {
+                    if (_amountController.text == '0' || _amountController.text == '0.0' || _amountController.text == '0.00') {
                       _amountController.clear();
                     }
                   },
@@ -315,9 +284,7 @@ class _InternalTransferScreenState extends State<InternalTransferScreen> {
                       RegExp(r'^\d+\.?\d{0,2}'),
                     ),
                   ],
-                  style: (Theme.of(context).textTheme.displayLarge ??
-                          const TextStyle())
-                      .copyWith(color: Theme.of(context).colorScheme.onSurface),
+                  style: (Theme.of(context).textTheme.displayMedium ?? const TextStyle()).copyWith(color: Theme.of(context).colorScheme.onSurface),
                   decoration: const InputDecoration(
                     border: InputBorder.none,
                     enabledBorder: InputBorder.none,
@@ -360,22 +327,16 @@ class _InternalTransferScreenState extends State<InternalTransferScreen> {
         children: [
           Text(
             'Note (Optional)',
-            style:
-                (Theme.of(context).textTheme.labelMedium ?? const TextStyle())
-                    .copyWith(
-                        color: Theme.of(context).colorScheme.onSurfaceVariant),
+            style: (Theme.of(context).textTheme.labelMedium ?? const TextStyle()).copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
           ),
           const SizedBox(height: 8),
           TextField(
             controller: _noteController,
             maxLines: 3,
-            style: (Theme.of(context).textTheme.bodyMedium ?? const TextStyle())
-                .copyWith(color: Theme.of(context).colorScheme.onSurface),
+            style: (Theme.of(context).textTheme.bodyMedium ?? const TextStyle()).copyWith(color: Theme.of(context).colorScheme.onSurface),
             decoration: InputDecoration(
               hintText: "What's this transfer for?",
-              hintStyle:
-                  (Theme.of(context).textTheme.bodyMedium ?? const TextStyle())
-                      .copyWith(color: Theme.of(context).colorScheme.outline),
+              hintStyle: (Theme.of(context).textTheme.bodyMedium ?? const TextStyle()).copyWith(color: Theme.of(context).colorScheme.outline),
               border: InputBorder.none,
               enabledBorder: InputBorder.none,
               focusedBorder: InputBorder.none,
@@ -405,10 +366,7 @@ class _InternalTransferScreenState extends State<InternalTransferScreen> {
           Expanded(
             child: Text(
               'Internal transfer is not counted as income or expense',
-              style: (Theme.of(context).textTheme.labelMedium ??
-                      const TextStyle())
-                  .copyWith(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant),
+              style: (Theme.of(context).textTheme.labelMedium ?? const TextStyle()).copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
             ),
           ),
         ],
@@ -416,15 +374,62 @@ class _InternalTransferScreenState extends State<InternalTransferScreen> {
     );
   }
 
-  void _onTransfer() {
+  Future<void> _onTransfer() async {
+    if (_fromWalletId == null || _toWalletId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please select both wallets')),
+      );
+      return;
+    }
+    if (_fromWalletId == _toWalletId) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Cannot transfer to the same wallet')),
+      );
+      return;
+    }
+
+    final amount = double.tryParse(_amountController.text) ?? 0.0;
+    if (amount <= 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter a valid amount')),
+      );
+      return;
+    }
+
     setState(() => _loading = true);
-    // Backend integration: call WalletRepository.transfer()
-    Future.delayed(const Duration(seconds: 1), () {
+    
+    try {
+      final secureStorage = SecureStorageService.create();
+      final userId = await secureStorage.getUserId();
+      if (userId == null) throw Exception('User not logged in');
+
+      final repo = ref.read(walletRepositoryProvider);
+      await repo.transfer(
+        userId: userId,
+        fromWalletId: _fromWalletId!,
+        toWalletId: _toWalletId!,
+        amount: amount,
+        note: _noteController.text.trim(),
+      );
+
+      if (mounted) {
+        Navigator.of(context).pop(true);
+      }
+    } catch (e) {
+      if (mounted) {
+        String errorMsg = e.toString();
+        if (e is DioException && e.response?.data != null) {
+          errorMsg = e.response?.data.toString() ?? errorMsg;
+        }
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Transfer failed: $errorMsg')),
+        );
+      }
+    } finally {
       if (mounted) {
         setState(() => _loading = false);
-        Navigator.of(context).pop();
       }
-    });
+    }
   }
 }
 
@@ -443,13 +448,11 @@ class _QuickAmountChip extends StatelessWidget {
         decoration: BoxDecoration(
           color: Theme.of(context).colorScheme.surfaceContainerLow,
           borderRadius: BorderRadius.circular(999),
-          border:
-              Border.all(color: Theme.of(context).colorScheme.outlineVariant),
+          border: Border.all(color: Theme.of(context).colorScheme.outlineVariant),
         ),
         child: Text(
           label,
-          style: (Theme.of(context).textTheme.labelMedium ?? const TextStyle())
-              .copyWith(color: Theme.of(context).colorScheme.onSurface),
+          style: (Theme.of(context).textTheme.labelMedium ?? const TextStyle()).copyWith(color: Theme.of(context).colorScheme.onSurface),
         ),
       ),
     );
