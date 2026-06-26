@@ -44,7 +44,7 @@ ThemeData buildAppTheme() {
       style: FilledButton.styleFrom(
         backgroundColor: primaryGreen,
         foregroundColor: Colors.white,
-        minimumSize: const Size.fromHeight(48),
+        minimumSize: const Size(0, 48),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       ),
     ),

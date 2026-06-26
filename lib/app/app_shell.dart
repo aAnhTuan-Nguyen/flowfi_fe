@@ -1,20 +1,20 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 import '../features/budgets/presentation/screens/budgets_screen.dart';
 import '../features/home/presentation/screens/home_screen.dart';
 import '../features/insights/presentation/screens/insights_screen.dart';
 import '../features/transactions/presentation/screens/transactions_screen.dart';
 import '../features/wallets/presentation/screens/wallets_screen.dart';
+import '../routes/app_routes.dart';
 
-class FlowFiAppShell extends StatefulWidget {
-  const FlowFiAppShell({super.key});
+class FlowFiAppShell extends StatelessWidget {
+  const FlowFiAppShell({super.key, this.selectedIndex = 0})
+    : assert(selectedIndex >= 0 && selectedIndex < _tabCount);
 
-  @override
-  State<FlowFiAppShell> createState() => _FlowFiAppShellState();
-}
+  final int selectedIndex;
 
-class _FlowFiAppShellState extends State<FlowFiAppShell> {
-  int _selectedIndex = 0;
+  static const _tabCount = 5;
 
   static const _screens = <Widget>[
     HomeScreen(),
@@ -24,14 +24,28 @@ class _FlowFiAppShellState extends State<FlowFiAppShell> {
     InsightsScreen(),
   ];
 
+  static const _routes = <String>[
+    AppRoutes.home,
+    AppRoutes.transactions,
+    AppRoutes.wallets,
+    AppRoutes.budgets,
+    AppRoutes.insights,
+  ];
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: IndexedStack(index: _selectedIndex, children: _screens),
+      body: IndexedStack(
+        index: selectedIndex,
+        sizing: StackFit.expand,
+        children: _screens,
+      ),
       bottomNavigationBar: NavigationBar(
-        selectedIndex: _selectedIndex,
+        selectedIndex: selectedIndex,
         onDestinationSelected: (index) {
-          setState(() => _selectedIndex = index);
+          if (index != selectedIndex) {
+            context.go(_routes[index]);
+          }
         },
         destinations: const [
           NavigationDestination(
