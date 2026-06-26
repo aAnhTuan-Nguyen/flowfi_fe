@@ -6,13 +6,14 @@ These rules apply to the entire repository. Read
 
 ## Current project state
 
-FlowFi is a Flutter frontend at the foundation stage. The disposable
-`features/example` vertical slice demonstrates the intended architecture but is
-not a production feature. It may be copied selectively and then deleted.
+FlowFi is a Flutter frontend at the foundation stage. The real auth slice is
+the current architecture reference. Dashboard tabs beyond auth are still
+placeholder surfaces until their API integration is implemented.
 
 Do not treat planned product capabilities as implemented. Backend contracts,
-storage, authentication, AI/OCR services, and offline conflict rules remain
-undecided until code or an approved specification establishes them.
+local persistence beyond secure refresh-token storage, AI/OCR services, and
+offline conflict rules remain undecided until code or an approved specification
+establishes them.
 
 ## Before changing code
 

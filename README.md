@@ -6,10 +6,10 @@ budgets, reports, financial insights, and offline synchronization.
 
 ## Current status
 
-The repository contains the application foundation and a disposable `example`
-feature that demonstrates the intended dependency flow. It is teaching code,
-not a FlowFi product feature. Copy the relevant pattern and delete the example
-when the first real feature is ready.
+The repository contains the application foundation, a real authentication slice,
+and placeholder dashboard tabs for the main FlowFi surfaces. Backend APIs are
+mapped in [`docs/API_MAP.md`](docs/API_MAP.md); only authentication is wired in
+the frontend so far.
 
 ## Foundation stack
 
@@ -18,6 +18,7 @@ when the first real feature is ready.
 - GetIt for dependency composition
 - Dio for HTTP communication
 - GoRouter for navigation
+- flutter_secure_storage for persisted refresh-token storage
 
 Detailed design and dependency rules are documented in
 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) and
@@ -50,5 +51,5 @@ flutter analyze
 flutter test
 ```
 
-Backend contracts, persistence, authentication, AI/OCR providers, and offline
-conflict handling have not been selected in this frontend repository yet.
+Most product APIs, local persistence, AI/OCR providers, and offline conflict
+handling have not been implemented in this frontend repository yet.
