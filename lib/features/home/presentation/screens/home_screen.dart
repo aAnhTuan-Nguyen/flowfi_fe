@@ -1,4 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+
+import '../../../../routes/app_routes.dart';
+import '../../../ai_processing/presentation/widgets/image_transaction_import_sheet.dart';
+import '../../../auth/presentation/providers/auth_controller.dart';
+import '../../../shared/presentation/widgets/crud_helpers.dart';
+import '../../../shared/presentation/widgets/feature_states.dart';
+import '../../../tags/presentation/widgets/tag_manager_sheet.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -47,7 +56,7 @@ class HomeScreen extends StatelessWidget {
             _SectionHeader(
               title: 'Recent Transactions',
               actionLabel: 'View All',
-              onActionPressed: () {},
+              onActionPressed: () => context.go(AppRoutes.transactions),
             ),
             const SizedBox(height: 10),
             ..._transactions.map(
@@ -63,11 +72,11 @@ class HomeScreen extends StatelessWidget {
   }
 }
 
-class _HomeHeader extends StatelessWidget {
+class _HomeHeader extends ConsumerWidget {
   const _HomeHeader();
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final colors = Theme.of(context).colorScheme;
 
     return Row(
@@ -92,6 +101,8 @@ class _HomeHeader extends StatelessWidget {
             style: Theme.of(
               context,
             ).textTheme.titleMedium?.copyWith(color: const Color(0xFF49672A)),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
           ),
         ),
         IconButton(
@@ -99,10 +110,43 @@ class _HomeHeader extends StatelessWidget {
           icon: const Icon(Icons.notifications_none_rounded),
           tooltip: 'Notifications',
         ),
+        PopupMenuButton<_AccountAction>(
+          tooltip: 'Account',
+          icon: const Icon(Icons.account_circle_outlined),
+          onSelected: (action) async {
+            switch (action) {
+              case _AccountAction.signOut:
+                final confirmed = await confirmDestructiveAction(
+                  context,
+                  title: 'Sign out?',
+                  message: 'You will need to log in again to use FlowFi.',
+                  actionLabel: 'Sign out',
+                );
+                if (!confirmed || !context.mounted) {
+                  return;
+                }
+                try {
+                  await ref.read(authControllerProvider.notifier).signOut();
+                } catch (_) {
+                  if (context.mounted) {
+                    showGenericMutationError(context);
+                  }
+                }
+            }
+          },
+          itemBuilder: (context) => const [
+            PopupMenuItem(
+              value: _AccountAction.signOut,
+              child: Text('Sign out'),
+            ),
+          ],
+        ),
       ],
     );
   }
 }
+
+enum _AccountAction { signOut }
 
 class _BalanceCard extends StatelessWidget {
   const _BalanceCard();
@@ -178,20 +222,37 @@ class _QuickActions extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Row(
+    return Row(
       children: [
         Expanded(
-          child: _QuickActionCard(icon: Icons.add_rounded, label: 'Add'),
+          child: _QuickActionCard(
+            icon: Icons.add_rounded,
+            label: 'Add',
+            onTap: () => context.go(AppRoutes.transactions),
+          ),
         ),
-        SizedBox(width: 10),
+        const SizedBox(width: 10),
         Expanded(
-          child: _QuickActionCard(icon: Icons.mic_none_rounded, label: 'Voice'),
+          child: _QuickActionCard(
+            icon: Icons.sell_outlined,
+            label: 'Tags',
+            onTap: () => showFlowFiFormSheet<void>(
+              context: context,
+              title: 'Manage tags',
+              child: const TagManagerSheet(),
+            ),
+          ),
         ),
-        SizedBox(width: 10),
+        const SizedBox(width: 10),
         Expanded(
           child: _QuickActionCard(
             icon: Icons.document_scanner_outlined,
             label: 'Scan',
+            onTap: () => showFlowFiFormSheet<void>(
+              context: context,
+              title: 'Scan receipt',
+              child: const ImageTransactionImportSheet(),
+            ),
           ),
         ),
       ],
@@ -200,10 +261,15 @@ class _QuickActions extends StatelessWidget {
 }
 
 class _QuickActionCard extends StatelessWidget {
-  const _QuickActionCard({required this.icon, required this.label});
+  const _QuickActionCard({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+  });
 
   final IconData icon;
   final String label;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -211,7 +277,7 @@ class _QuickActionCard extends StatelessWidget {
       color: Colors.white,
       borderRadius: BorderRadius.circular(14),
       child: InkWell(
-        onTap: () {},
+        onTap: onTap,
         borderRadius: BorderRadius.circular(14),
         child: Container(
           height: 76,

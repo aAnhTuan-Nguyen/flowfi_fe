@@ -13,6 +13,9 @@ import '../features/auth/domain/usecases/bootstrap_auth_session_use_case.dart';
 import '../features/auth/domain/usecases/sign_in_use_case.dart';
 import '../features/auth/domain/usecases/sign_out_use_case.dart';
 import '../features/auth/domain/usecases/sign_up_use_case.dart';
+import '../features/ai_processing/data/datasources/ai_processing_remote_data_source.dart';
+import '../features/ai_processing/data/repositories/ai_processing_repository_impl.dart';
+import '../features/ai_processing/domain/repositories/ai_processing_repository.dart';
 import '../features/budgets/data/datasources/budget_remote_data_source.dart';
 import '../features/budgets/data/repositories/budget_repository_impl.dart';
 import '../features/budgets/domain/repositories/budget_repository.dart';
@@ -115,6 +118,18 @@ void configureDependencies() {
     serviceLocator.registerLazySingleton<TransactionRepository>(
       () => TransactionRepositoryImpl(
         serviceLocator<TransactionRemoteDataSource>(),
+      ),
+    );
+  }
+  if (!serviceLocator.isRegistered<AiProcessingRemoteDataSource>()) {
+    serviceLocator.registerLazySingleton<AiProcessingRemoteDataSource>(
+      () => DioAiProcessingRemoteDataSource(serviceLocator<Dio>()),
+    );
+  }
+  if (!serviceLocator.isRegistered<AiProcessingRepository>()) {
+    serviceLocator.registerLazySingleton<AiProcessingRepository>(
+      () => AiProcessingRepositoryImpl(
+        serviceLocator<AiProcessingRemoteDataSource>(),
       ),
     );
   }

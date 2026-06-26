@@ -9,6 +9,7 @@ import 'package:flowfi_fe/features/auth/domain/usecases/bootstrap_auth_session_u
 import 'package:flowfi_fe/features/auth/domain/usecases/sign_in_use_case.dart';
 import 'package:flowfi_fe/features/auth/domain/usecases/sign_out_use_case.dart';
 import 'package:flowfi_fe/features/auth/domain/usecases/sign_up_use_case.dart';
+import 'package:flowfi_fe/features/ai_processing/domain/repositories/ai_processing_repository.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -28,6 +29,7 @@ void main() {
     expect(serviceLocator.isRegistered<SignInUseCase>(), isTrue);
     expect(serviceLocator.isRegistered<SignUpUseCase>(), isTrue);
     expect(serviceLocator.isRegistered<SignOutUseCase>(), isTrue);
+    expect(serviceLocator.isRegistered<AiProcessingRepository>(), isTrue);
     expect(serviceLocator<Dio>(), same(serviceLocator<Dio>()));
     expect(
       serviceLocator<Dio>().interceptors.whereType<AuthInterceptor>().length,

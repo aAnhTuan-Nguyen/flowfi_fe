@@ -57,7 +57,7 @@ void main() {
     expect(find.text('+5,000,000 VND'), findsOneWidget);
     expect(find.text('+2.4% this month'), findsOneWidget);
     expect(find.text('Add'), findsOneWidget);
-    expect(find.text('Voice'), findsOneWidget);
+    expect(find.text('Tags'), findsOneWidget);
     expect(find.text('Scan'), findsOneWidget);
     expect(find.text('AI Insights'), findsOneWidget);
     expect(find.text('Budget Health'), findsOneWidget);
@@ -130,6 +130,105 @@ void main() {
 
     expect(find.text('Monthly Salary'), findsOneWidget);
     expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('home scan quick action opens the image import sheet', (
+    tester,
+  ) async {
+    await _pumpApp(tester, _authenticatedRepository());
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Scan'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Scan receipt'), findsOneWidget);
+    expect(find.text('Take photo'), findsOneWidget);
+    expect(find.text('Choose image'), findsOneWidget);
+  });
+
+  testWidgets('home tags quick action opens the tag manager sheet', (
+    tester,
+  ) async {
+    await _pumpApp(tester, _authenticatedRepository());
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Tags'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Manage tags'), findsOneWidget);
+    expect(find.text('Add tag'), findsOneWidget);
+    expect(find.text('Food'), findsOneWidget);
+  });
+
+  testWidgets('home add quick action navigates to transactions', (
+    tester,
+  ) async {
+    final router = await _pumpApp(tester, _authenticatedRepository());
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Add'));
+    await tester.pumpAndSettle();
+
+    expect(router.state.uri.path, AppRoutes.transactions);
+    expect(
+      find.text('Review the latest confirmed and draft entries.'),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('home account menu signs out through auth controller', (
+    tester,
+  ) async {
+    final repository = _authenticatedRepository();
+    await _pumpApp(tester, repository);
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byTooltip('Account'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Sign out'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Sign out'));
+    await tester.pumpAndSettle();
+
+    expect(repository.signOutCalled, isTrue);
+    expect(find.text('Welcome Back'), findsOneWidget);
+    expect(find.text('Login'), findsOneWidget);
+  });
+
+  testWidgets('transactions scan action opens the image import sheet', (
+    tester,
+  ) async {
+    await _pumpApp(
+      tester,
+      _authenticatedRepository(),
+      initialLocation: AppRoutes.transactions,
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byTooltip('Scan receipt'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Scan receipt'), findsOneWidget);
+    expect(find.text('Take photo'), findsOneWidget);
+    expect(find.text('Choose image'), findsOneWidget);
+  });
+
+  testWidgets('transactions tag action opens the reusable tag manager', (
+    tester,
+  ) async {
+    await _pumpApp(
+      tester,
+      _authenticatedRepository(),
+      initialLocation: AppRoutes.transactions,
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byTooltip('Manage tags'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Manage tags'), findsOneWidget);
+    expect(find.text('Add tag'), findsOneWidget);
+    expect(find.text('Food'), findsOneWidget);
   });
 
   testWidgets('opens the home tab at the root route when authenticated', (
@@ -266,9 +365,19 @@ FakeAuthRepository _authenticatedRepository() {
 }
 
 Future<void> _pumpShell(WidgetTester tester) async {
+  final authRepository = _authenticatedRepository();
   await tester.pumpWidget(
     ProviderScope(
       overrides: [
+        authRepositoryProvider.overrideWithValue(authRepository),
+        bootstrapAuthSessionUseCaseProvider.overrideWithValue(
+          BootstrapAuthSessionUseCase(authRepository),
+        ),
+        signInUseCaseProvider.overrideWithValue(SignInUseCase(authRepository)),
+        signUpUseCaseProvider.overrideWithValue(SignUpUseCase(authRepository)),
+        signOutUseCaseProvider.overrideWithValue(
+          SignOutUseCase(authRepository),
+        ),
         transactionRepositoryProvider.overrideWithValue(
           _FakeTransactionRepository(),
         ),
