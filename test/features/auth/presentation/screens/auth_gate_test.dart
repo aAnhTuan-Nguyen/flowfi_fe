@@ -23,6 +23,23 @@ void main() {
     expect(find.byType(FlowFiAppShell), findsNothing);
   });
 
+  testWidgets('returns from sign up to the sign in screen', (tester) async {
+    await tester.pumpWidget(_app(FakeAuthRepository()));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Create Account'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Create account'), findsOneWidget);
+    expect(find.text('Back to Login'), findsOneWidget);
+
+    await tester.tap(find.text('Back to Login'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Welcome Back'), findsOneWidget);
+    expect(find.text('Login'), findsOneWidget);
+  });
+
   testWidgets('shows the app shell when authenticated', (tester) async {
     await tester.pumpWidget(
       _app(

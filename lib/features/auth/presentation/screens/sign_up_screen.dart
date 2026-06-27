@@ -63,9 +63,9 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                       ),
                       const Spacer(),
                       IconButton(
-                        tooltip: 'Back',
-                        onPressed: () => Navigator.of(context).maybePop(),
-                        icon: const Icon(Icons.help_outline_rounded, size: 18),
+                        tooltip: 'Back to login',
+                        onPressed: isLoading ? null : _returnToSignIn,
+                        icon: const Icon(Icons.arrow_back_rounded, size: 18),
                       ),
                     ],
                   ),
@@ -199,6 +199,12 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                                   )
                                 : const Icon(Icons.arrow_forward_rounded),
                           ),
+                          const SizedBox(height: 12),
+                          TextButton.icon(
+                            onPressed: isLoading ? null : _returnToSignIn,
+                            icon: const Icon(Icons.arrow_back_rounded),
+                            label: const Text('Back to Login'),
+                          ),
                           const SizedBox(height: 24),
                           Text(
                             'LUMINOUS CORE INTELLIGENCE',
@@ -236,6 +242,10 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
               ? null
               : _nameController.text.trim(),
         );
+  }
+
+  void _returnToSignIn() {
+    Navigator.of(context).maybePop();
   }
 }
 

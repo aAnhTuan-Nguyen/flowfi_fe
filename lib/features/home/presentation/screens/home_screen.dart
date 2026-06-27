@@ -332,75 +332,128 @@ class _AiInsightsCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 16),
-          Row(
-            children: [
-              const SizedBox(
-                width: 96,
-                height: 96,
-                child: Stack(
-                  alignment: Alignment.center,
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final isCompact = constraints.maxWidth < 320;
+              final chartSize = isCompact
+                  ? constraints.maxWidth.clamp(72.0, 96.0)
+                  : 96.0;
+
+              final chart = _InsightChart(size: chartSize);
+              final insightText = _InsightText(
+                textStyle: Theme.of(context).textTheme.bodyMedium,
+                highlightColor: Theme.of(context).colorScheme.primary,
+                textAlign: isCompact ? TextAlign.center : TextAlign.start,
+              );
+
+              if (isCompact) {
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    CircularProgressIndicator(
-                      value: 0.65,
-                      strokeWidth: 10,
-                      backgroundColor: Color(0xFFD7DED0),
-                      valueColor: AlwaysStoppedAnimation(Color(0xFF49672A)),
-                      strokeCap: StrokeCap.round,
-                    ),
-                    Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          'FOOD',
-                          style: TextStyle(
-                            fontSize: 9,
-                            fontWeight: FontWeight.w700,
-                            color: Color(0xFF757872),
-                          ),
-                        ),
-                        Text(
-                          '65%',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w800,
-                            color: Color(0xFF1B211A),
-                          ),
-                        ),
-                      ],
-                    ),
+                    chart,
+                    const SizedBox(height: 14),
+                    insightText,
                   ],
+                );
+              }
+
+              return Row(
+                children: [
+                  chart,
+                  const SizedBox(width: 18),
+                  Expanded(child: insightText),
+                ],
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _InsightChart extends StatelessWidget {
+  const _InsightChart({required this.size});
+
+  final double size;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox.square(
+      dimension: size,
+      child: const Stack(
+        alignment: Alignment.center,
+        children: [
+          Positioned.fill(
+            child: CircularProgressIndicator(
+              value: 0.65,
+              strokeWidth: 10,
+              backgroundColor: Color(0xFFD7DED0),
+              valueColor: AlwaysStoppedAnimation(Color(0xFF49672A)),
+              strokeCap: StrokeCap.round,
+            ),
+          ),
+          Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'FOOD',
+                style: TextStyle(
+                  fontSize: 9,
+                  fontWeight: FontWeight.w700,
+                  color: Color(0xFF757872),
                 ),
               ),
-              const SizedBox(width: 18),
-              Expanded(
-                child: Text.rich(
-                  TextSpan(
-                    text: 'Your spending on ',
-                    children: [
-                      const TextSpan(
-                        text: 'Dining Out',
-                        style: TextStyle(fontWeight: FontWeight.w800),
-                      ),
-                      const TextSpan(text: ' is '),
-                      TextSpan(
-                        text: '12%',
-                        style: TextStyle(
-                          color: Theme.of(context).colorScheme.primary,
-                          fontWeight: FontWeight.w800,
-                        ),
-                      ),
-                      const TextSpan(
-                        text: ' lower than last month. Keep it up!',
-                      ),
-                    ],
-                  ),
-                  style: Theme.of(context).textTheme.bodyMedium,
+              Text(
+                '65%',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w800,
+                  color: Color(0xFF1B211A),
                 ),
               ),
             ],
           ),
         ],
       ),
+    );
+  }
+}
+
+class _InsightText extends StatelessWidget {
+  const _InsightText({
+    required this.textStyle,
+    required this.highlightColor,
+    required this.textAlign,
+  });
+
+  final TextStyle? textStyle;
+  final Color highlightColor;
+  final TextAlign textAlign;
+
+  @override
+  Widget build(BuildContext context) {
+    return Text.rich(
+      TextSpan(
+        text: 'Your spending on ',
+        children: [
+          const TextSpan(
+            text: 'Dining Out',
+            style: TextStyle(fontWeight: FontWeight.w800),
+          ),
+          const TextSpan(text: ' is '),
+          TextSpan(
+            text: '12%',
+            style: TextStyle(
+              color: highlightColor,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+          const TextSpan(text: ' lower than last month. Keep it up!'),
+        ],
+      ),
+      textAlign: textAlign,
+      style: textStyle,
     );
   }
 }

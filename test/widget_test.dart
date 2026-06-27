@@ -132,6 +132,27 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
+  testWidgets('home AI insights card adapts on a narrow viewport', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(320, 640);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await _pumpShell(tester);
+    await tester.pumpAndSettle();
+
+    expect(find.text('AI Insights'), findsOneWidget);
+    expect(find.text('65%'), findsOneWidget);
+    expect(find.textContaining('Your spending on'), findsOneWidget);
+    expect(
+      tester.getSize(find.byType(CircularProgressIndicator)),
+      const Size(96, 96),
+    );
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('home scan quick action opens the image import sheet', (
     tester,
   ) async {
