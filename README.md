@@ -41,6 +41,24 @@ flutter devices
 flutter run -d <device-id>
 ```
 
+## Environment configuration
+
+The app reads its API base URL from `.env` through `flutter_dotenv`.
+Create a local `.env` from `.env.example` and adjust it for your backend:
+
+```env
+API_BASE_URL=http://localhost:3005/api/v1/
+```
+
+For the Android Emulator, use the host machine alias instead of `localhost`:
+
+```env
+API_BASE_URL=http://10.0.2.2:3005/api/v1/
+```
+
+The `.env` file is ignored by Git. Keep secrets out of it because Flutter
+assets are bundled into the app.
+
 ## Development checks
 
 Run these checks before submitting a change:

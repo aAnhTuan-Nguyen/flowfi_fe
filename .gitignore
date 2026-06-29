@@ -26,6 +26,9 @@ migrate_working_dir/
 .antigravity/
 .gemini/
 
+# Local app environment
+.env
+
 # Flutter/Dart/Pub related
 **/doc/api/
 **/ios/Flutter/.last_build_id

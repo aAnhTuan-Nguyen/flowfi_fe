@@ -130,13 +130,13 @@ registration function called from it. Widgets do not access the locator.
 
 ### Dio
 
-`AppConfig.apiBaseUrl` currently uses a temporary Android Emulator local URL
-with the `/api/v1/` prefix. Each developer may replace it with the address of
-their local backend. A commented `String.fromEnvironment` alternative is kept
-next to it for the point when the API Gateway and deployment environments are
-available. Authentication is handled by a Dio interceptor that attaches the
-in-memory access token and refreshes it with the stored refresh token after a
-401. Never log sensitive financial payloads or secrets.
+`AppConfig.apiBaseUrl` reads `API_BASE_URL` from `.env` through
+`flutter_dotenv`, with a local `/api/v1/` fallback when dotenv is not loaded.
+Developers should keep local backend addresses in their ignored `.env` file and
+use `.env.example` as the shared template. Authentication is handled by a Dio
+interceptor that attaches the in-memory access token and refreshes it with the
+stored refresh token after a 401. Never log sensitive financial payloads or
+secrets.
 
 ### Token storage
 

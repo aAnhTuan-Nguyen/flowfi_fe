@@ -33,6 +33,7 @@ void main() {
     expect(find.text('Create account'), findsOneWidget);
     expect(find.text('Back to Login'), findsOneWidget);
 
+    await tester.ensureVisible(find.text('Back to Login'));
     await tester.tap(find.text('Back to Login'));
     await tester.pumpAndSettle();
 
