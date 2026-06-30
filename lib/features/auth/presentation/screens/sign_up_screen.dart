@@ -31,6 +31,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
   Widget build(BuildContext context) {
     final authValue = ref.watch(authControllerProvider);
     final isLoading = authValue.isLoading;
+    final colors = Theme.of(context).colorScheme;
 
     return Scaffold(
       body: SafeArea(
@@ -47,13 +48,13 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                         width: 18,
                         height: 18,
                         decoration: BoxDecoration(
-                          color: const Color(0xFFE7F1DA),
+                          color: colors.primaryContainer,
                           borderRadius: BorderRadius.circular(5),
                         ),
-                        child: const Icon(
+                        child: Icon(
                           Icons.bolt_rounded,
                           size: 13,
-                          color: Color(0xFF49672A),
+                          color: colors.primary,
                         ),
                       ),
                       const SizedBox(width: 6),
@@ -73,8 +74,9 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                   Container(
                     padding: const EdgeInsets.all(28),
                     decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.72),
+                      color: colors.surface,
                       borderRadius: BorderRadius.circular(18),
+                      border: Border.all(color: colors.outlineVariant),
                     ),
                     child: Form(
                       key: _formKey,
@@ -93,7 +95,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                             style: Theme.of(context).textTheme.bodyMedium
                                 ?.copyWith(
                                   fontSize: 12,
-                                  color: const Color(0xFF74786E),
+                                  color: colors.onSurfaceVariant,
                                 ),
                           ),
                           const SizedBox(height: 26),
@@ -205,17 +207,6 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                             icon: const Icon(Icons.arrow_back_rounded),
                             label: const Text('Back to Login'),
                           ),
-                          const SizedBox(height: 24),
-                          Text(
-                            'LUMINOUS CORE INTELLIGENCE',
-                            textAlign: TextAlign.center,
-                            style: Theme.of(context).textTheme.labelMedium
-                                ?.copyWith(
-                                  fontSize: 10,
-                                  color: const Color(0xFFB9BDAF),
-                                  letterSpacing: 1.2,
-                                ),
-                          ),
                         ],
                       ),
                     ),
@@ -262,7 +253,7 @@ class _Label extends StatelessWidget {
         text.toUpperCase(),
         style: Theme.of(context).textTheme.labelMedium?.copyWith(
           fontSize: 10,
-          color: const Color(0xFF74786E),
+          color: Theme.of(context).colorScheme.onSurfaceVariant,
         ),
       ),
     );
@@ -273,10 +264,7 @@ InputDecoration _decor(String hintText, IconData icon) {
   return InputDecoration(
     hintText: hintText,
     prefixIcon: Icon(icon, size: 18),
-    filled: true,
-    fillColor: Colors.white,
     contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-    border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
   );
 }
 

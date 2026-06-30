@@ -33,6 +33,7 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
     final errorText = authValue.hasError
         ? 'Could not login. Please check your credentials.'
         : widget.initialMessage;
+    final colors = Theme.of(context).colorScheme;
 
     return Scaffold(
       body: SafeArea(
@@ -46,7 +47,7 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
                   Text(
                     'FlowFi',
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      color: const Color(0xFF2F7A32),
+                      color: colors.primary,
                       fontWeight: FontWeight.w800,
                     ),
                   ),
@@ -62,7 +63,7 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
                             textAlign: TextAlign.center,
                             style: Theme.of(context).textTheme.headlineMedium
                                 ?.copyWith(
-                                  color: const Color(0xFF0D5C16),
+                                  color: colors.onSurface,
                                   fontWeight: FontWeight.w800,
                                 ),
                           ),
@@ -73,7 +74,7 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
                             style: Theme.of(context).textTheme.bodyMedium
                                 ?.copyWith(
                                   fontSize: 12,
-                                  color: const Color(0xFF5B604E),
+                                  color: colors.onSurfaceVariant,
                                 ),
                           ),
                           const SizedBox(height: 22),
@@ -99,7 +100,7 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
                                 style: Theme.of(context).textTheme.labelMedium
                                     ?.copyWith(
                                       fontSize: 10,
-                                      color: const Color(0xFF49672A),
+                                      color: colors.primary,
                                     ),
                               ),
                             ],
@@ -167,6 +168,7 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
                                   style: Theme.of(context).textTheme.labelMedium
                                       ?.copyWith(
                                         color: const Color(0xFFB5AA76),
+                                        letterSpacing: 0,
                                         fontSize: 10,
                                       ),
                                 ),
@@ -218,16 +220,19 @@ class _AuthCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+
     return Container(
       padding: const EdgeInsets.fromLTRB(18, 22, 18, 18),
       decoration: BoxDecoration(
-        color: const Color(0xFFEFE9B8),
-        borderRadius: BorderRadius.circular(8),
+        color: colors.surface,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: colors.outlineVariant),
         boxShadow: const [
           BoxShadow(
-            color: Color(0x141B211A),
-            blurRadius: 20,
-            offset: Offset(0, 8),
+            color: Color(0x0F172015),
+            blurRadius: 24,
+            offset: Offset(0, 10),
           ),
         ],
       ),
@@ -247,7 +252,7 @@ class _FieldLabel extends StatelessWidget {
       text.toUpperCase(),
       style: Theme.of(context).textTheme.labelMedium?.copyWith(
         fontSize: 10,
-        color: const Color(0xFF5B604E),
+        color: Theme.of(context).colorScheme.onSurfaceVariant,
       ),
     );
   }
@@ -262,10 +267,7 @@ InputDecoration _inputDecoration({
     hintText: hintText,
     prefixIcon: Icon(icon, size: 18),
     suffixIcon: suffix,
-    filled: true,
-    fillColor: Colors.white,
     contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-    border: OutlineInputBorder(borderRadius: BorderRadius.circular(6)),
   );
 }
 

@@ -50,10 +50,10 @@ class _ImageTransactionImportSheetState
         color: const Color(0xFFFFF6EB),
         child: Row(
           children: [
-            const Expanded(child: Text('Could not load wallets.')),
+            const Expanded(child: Text('Không tải được ví.')),
             TextButton(
               onPressed: () => ref.read(walletsProvider.notifier).reload(),
-              child: const Text('Retry'),
+              child: const Text('Thử lại'),
             ),
           ],
         ),
@@ -66,7 +66,7 @@ class _ImageTransactionImportSheetState
     if (wallets.isEmpty) {
       return const FlowFiCard(
         color: Color(0xFFFFF6EB),
-        child: Text('Create a wallet before scanning receipts.'),
+        child: Text('Tạo ít nhất một ví trước khi quét hóa đơn.'),
       );
     }
 
@@ -79,7 +79,7 @@ class _ImageTransactionImportSheetState
       children: [
         DropdownButtonFormField<String>(
           initialValue: _walletId,
-          decoration: const InputDecoration(labelText: 'Wallet'),
+          decoration: const InputDecoration(labelText: 'Ví'),
           items: [
             for (final wallet in wallets)
               DropdownMenuItem(value: wallet.id, child: Text(wallet.name)),
@@ -97,7 +97,7 @@ class _ImageTransactionImportSheetState
               SizedBox(width: 10),
               Expanded(
                 child: Text(
-                  'Scanning an image creates confirmed transactions immediately.',
+                  'AI sẽ đọc hóa đơn. Hiện backend tạo giao dịch sau khi quét, nên hãy kiểm tra lại kết quả ngay.',
                 ),
               ),
             ],
@@ -112,7 +112,7 @@ class _ImageTransactionImportSheetState
                     ? null
                     : () => _pickImage(ImageSource.camera),
                 icon: const Icon(Icons.photo_camera_rounded),
-                label: const Text('Take photo'),
+                label: const Text('Chụp ảnh'),
               ),
             ),
             const SizedBox(width: 10),
@@ -122,7 +122,7 @@ class _ImageTransactionImportSheetState
                     ? null
                     : () => _pickImage(ImageSource.gallery),
                 icon: const Icon(Icons.image_rounded),
-                label: const Text('Choose image'),
+                label: const Text('Chọn ảnh'),
               ),
             ),
           ],
@@ -182,7 +182,7 @@ class _ImageTransactionImportSheetState
                     child: CircularProgressIndicator(strokeWidth: 2),
                   )
                 : const Icon(Icons.document_scanner_rounded),
-            label: Text(_isSubmitting ? 'Scanning...' : 'Scan image'),
+            label: Text(_isSubmitting ? 'Đang quét...' : 'Quét ảnh'),
           ),
         ),
         if (result != null) ...[
@@ -254,7 +254,7 @@ class _ImageTransactionImportSheetState
     } catch (_) {
       if (mounted) {
         setState(() {
-          _errorMessage = 'Could not scan this image. Please try again.';
+          _errorMessage = 'Không quét được ảnh này. Vui lòng thử lại.';
           _isSubmitting = false;
         });
       }
@@ -277,12 +277,12 @@ class _ImportResultCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Created $count confirmed transaction${count == 1 ? '' : 's'}.',
+            'Đã tạo $count giao dịch từ hóa đơn.',
             style: Theme.of(context).textTheme.titleMedium,
           ),
           if (result.imageType != null) ...[
             const SizedBox(height: 4),
-            Text('Image type: ${result.imageType}'),
+            Text('Loại ảnh: ${result.imageType}'),
           ],
           const SizedBox(height: 10),
           for (final item in result.createdTransactions.take(3))
