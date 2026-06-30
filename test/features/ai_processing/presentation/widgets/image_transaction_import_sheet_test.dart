@@ -23,9 +23,9 @@ void main() {
     );
     await tester.pump();
 
-    expect(find.text('Create a wallet before scanning receipts.'), findsOne);
-    expect(find.text('Take photo'), findsNothing);
-    expect(find.text('Choose image'), findsNothing);
+    expect(find.text('Tạo ít nhất một ví trước khi quét hóa đơn.'), findsOne);
+    expect(find.text('Chụp ảnh'), findsNothing);
+    expect(find.text('Chọn ảnh'), findsNothing);
   });
 
   testWidgets('explains that scanned images create confirmed transactions', (
@@ -47,7 +47,7 @@ void main() {
 
     expect(
       find.text(
-        'Scanning an image creates confirmed transactions immediately.',
+        'AI sẽ đọc hóa đơn. Hiện backend tạo giao dịch sau khi quét, nên hãy kiểm tra lại kết quả ngay.',
       ),
       findsOneWidget,
     );
@@ -76,7 +76,7 @@ void main() {
     );
     await tester.pump();
 
-    await tester.tap(find.text('Choose image'));
+    await tester.tap(find.text('Chọn ảnh'));
     await tester.pumpAndSettle();
 
     expect(find.byType(Image), findsOneWidget);

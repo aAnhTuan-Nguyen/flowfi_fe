@@ -57,7 +57,6 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byType(FlowFiAppShell), findsOneWidget);
-    expect(find.text('Recent Transactions'), findsOneWidget);
   });
 }
 

@@ -1,15 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../../core/finance/money_flow_type.dart';
-import '../../../tags/presentation/providers/tags_provider.dart';
-import '../../../tags/presentation/widgets/tag_manager_sheet.dart';
-import '../../../wallets/presentation/providers/wallets_provider.dart';
-import '../../../shared/presentation/widgets/crud_helpers.dart';
 import '../../../ai_processing/presentation/widgets/image_transaction_import_sheet.dart';
+import '../../../shared/presentation/widgets/feature_states.dart';
+import '../../../tags/presentation/widgets/tag_manager_sheet.dart';
 import '../../domain/entities/transaction.dart';
 import '../providers/transactions_provider.dart';
-import '../../../shared/presentation/widgets/feature_states.dart';
+import '../widgets/transaction_filter_bar.dart';
+import '../widgets/transaction_form_sheet.dart';
+import '../widgets/transaction_list.dart';
 
 class TransactionsScreen extends ConsumerStatefulWidget {
   const TransactionsScreen({super.key});
@@ -19,7 +18,7 @@ class TransactionsScreen extends ConsumerStatefulWidget {
 }
 
 class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
-  _TransactionFilter _filter = _TransactionFilter.all;
+  TransactionFilter _filter = TransactionFilter.all;
 
   @override
   Widget build(BuildContext context) {
@@ -27,70 +26,47 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
 
     return FlowFiFeatureScaffold(
       icon: Icons.receipt_long_rounded,
-      title: 'Transactions',
-      subtitle: 'Review the latest confirmed and draft entries.',
+      title: 'Giao dịch',
+      subtitle: 'Duyệt giao dịch mới, nháp và đã xác nhận.',
       onRefresh: () => ref.read(transactionsProvider.notifier).reload(),
       actions: [
         IconButton.outlined(
           onPressed: () => _showImageImport(context),
           icon: const Icon(Icons.document_scanner_rounded),
-          tooltip: 'Scan receipt',
+          tooltip: 'Quét hóa đơn',
         ),
         FilledButton.icon(
           onPressed: () => _showTransactionForm(context),
           icon: const Icon(Icons.add_rounded),
-          label: const Text('Add'),
+          label: const Text('Thêm'),
         ),
         IconButton.outlined(
           onPressed: () => _showTagManager(context),
           icon: const Icon(Icons.sell_outlined),
-          tooltip: 'Manage tags',
+          tooltip: 'Quản lý danh mục',
         ),
       ],
       child: SliverToBoxAdapter(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Wrap(
-              spacing: 8,
-              children: [
-                for (final filter in _TransactionFilter.values)
-                  FilterChip(
-                    label: Text(_filterLabel(filter)),
-                    selected: _filter == filter,
-                    onSelected: (_) => setState(() => _filter = filter),
-                  ),
-              ],
+            TransactionFilterBar(
+              selected: _filter,
+              onSelected: (filter) => setState(() => _filter = filter),
             ),
             const SizedBox(height: 12),
             transactions.when(
-              loading: () => const _InlineLoading(),
+              loading: () =>
+                  const FlowFiInlineLoading(label: 'Đang tải giao dịch'),
               error: (_, _) => _InlineError(
                 onRetry: () => ref.read(transactionsProvider.notifier).reload(),
               ),
-              data: (items) {
-                final filtered = items.where(_matchesFilter).toList();
-                if (filtered.isEmpty) {
-                  return const FlowFiCard(
-                    color: Color(0xFFFFF6EB),
-                    child: Text('No transactions match this view.'),
-                  );
-                }
-                return Column(
-                  children: [
-                    for (final transaction in filtered) ...[
-                      _TransactionCard(
-                        transaction: transaction,
-                        onEdit: () => _showTransactionForm(
-                          context,
-                          transaction: transaction,
-                        ),
-                      ),
-                      const SizedBox(height: 10),
-                    ],
-                  ],
-                );
-              },
+              data: (items) => TransactionList(
+                transactions: items.where(_filter.matches).toList(),
+                isFiltered: _filter != TransactionFilter.all,
+                onEdit: (transaction) =>
+                    _showTransactionForm(context, transaction: transaction),
+              ),
             ),
           ],
         ),
@@ -98,29 +74,18 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
     );
   }
 
-  bool _matchesFilter(Transaction transaction) {
-    return switch (_filter) {
-      _TransactionFilter.all => true,
-      _TransactionFilter.income => transaction.type == MoneyFlowType.income,
-      _TransactionFilter.expense => transaction.type == MoneyFlowType.expense,
-      _TransactionFilter.draft => transaction.status == TransactionStatus.draft,
-      _TransactionFilter.confirmed =>
-        transaction.status == TransactionStatus.confirmed,
-    };
-  }
-
   void _showTransactionForm(BuildContext context, {Transaction? transaction}) {
     showFlowFiFormSheet<void>(
       context: context,
-      title: transaction == null ? 'Add transaction' : 'Edit transaction',
-      child: _TransactionForm(transaction: transaction),
+      title: transaction == null ? 'Thêm giao dịch' : 'Sửa giao dịch',
+      child: TransactionFormSheet(transaction: transaction),
     );
   }
 
   void _showTagManager(BuildContext context) {
     showFlowFiFormSheet<void>(
       context: context,
-      title: 'Manage tags',
+      title: 'Quản lý danh mục',
       child: const TagManagerSheet(),
     );
   }
@@ -128,417 +93,8 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
   void _showImageImport(BuildContext context) {
     showFlowFiFormSheet<void>(
       context: context,
-      title: 'Scan receipt',
+      title: 'Quét hóa đơn',
       child: const ImageTransactionImportSheet(),
-    );
-  }
-}
-
-enum _TransactionFilter { all, income, expense, draft, confirmed }
-
-String _filterLabel(_TransactionFilter filter) {
-  return switch (filter) {
-    _TransactionFilter.all => 'All',
-    _TransactionFilter.income => 'Income',
-    _TransactionFilter.expense => 'Expense',
-    _TransactionFilter.draft => 'Draft',
-    _TransactionFilter.confirmed => 'Confirmed',
-  };
-}
-
-class _TransactionForm extends ConsumerStatefulWidget {
-  const _TransactionForm({this.transaction});
-
-  final Transaction? transaction;
-
-  @override
-  ConsumerState<_TransactionForm> createState() => _TransactionFormState();
-}
-
-class _TransactionFormState extends ConsumerState<_TransactionForm> {
-  final _formKey = GlobalKey<FormState>();
-  late final TextEditingController _titleController;
-  late final TextEditingController _amountController;
-  late final TextEditingController _merchantController;
-  late final TextEditingController _descriptionController;
-  String? _walletId;
-  String? _tagId;
-  late MoneyFlowType _type;
-  late TransactionStatus _status;
-  late DateTime _date;
-  bool _isSubmitting = false;
-
-  @override
-  void initState() {
-    super.initState();
-    final transaction = widget.transaction;
-    _titleController = TextEditingController(text: transaction?.title ?? '');
-    _amountController = TextEditingController(text: transaction?.amount ?? '');
-    _merchantController = TextEditingController(
-      text: transaction?.merchantName ?? '',
-    );
-    _descriptionController = TextEditingController(
-      text: transaction?.description ?? '',
-    );
-    _type = transaction?.type == MoneyFlowType.unknown
-        ? MoneyFlowType.expense
-        : transaction?.type ?? MoneyFlowType.expense;
-    _status = transaction?.status == TransactionStatus.unknown
-        ? TransactionStatus.draft
-        : transaction?.status ?? TransactionStatus.draft;
-    _date = transaction?.date ?? DateTime.now();
-  }
-
-  @override
-  void dispose() {
-    _titleController.dispose();
-    _amountController.dispose();
-    _merchantController.dispose();
-    _descriptionController.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final wallets = ref.watch(walletsProvider);
-    final tags = ref.watch(tagsProvider);
-
-    return wallets.when(
-      loading: () => const _InlineLoading(),
-      error: (_, _) => const Text('Could not load wallets.'),
-      data: (walletItems) => tags.when(
-        loading: () => const _InlineLoading(),
-        error: (_, _) => const Text('Could not load tags.'),
-        data: (tagItems) {
-          if (walletItems.isEmpty || tagItems.isEmpty) {
-            return const Text(
-              'Create at least one wallet and one tag before adding transactions.',
-            );
-          }
-          _walletId ??= _initialId(
-            widget.transaction?.walletId,
-            walletItems.map((wallet) => wallet.id),
-          );
-          _tagId ??= _initialId(
-            widget.transaction?.tagId,
-            tagItems.map((tag) => tag.id),
-          );
-          return Form(
-            key: _formKey,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                DropdownButtonFormField<String>(
-                  initialValue: _walletId,
-                  decoration: const InputDecoration(labelText: 'Wallet'),
-                  items: [
-                    for (final wallet in walletItems)
-                      DropdownMenuItem(
-                        value: wallet.id,
-                        child: Text(wallet.name),
-                      ),
-                  ],
-                  onChanged: (value) => setState(() => _walletId = value),
-                ),
-                const SizedBox(height: 12),
-                DropdownButtonFormField<String>(
-                  initialValue: _tagId,
-                  decoration: const InputDecoration(labelText: 'Tag'),
-                  items: [
-                    for (final tag in tagItems)
-                      DropdownMenuItem(value: tag.id, child: Text(tag.name)),
-                  ],
-                  onChanged: (value) => setState(() => _tagId = value),
-                ),
-                const SizedBox(height: 12),
-                TextFormField(
-                  controller: _titleController,
-                  decoration: const InputDecoration(labelText: 'Title'),
-                  validator: requiredText,
-                ),
-                const SizedBox(height: 12),
-                TextFormField(
-                  controller: _amountController,
-                  decoration: const InputDecoration(labelText: 'Amount'),
-                  keyboardType: const TextInputType.numberWithOptions(
-                    decimal: true,
-                  ),
-                  validator: requiredAmount,
-                ),
-                const SizedBox(height: 12),
-                Row(
-                  children: [
-                    Expanded(
-                      child: DropdownButtonFormField<MoneyFlowType>(
-                        initialValue: _type,
-                        decoration: const InputDecoration(labelText: 'Type'),
-                        items: const [
-                          DropdownMenuItem(
-                            value: MoneyFlowType.expense,
-                            child: Text('Expense'),
-                          ),
-                          DropdownMenuItem(
-                            value: MoneyFlowType.income,
-                            child: Text('Income'),
-                          ),
-                        ],
-                        onChanged: (value) {
-                          if (value != null) setState(() => _type = value);
-                        },
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: DropdownButtonFormField<TransactionStatus>(
-                        initialValue: _status,
-                        decoration: const InputDecoration(labelText: 'Status'),
-                        items: const [
-                          DropdownMenuItem(
-                            value: TransactionStatus.draft,
-                            child: Text('Draft'),
-                          ),
-                          DropdownMenuItem(
-                            value: TransactionStatus.confirmed,
-                            child: Text('Confirmed'),
-                          ),
-                        ],
-                        onChanged: (value) {
-                          if (value != null) setState(() => _status = value);
-                        },
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  title: const Text('Date'),
-                  subtitle: Text(_formatDate(_date)),
-                  trailing: const Icon(Icons.calendar_month_rounded),
-                  onTap: _pickDate,
-                ),
-                TextFormField(
-                  controller: _merchantController,
-                  decoration: const InputDecoration(labelText: 'Merchant'),
-                ),
-                const SizedBox(height: 12),
-                TextFormField(
-                  controller: _descriptionController,
-                  decoration: const InputDecoration(labelText: 'Description'),
-                  maxLines: 2,
-                ),
-                const SizedBox(height: 18),
-                SizedBox(
-                  width: double.infinity,
-                  child: FilledButton(
-                    onPressed: _isSubmitting ? null : _submit,
-                    child: Text(
-                      widget.transaction == null
-                          ? 'Create transaction'
-                          : 'Save',
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          );
-        },
-      ),
-    );
-  }
-
-  Future<void> _pickDate() async {
-    final picked = await showDatePicker(
-      context: context,
-      firstDate: DateTime(2000),
-      lastDate: DateTime(2100),
-      initialDate: _date,
-    );
-    if (picked != null) {
-      setState(() => _date = picked);
-    }
-  }
-
-  Future<void> _submit() async {
-    if (!_formKey.currentState!.validate() ||
-        _walletId == null ||
-        _tagId == null) {
-      return;
-    }
-    setState(() => _isSubmitting = true);
-    try {
-      final notifier = ref.read(transactionsProvider.notifier);
-      if (widget.transaction == null) {
-        await notifier.createTransaction(
-          walletId: _walletId!,
-          tagId: _tagId!,
-          title: _titleController.text.trim(),
-          amount: _amountController.text.trim(),
-          type: _type,
-          date: _date,
-          status: _status,
-          merchantName: emptyToNull(_merchantController.text.trim()),
-          description: emptyToNull(_descriptionController.text.trim()),
-        );
-      } else {
-        await notifier.updateTransaction(
-          widget.transaction!.id,
-          walletId: _walletId,
-          tagId: _tagId,
-          title: _titleController.text.trim(),
-          amount: _amountController.text.trim(),
-          type: _type,
-          date: _date,
-          status: _status,
-          merchantName: emptyToNull(_merchantController.text.trim()),
-          description: emptyToNull(_descriptionController.text.trim()),
-        );
-      }
-      if (mounted) Navigator.of(context).pop();
-    } catch (_) {
-      if (mounted) {
-        showGenericMutationError(context);
-        setState(() => _isSubmitting = false);
-      }
-    }
-  }
-}
-
-String _initialId(String? preferredId, Iterable<String> availableIds) {
-  if (preferredId != null && availableIds.contains(preferredId)) {
-    return preferredId;
-  }
-  return availableIds.first;
-}
-
-class _TransactionCard extends ConsumerWidget {
-  const _TransactionCard({required this.transaction, required this.onEdit});
-
-  final Transaction transaction;
-  final VoidCallback onEdit;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final isIncome = transaction.type == MoneyFlowType.income;
-    final amountPrefix = isIncome ? '+' : '-';
-
-    return FlowFiCard(
-      child: Row(
-        children: [
-          Container(
-            width: 44,
-            height: 44,
-            decoration: BoxDecoration(
-              color: isIncome
-                  ? const Color(0xFF49672A)
-                  : const Color(0xFFFFF1E3),
-              borderRadius: BorderRadius.circular(15),
-            ),
-            child: Icon(
-              isIncome
-                  ? Icons.trending_up_rounded
-                  : Icons.trending_down_rounded,
-              color: isIncome ? Colors.white : const Color(0xFF49672A),
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  transaction.title,
-                  style: Theme.of(context).textTheme.titleMedium,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: 3),
-                Text(
-                  _transactionMeta(transaction),
-                  style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                    color: const Color(0xFF757872),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(width: 12),
-          Text(
-            '$amountPrefix${transaction.amount}',
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              color: isIncome
-                  ? const Color(0xFF49672A)
-                  : const Color(0xFF1B211A),
-            ),
-            textAlign: TextAlign.end,
-          ),
-          PopupMenuButton<_TransactionAction>(
-            tooltip: 'Transaction actions',
-            onSelected: (action) async {
-              switch (action) {
-                case _TransactionAction.edit:
-                  onEdit();
-                case _TransactionAction.confirm:
-                  try {
-                    await ref
-                        .read(transactionsProvider.notifier)
-                        .confirmTransaction(transaction.id);
-                  } catch (_) {
-                    if (context.mounted) {
-                      showGenericMutationError(context);
-                    }
-                  }
-                case _TransactionAction.delete:
-                  final confirmed = await confirmDestructiveAction(
-                    context,
-                    title: 'Delete transaction?',
-                    message: 'This removes the transaction from FlowFi.',
-                  );
-                  if (confirmed) {
-                    try {
-                      await ref
-                          .read(transactionsProvider.notifier)
-                          .deleteTransaction(transaction.id);
-                    } catch (_) {
-                      if (context.mounted) {
-                        showGenericMutationError(context);
-                      }
-                    }
-                  }
-              }
-            },
-            itemBuilder: (context) => [
-              const PopupMenuItem(
-                value: _TransactionAction.edit,
-                child: Text('Edit'),
-              ),
-              if (transaction.status == TransactionStatus.draft)
-                const PopupMenuItem(
-                  value: _TransactionAction.confirm,
-                  child: Text('Confirm draft'),
-                ),
-              const PopupMenuItem(
-                value: _TransactionAction.delete,
-                child: Text('Delete'),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-enum _TransactionAction { edit, confirm, delete }
-
-class _InlineLoading extends StatelessWidget {
-  const _InlineLoading();
-
-  @override
-  Widget build(BuildContext context) {
-    return const Padding(
-      padding: EdgeInsets.symmetric(vertical: 24),
-      child: Center(child: CircularProgressIndicator()),
     );
   }
 }
@@ -553,27 +109,10 @@ class _InlineError extends StatelessWidget {
     return FlowFiCard(
       child: Row(
         children: [
-          const Expanded(child: Text('Could not load this section.')),
-          TextButton(onPressed: onRetry, child: const Text('Retry')),
+          const Expanded(child: Text('Không tải được giao dịch.')),
+          TextButton(onPressed: onRetry, child: const Text('Thử lại')),
         ],
       ),
     );
   }
-}
-
-String _transactionMeta(Transaction transaction) {
-  final date = transaction.date;
-  final dateLabel = date == null
-      ? 'No date'
-      : '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year}';
-  final status = switch (transaction.status) {
-    TransactionStatus.draft => 'Draft',
-    TransactionStatus.confirmed => 'Confirmed',
-    TransactionStatus.unknown => 'Unknown',
-  };
-  return '$dateLabel - $status';
-}
-
-String _formatDate(DateTime date) {
-  return '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year}';
 }

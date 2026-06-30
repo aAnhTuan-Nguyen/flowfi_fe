@@ -1,5 +1,6 @@
-import 'package:flowfi_fe/app/app_shell.dart';
+import 'package:fl_chart/fl_chart.dart';
 import 'package:flowfi_fe/app/app.dart';
+import 'package:flowfi_fe/app/app_shell.dart';
 import 'package:flowfi_fe/core/finance/money_flow_type.dart';
 import 'package:flowfi_fe/features/auth/domain/entities/auth_user.dart';
 import 'package:flowfi_fe/features/auth/domain/usecases/bootstrap_auth_session_use_case.dart';
@@ -25,12 +26,14 @@ import 'package:flowfi_fe/features/transactions/presentation/providers/transacti
 import 'package:flowfi_fe/features/wallets/domain/entities/wallet.dart';
 import 'package:flowfi_fe/features/wallets/domain/repositories/wallet_repository.dart';
 import 'package:flowfi_fe/features/wallets/presentation/providers/wallets_provider.dart';
-import 'package:flowfi_fe/routes/app_routes.dart';
 import 'package:flowfi_fe/routes/app_router.dart';
+import 'package:flowfi_fe/routes/app_routes.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:forui/forui.dart';
 import 'package:go_router/go_router.dart';
+import 'package:lottie/lottie.dart';
 
 import 'features/auth/presentation/providers/auth_controller_test.dart';
 
@@ -47,38 +50,47 @@ void main() {
     expect(find.text('Disposable architecture example'), findsNothing);
   });
 
-  testWidgets('shows the FlowFi home dashboard in the authenticated shell', (
-    tester,
-  ) async {
-    await _pumpShell(tester);
-    await tester.pumpAndSettle();
-
-    expect(find.text('FlowFi'), findsOneWidget);
-    expect(find.text('+5,000,000 VND'), findsOneWidget);
-    expect(find.text('+2.4% this month'), findsOneWidget);
-    expect(find.text('Add'), findsOneWidget);
-    expect(find.text('Tags'), findsOneWidget);
-    expect(find.text('Scan'), findsOneWidget);
-    expect(find.text('AI Insights'), findsOneWidget);
-    expect(find.text('Budget Health'), findsOneWidget);
-    expect(find.text('Recent Transactions'), findsOneWidget);
-    expect(find.text('Coffee House'), findsOneWidget);
-    expect(find.text('Disposable architecture example'), findsNothing);
-  });
-
-  testWidgets('switches between the five dashboard tabs', (tester) async {
+  testWidgets('installs Forui wrappers at the app root', (tester) async {
     await _pumpApp(tester, _authenticatedRepository());
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('Transactions'));
+    expect(find.byType(FTheme), findsOneWidget);
+    expect(find.byType(FToaster), findsOneWidget);
+    expect(find.byType(FTooltipGroup), findsOneWidget);
+  });
+
+  testWidgets('shows a provider-backed finance dashboard', (tester) async {
+    await _pumpShell(tester);
+    await tester.pumpAndSettle();
+
+    expect(find.text('Xin chào, Alex'), findsOneWidget);
+    expect(find.text('Tổng số dư'), findsOneWidget);
+    expect(find.text('5.000.000 VND'), findsOneWidget);
+    expect(find.text('Chi tiêu tháng này'), findsOneWidget);
+    expect(find.text('120.000 VND'), findsOneWidget);
+    expect(find.byType(PieChart), findsOneWidget);
+    expect(find.text('Giao dịch gần đây'), findsOneWidget);
+    expect(find.text('Groceries'), findsOneWidget);
+    expect(find.text('Coffee House'), findsNothing);
+    expect(find.text('Ngân sách nổi bật'), findsOneWidget);
+    expect(find.text('Food'), findsOneWidget);
+  });
+
+  testWidgets('switches between the four primary dashboard tabs', (
+    tester,
+  ) async {
+    await _pumpApp(tester, _authenticatedRepository());
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Giao dịch'));
     await tester.pumpAndSettle();
     expect(
-      find.text('Review the latest confirmed and draft entries.'),
+      find.text('Duyệt giao dịch mới, nháp và đã xác nhận.'),
       findsOneWidget,
     );
     expect(find.text('Groceries'), findsOneWidget);
 
-    await tester.tap(find.text('Wallets'));
+    await tester.tap(find.text('Ví'));
     await tester.pumpAndSettle();
     expect(
       find.text('Track balances across cash, bank, and e-wallets.'),
@@ -86,7 +98,7 @@ void main() {
     );
     expect(find.text('500000'), findsOneWidget);
 
-    await tester.tap(find.text('Budgets'));
+    await tester.tap(find.text('Ngân sách'));
     await tester.pumpAndSettle();
     expect(
       find.text('Watch monthly limits and savings progress.'),
@@ -95,17 +107,110 @@ void main() {
     expect(find.text('Food'), findsOneWidget);
     expect(find.text('Emergency Fund'), findsOneWidget);
 
-    await tester.tap(find.text('Insights'));
+    await tester.tap(find.text('Trang chủ'));
     await tester.pumpAndSettle();
-    expect(
-      find.text('Notifications and backend-driven insights.'),
-      findsOneWidget,
-    );
-    expect(find.text('Budget warning'), findsOneWidget);
+    expect(find.text('Giao dịch gần đây'), findsOneWidget);
+  });
 
-    await tester.tap(find.text('Home'));
+  testWidgets('center add action opens the transaction launcher', (
+    tester,
+  ) async {
+    await _pumpApp(tester, _authenticatedRepository());
     await tester.pumpAndSettle();
-    expect(find.text('Recent Transactions'), findsOneWidget);
+
+    await tester.tap(find.byTooltip('Thêm giao dịch'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Thêm giao dịch'), findsOneWidget);
+    expect(find.text('Quét hóa đơn'), findsOneWidget);
+    expect(find.text('Nói giao dịch'), findsOneWidget);
+    expect(find.text('Nhập nhanh'), findsOneWidget);
+  });
+
+  testWidgets('transaction launcher opens the scan flow', (tester) async {
+    await _pumpApp(tester, _authenticatedRepository());
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byTooltip('Thêm giao dịch'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Quét hóa đơn'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Quét hóa đơn'), findsOneWidget);
+    expect(find.text('Chụp ảnh'), findsOneWidget);
+    expect(find.text('Chọn ảnh'), findsOneWidget);
+  });
+
+  testWidgets('transaction launcher opens the voice placeholder flow', (
+    tester,
+  ) async {
+    await _pumpApp(tester, _authenticatedRepository());
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byTooltip('Thêm giao dịch'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Nói giao dịch'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Nói giao dịch'), findsOneWidget);
+    expect(find.text('Voice sẽ tạo gợi ý để bạn xác nhận.'), findsOneWidget);
+  });
+
+  testWidgets('transaction launcher opens the quick manual form', (
+    tester,
+  ) async {
+    await _pumpApp(tester, _authenticatedRepository());
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byTooltip('Thêm giao dịch'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Nhập nhanh'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Nhập nhanh'), findsOneWidget);
+    expect(find.text('Số tiền'), findsOneWidget);
+    expect(find.text('Danh mục'), findsWidgets);
+    expect(find.text('Ghi chú'), findsOneWidget);
+  });
+
+  testWidgets('quick manual form saves a confirmed transaction with defaults', (
+    tester,
+  ) async {
+    final transactionRepository = _FakeTransactionRepository();
+    await _pumpApp(
+      tester,
+      _authenticatedRepository(),
+      transactionRepository: transactionRepository,
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byTooltip('Thêm giao dịch'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Nhập nhanh'));
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.ancestor(
+        of: find.text('Số tiền'),
+        matching: find.byType(TextFormField),
+      ),
+      '50000',
+    );
+    await tester.enterText(
+      find.ancestor(
+        of: find.text('Ghi chú'),
+        matching: find.byType(TextFormField),
+      ),
+      'Cà phê sáng',
+    );
+    await tester.tap(find.text('Lưu giao dịch'));
+    await tester.pumpAndSettle();
+
+    expect(transactionRepository.createdWalletId, 'wallet-1');
+    expect(transactionRepository.createdTagId, 'tag-1');
+    expect(transactionRepository.createdTitle, 'Cà phê sáng');
+    expect(transactionRepository.createdAmount, '50000');
+    expect(transactionRepository.createdStatus, TransactionStatus.confirmed);
+    expect(transactionRepository.createdDescription, 'Cà phê sáng');
   });
 
   testWidgets('home dashboard scrolls on a compact mobile viewport', (
@@ -119,8 +224,8 @@ void main() {
     await _pumpShell(tester);
     await tester.pumpAndSettle();
 
-    expect(find.text('Budget Health'), findsOneWidget);
-    expect(find.text('Coffee House'), findsOneWidget);
+    expect(find.text('Ngân sách nổi bật'), findsOneWidget);
+    expect(find.text('Groceries'), findsOneWidget);
 
     await tester.drag(
       find.byType(SingleChildScrollView),
@@ -132,69 +237,29 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('home AI insights card adapts on a narrow viewport', (
-    tester,
-  ) async {
-    tester.view.physicalSize = const Size(320, 640);
-    tester.view.devicePixelRatio = 1;
-    addTearDown(tester.view.resetPhysicalSize);
-    addTearDown(tester.view.resetDevicePixelRatio);
-
-    await _pumpShell(tester);
-    await tester.pumpAndSettle();
-
-    expect(find.text('AI Insights'), findsOneWidget);
-    expect(find.text('65%'), findsOneWidget);
-    expect(find.textContaining('Your spending on'), findsOneWidget);
-    expect(
-      tester.getSize(find.byType(CircularProgressIndicator)),
-      const Size(96, 96),
-    );
-    expect(tester.takeException(), isNull);
-  });
-
-  testWidgets('home scan quick action opens the image import sheet', (
-    tester,
-  ) async {
+  testWidgets('home quick actions open scan, voice, and tags', (tester) async {
     await _pumpApp(tester, _authenticatedRepository());
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('Scan'));
+    await tester.tap(find.text('Quét'));
+    await tester.pumpAndSettle();
+    expect(find.text('Quét hóa đơn'), findsOneWidget);
+    expect(find.text('Chụp ảnh'), findsOneWidget);
+    await tester.tap(find.byTooltip('Đóng'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Scan receipt'), findsOneWidget);
-    expect(find.text('Take photo'), findsOneWidget);
-    expect(find.text('Choose image'), findsOneWidget);
-  });
-
-  testWidgets('home tags quick action opens the tag manager sheet', (
-    tester,
-  ) async {
-    await _pumpApp(tester, _authenticatedRepository());
+    await tester.tap(find.text('Voice'));
+    await tester.pumpAndSettle();
+    expect(find.text('Nói giao dịch'), findsOneWidget);
+    expect(find.text('Voice sẽ tạo gợi ý để bạn xác nhận.'), findsOneWidget);
+    await tester.tap(find.byTooltip('Đóng'));
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('Tags'));
+    await tester.tap(find.text('Danh mục'));
     await tester.pumpAndSettle();
-
-    expect(find.text('Manage tags'), findsOneWidget);
+    expect(find.text('Quản lý danh mục'), findsOneWidget);
     expect(find.text('Add tag'), findsOneWidget);
-    expect(find.text('Food'), findsOneWidget);
-  });
-
-  testWidgets('home add quick action navigates to transactions', (
-    tester,
-  ) async {
-    final router = await _pumpApp(tester, _authenticatedRepository());
-    await tester.pumpAndSettle();
-
-    await tester.tap(find.text('Add'));
-    await tester.pumpAndSettle();
-
-    expect(router.state.uri.path, AppRoutes.transactions);
-    expect(
-      find.text('Review the latest confirmed and draft entries.'),
-      findsOneWidget,
-    );
+    expect(find.text('Food'), findsWidgets);
   });
 
   testWidgets('home account menu signs out through auth controller', (
@@ -204,11 +269,11 @@ void main() {
     await _pumpApp(tester, repository);
     await tester.pumpAndSettle();
 
-    await tester.tap(find.byTooltip('Account'));
+    await tester.tap(find.byTooltip('Tài khoản'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Sign out'));
+    await tester.tap(find.text('Đăng xuất'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Sign out'));
+    await tester.tap(find.text('Đăng xuất'));
     await tester.pumpAndSettle();
 
     expect(repository.signOutCalled, isTrue);
@@ -216,9 +281,7 @@ void main() {
     expect(find.text('Login'), findsOneWidget);
   });
 
-  testWidgets('transactions scan action opens the image import sheet', (
-    tester,
-  ) async {
+  testWidgets('transactions screen filters by type and status', (tester) async {
     await _pumpApp(
       tester,
       _authenticatedRepository(),
@@ -226,15 +289,55 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    await tester.tap(find.byTooltip('Scan receipt'));
-    await tester.pumpAndSettle();
+    expect(find.text('Tất cả'), findsOneWidget);
+    expect(find.text('Thu'), findsOneWidget);
+    expect(find.text('Chi'), findsOneWidget);
+    expect(find.text('Nháp'), findsOneWidget);
+    expect(find.text('Đã xác nhận'), findsOneWidget);
 
-    expect(find.text('Scan receipt'), findsOneWidget);
-    expect(find.text('Take photo'), findsOneWidget);
-    expect(find.text('Choose image'), findsOneWidget);
+    await tester.tap(find.text('Thu'));
+    await tester.pumpAndSettle();
+    expect(find.text('Monthly Salary'), findsOneWidget);
+    expect(find.text('Groceries'), findsNothing);
+
+    await tester.tap(find.text('Nháp'));
+    await tester.pumpAndSettle();
+    expect(find.text('Chờ kiểm tra'), findsOneWidget);
+    expect(find.text('Nháp'), findsWidgets);
   });
 
-  testWidgets('transactions tag action opens the reusable tag manager', (
+  testWidgets('transactions card actions confirm and delete entries', (
+    tester,
+  ) async {
+    final transactionRepository = _FakeTransactionRepository();
+    await _pumpApp(
+      tester,
+      _authenticatedRepository(),
+      initialLocation: AppRoutes.transactions,
+      transactionRepository: transactionRepository,
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Nháp'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byTooltip('Thao tác giao dịch').first);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Xác nhận nháp'));
+    await tester.pumpAndSettle();
+    expect(transactionRepository.confirmedId, 'tx-draft');
+
+    await tester.tap(find.text('Tất cả'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byTooltip('Thao tác giao dịch').first);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Xóa'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Xóa giao dịch'));
+    await tester.pumpAndSettle();
+    expect(transactionRepository.deletedId, isNotNull);
+  });
+
+  testWidgets('transactions scan and tag actions open reusable sheets', (
     tester,
   ) async {
     await _pumpApp(
@@ -244,12 +347,32 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    await tester.tap(find.byTooltip('Manage tags'));
+    await tester.tap(find.byTooltip('Quét hóa đơn'));
+    await tester.pumpAndSettle();
+    expect(find.text('Quét hóa đơn'), findsOneWidget);
+    expect(find.text('Chụp ảnh'), findsOneWidget);
+    await tester.tap(find.byTooltip('Đóng'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Manage tags'), findsOneWidget);
+    await tester.tap(find.byTooltip('Quản lý danh mục'));
+    await tester.pumpAndSettle();
+    expect(find.text('Quản lý danh mục'), findsOneWidget);
     expect(find.text('Add tag'), findsOneWidget);
-    expect(find.text('Food'), findsOneWidget);
+  });
+
+  testWidgets('empty transaction views use a Lottie-backed state', (
+    tester,
+  ) async {
+    await _pumpApp(
+      tester,
+      _authenticatedRepository(),
+      initialLocation: AppRoutes.transactions,
+      transactionRepository: _FakeTransactionRepository(transactions: const []),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Chưa có giao dịch'), findsOneWidget);
+    expect(find.byType(Lottie), findsOneWidget);
   });
 
   testWidgets('opens the home tab at the root route when authenticated', (
@@ -259,15 +382,15 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(router.state.uri.path, AppRoutes.root);
-    expect(find.text('Recent Transactions'), findsOneWidget);
-    expect(find.text('Coffee House'), findsOneWidget);
+    expect(find.text('Giao dịch gần đây'), findsOneWidget);
+    expect(find.text('Groceries'), findsOneWidget);
   });
 
   for (final routeCase in [
-    (path: AppRoutes.home, text: 'Recent Transactions'),
+    (path: AppRoutes.home, text: 'Giao dịch gần đây'),
     (
       path: AppRoutes.transactions,
-      text: 'Review the latest confirmed and draft entries.',
+      text: 'Duyệt giao dịch mới, nháp và đã xác nhận.',
     ),
     (
       path: AppRoutes.wallets,
@@ -301,15 +424,15 @@ void main() {
     final router = await _pumpApp(tester, _authenticatedRepository());
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('Transactions'));
+    await tester.tap(find.text('Giao dịch'));
     await tester.pumpAndSettle();
     expect(router.state.uri.path, AppRoutes.transactions);
     expect(
-      find.text('Review the latest confirmed and draft entries.'),
+      find.text('Duyệt giao dịch mới, nháp và đã xác nhận.'),
       findsOneWidget,
     );
 
-    await tester.tap(find.text('Wallets'));
+    await tester.tap(find.text('Ví'));
     await tester.pumpAndSettle();
     expect(router.state.uri.path, AppRoutes.wallets);
     expect(
@@ -317,7 +440,7 @@ void main() {
       findsOneWidget,
     );
 
-    await tester.tap(find.text('Budgets'));
+    await tester.tap(find.text('Ngân sách'));
     await tester.pumpAndSettle();
     expect(router.state.uri.path, AppRoutes.budgets);
     expect(
@@ -325,18 +448,10 @@ void main() {
       findsOneWidget,
     );
 
-    await tester.tap(find.text('Insights'));
-    await tester.pumpAndSettle();
-    expect(router.state.uri.path, AppRoutes.insights);
-    expect(
-      find.text('Notifications and backend-driven insights.'),
-      findsOneWidget,
-    );
-
-    await tester.tap(find.text('Home'));
+    await tester.tap(find.text('Trang chủ'));
     await tester.pumpAndSettle();
     expect(router.state.uri.path, AppRoutes.home);
-    expect(find.text('Recent Transactions'), findsOneWidget);
+    expect(find.text('Giao dịch gần đây'), findsOneWidget);
   });
 }
 
@@ -344,6 +459,7 @@ Future<GoRouter> _pumpApp(
   WidgetTester tester,
   FakeAuthRepository repository, {
   String initialLocation = AppRoutes.root,
+  _FakeTransactionRepository? transactionRepository,
 }) async {
   final router = createAppRouter(initialLocation: initialLocation);
   addTearDown(router.dispose);
@@ -358,7 +474,7 @@ Future<GoRouter> _pumpApp(
         signUpUseCaseProvider.overrideWithValue(SignUpUseCase(repository)),
         signOutUseCaseProvider.overrideWithValue(SignOutUseCase(repository)),
         transactionRepositoryProvider.overrideWithValue(
-          _FakeTransactionRepository(),
+          transactionRepository ?? _FakeTransactionRepository(),
         ),
         walletRepositoryProvider.overrideWithValue(_FakeWalletRepository()),
         tagRepositoryProvider.overrideWithValue(_FakeTagRepository()),
@@ -416,6 +532,57 @@ Future<void> _pumpShell(WidgetTester tester) async {
 }
 
 class _FakeTransactionRepository implements TransactionRepository {
+  _FakeTransactionRepository({List<Transaction>? transactions})
+    : _transactions = transactions?.toList() ?? _defaultTransactions();
+
+  static List<Transaction> _defaultTransactions() {
+    return [
+      Transaction(
+        id: 'tx-1',
+        walletId: 'wallet-1',
+        tagId: 'tag-1',
+        title: 'Groceries',
+        amount: '120000',
+        type: MoneyFlowType.expense,
+        date: DateTime(2026, 6, 24),
+        status: TransactionStatus.confirmed,
+        inputMethod: TransactionInputMethod.manual,
+      ),
+      Transaction(
+        id: 'tx-2',
+        walletId: 'wallet-2',
+        tagId: 'tag-2',
+        title: 'Monthly Salary',
+        amount: '15000000',
+        type: MoneyFlowType.income,
+        date: DateTime(2026, 6, 25),
+        status: TransactionStatus.confirmed,
+        inputMethod: TransactionInputMethod.manual,
+      ),
+      Transaction(
+        id: 'tx-draft',
+        walletId: 'wallet-1',
+        tagId: 'tag-1',
+        title: 'Chờ kiểm tra',
+        amount: '45000',
+        type: MoneyFlowType.expense,
+        date: DateTime(2026, 6, 26),
+        status: TransactionStatus.draft,
+        inputMethod: TransactionInputMethod.ocr,
+      ),
+    ];
+  }
+
+  final List<Transaction> _transactions;
+  String? createdWalletId;
+  String? createdTagId;
+  String? createdTitle;
+  String? createdAmount;
+  TransactionStatus? createdStatus;
+  String? createdDescription;
+  String? confirmedId;
+  String? deletedId;
+
   @override
   Future<List<Transaction>> listTransactions({
     int page = 1,
@@ -429,17 +596,7 @@ class _FakeTransactionRepository implements TransactionRepository {
     String? from,
     String? to,
   }) async {
-    return [
-      Transaction(
-        id: 'tx-1',
-        title: 'Groceries',
-        amount: '120000',
-        type: MoneyFlowType.expense,
-        date: DateTime(2026, 6, 24),
-        status: TransactionStatus.confirmed,
-        inputMethod: TransactionInputMethod.manual,
-      ),
-    ];
+    return _transactions;
   }
 
   @override
@@ -456,8 +613,16 @@ class _FakeTransactionRepository implements TransactionRepository {
     String? description,
     String? clientId,
   }) async {
-    return Transaction(
+    createdWalletId = walletId;
+    createdTagId = tagId;
+    createdTitle = title;
+    createdAmount = amount;
+    createdStatus = status;
+    createdDescription = description;
+    final transaction = Transaction(
       id: 'tx-new',
+      walletId: walletId,
+      tagId: tagId,
       title: title,
       amount: amount,
       type: type,
@@ -467,6 +632,8 @@ class _FakeTransactionRepository implements TransactionRepository {
       merchantName: merchantName,
       description: description,
     );
+    _transactions.insert(0, transaction);
+    return transaction;
   }
 
   @override
@@ -486,6 +653,8 @@ class _FakeTransactionRepository implements TransactionRepository {
   }) async {
     return Transaction(
       id: id,
+      walletId: walletId,
+      tagId: tagId,
       title: title ?? 'Groceries',
       amount: amount ?? '120000',
       type: type ?? MoneyFlowType.expense,
@@ -499,19 +668,35 @@ class _FakeTransactionRepository implements TransactionRepository {
 
   @override
   Future<Transaction> confirmTransaction(String id) async {
-    return Transaction(
-      id: id,
-      title: 'Groceries',
-      amount: '120000',
-      type: MoneyFlowType.expense,
-      date: DateTime(2026, 6, 24),
-      status: TransactionStatus.confirmed,
-      inputMethod: TransactionInputMethod.manual,
+    confirmedId = id;
+    final index = _transactions.indexWhere(
+      (transaction) => transaction.id == id,
     );
+    final current = index == -1 ? _transactions.first : _transactions[index];
+    final confirmed = Transaction(
+      id: current.id,
+      walletId: current.walletId,
+      tagId: current.tagId,
+      title: current.title,
+      description: current.description,
+      amount: current.amount,
+      type: current.type,
+      date: current.date,
+      status: TransactionStatus.confirmed,
+      inputMethod: current.inputMethod,
+      merchantName: current.merchantName,
+    );
+    if (index != -1) {
+      _transactions[index] = confirmed;
+    }
+    return confirmed;
   }
 
   @override
-  Future<void> deleteTransaction(String id) async {}
+  Future<void> deleteTransaction(String id) async {
+    deletedId = id;
+    _transactions.removeWhere((transaction) => transaction.id == id);
+  }
 }
 
 class _FakeWalletRepository implements WalletRepository {
@@ -524,6 +709,13 @@ class _FakeWalletRepository implements WalletRepository {
         type: WalletType.cash,
         balance: '500000',
         isDefault: true,
+      ),
+      Wallet(
+        id: 'wallet-2',
+        name: 'Bank',
+        type: WalletType.bank,
+        balance: '4500000',
+        isDefault: false,
       ),
     ];
   }
@@ -573,6 +765,12 @@ class _FakeTagRepository implements TagRepository {
         id: 'tag-1',
         name: 'Food',
         type: MoneyFlowType.expense,
+        isDefault: false,
+      ),
+      Tag(
+        id: 'tag-2',
+        name: 'Salary',
+        type: MoneyFlowType.income,
         isDefault: false,
       ),
     ];
