@@ -1,12 +1,31 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:forui/forui.dart';
+
+FThemeData buildForuiTheme() {
+  final isTouchPlatform = const {
+    TargetPlatform.android,
+    TargetPlatform.fuchsia,
+    TargetPlatform.iOS,
+  }.contains(defaultTargetPlatform);
+
+  return isTouchPlatform
+      ? FThemes.neutral.light.touch
+      : FThemes.neutral.light.desktop;
+}
 
 ThemeData buildAppTheme() {
-  const canvas = Color(0xFFFFF8F3);
-  const primaryDark = Color(0xFF1B211A);
-  const primaryGreen = Color(0xFF628141);
+  const canvas = Color(0xFFFAFBF6);
+  const surface = Color(0xFFFFFFFF);
+  const surfaceSoft = Color(0xFFF1F5EA);
+  const primaryDark = Color(0xFF172015);
+  const primaryGreen = Color(0xFF4F6F39);
   const accentGreen = Color(0xFF8BAE66);
-  const warmSurface = Color(0xFFFFF1E3);
+  const amber = Color(0xFFC9872B);
+  const danger = Color(0xFFB84A3F);
+  const muted = Color(0xFF687268);
 
+  final baseTheme = buildForuiTheme().toApproximateMaterialTheme();
   final colorScheme =
       ColorScheme.fromSeed(
         seedColor: primaryGreen,
@@ -14,20 +33,25 @@ ThemeData buildAppTheme() {
         surface: canvas,
         primary: primaryGreen,
         secondary: accentGreen,
+        tertiary: amber,
+        error: danger,
       ).copyWith(
         onSurface: primaryDark,
-        surfaceContainerLowest: Colors.white,
-        surfaceContainerLow: warmSurface,
-        surfaceContainer: const Color(0xFFFFEBD3),
-        surfaceContainerHigh: const Color(0xFFFFE4C2),
-        primaryContainer: primaryDark,
-        onPrimaryContainer: Colors.white,
+        surfaceContainerLowest: surface,
+        surfaceContainerLow: surfaceSoft,
+        surfaceContainer: const Color(0xFFE8EFE0),
+        surfaceContainerHigh: const Color(0xFFDCE8CF),
+        primaryContainer: const Color(0xFFDDECCF),
+        onPrimaryContainer: primaryDark,
+        secondaryContainer: const Color(0xFFFFE9C2),
+        onSecondaryContainer: const Color(0xFF3E2A05),
+        outline: const Color(0xFFD9DED4),
+        outlineVariant: const Color(0xFFE8ECE2),
       );
 
-  return ThemeData(
+  return baseTheme.copyWith(
     colorScheme: colorScheme,
     scaffoldBackgroundColor: canvas,
-    fontFamily: 'Plus Jakarta Sans',
     appBarTheme: const AppBarTheme(
       backgroundColor: canvas,
       foregroundColor: primaryDark,
@@ -35,22 +59,78 @@ ThemeData buildAppTheme() {
       centerTitle: false,
     ),
     cardTheme: CardThemeData(
-      color: Colors.white,
+      color: surface,
       elevation: 0,
       margin: EdgeInsets.zero,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
     ),
     filledButtonTheme: FilledButtonThemeData(
       style: FilledButton.styleFrom(
         backgroundColor: primaryGreen,
         foregroundColor: Colors.white,
         minimumSize: const Size(0, 48),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        textStyle: const TextStyle(fontWeight: FontWeight.w700),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
       ),
     ),
+    outlinedButtonTheme: OutlinedButtonThemeData(
+      style: OutlinedButton.styleFrom(
+        foregroundColor: primaryDark,
+        minimumSize: const Size(0, 44),
+        side: const BorderSide(color: Color(0xFFD9DED4)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+      ),
+    ),
+    inputDecorationTheme: InputDecorationTheme(
+      filled: true,
+      fillColor: surface,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(14),
+        borderSide: const BorderSide(color: Color(0xFFD9DED4)),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(14),
+        borderSide: const BorderSide(color: Color(0xFFD9DED4)),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(14),
+        borderSide: const BorderSide(color: primaryGreen, width: 1.4),
+      ),
+      labelStyle: const TextStyle(color: muted, fontWeight: FontWeight.w600),
+    ),
+    chipTheme: ChipThemeData(
+      backgroundColor: surface,
+      selectedColor: const Color(0xFFDDECCF),
+      disabledColor: const Color(0xFFF0F2ED),
+      side: const BorderSide(color: Color(0xFFD9DED4)),
+      labelStyle: const TextStyle(
+        color: primaryDark,
+        fontSize: 13,
+        fontWeight: FontWeight.w600,
+      ),
+      secondaryLabelStyle: const TextStyle(
+        color: primaryDark,
+        fontSize: 13,
+        fontWeight: FontWeight.w700,
+      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(999)),
+    ),
+    floatingActionButtonTheme: const FloatingActionButtonThemeData(
+      backgroundColor: primaryGreen,
+      foregroundColor: Colors.white,
+      elevation: 6,
+      shape: CircleBorder(),
+    ),
+    bottomAppBarTheme: const BottomAppBarThemeData(
+      color: surface,
+      elevation: 8,
+      shadowColor: Color(0x1F172015),
+      surfaceTintColor: Colors.transparent,
+    ),
     navigationBarTheme: NavigationBarThemeData(
-      backgroundColor: Colors.white,
-      indicatorColor: const Color(0xFFE7F1DA),
+      backgroundColor: surface,
+      indicatorColor: const Color(0xFFDDECCF),
       labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
       labelTextStyle: WidgetStateProperty.resolveWith((states) {
         final selected = states.contains(WidgetState.selected);
@@ -68,9 +148,25 @@ ThemeData buildAppTheme() {
         );
       }),
     ),
+    popupMenuTheme: PopupMenuThemeData(
+      color: surface,
+      surfaceTintColor: Colors.transparent,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+    ),
+    dialogTheme: DialogThemeData(
+      backgroundColor: surface,
+      surfaceTintColor: Colors.transparent,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+    ),
+    snackBarTheme: SnackBarThemeData(
+      backgroundColor: primaryDark,
+      contentTextStyle: const TextStyle(color: Colors.white),
+      behavior: SnackBarBehavior.floating,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+    ),
     textTheme: const TextTheme(
       headlineMedium: TextStyle(
-        fontSize: 24,
+        fontSize: 25,
         fontWeight: FontWeight.w700,
         height: 1.25,
         color: primaryDark,
@@ -99,7 +195,6 @@ ThemeData buildAppTheme() {
         height: 1.25,
         color: primaryDark,
       ),
-    ),
-    useMaterial3: true,
+    ).apply(fontFamily: 'Be Vietnam Pro'),
   );
 }

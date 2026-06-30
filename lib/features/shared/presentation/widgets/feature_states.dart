@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:lottie/lottie.dart';
 
 class FlowFiFeatureScaffold extends StatelessWidget {
   const FlowFiFeatureScaffold({
@@ -21,6 +22,7 @@ class FlowFiFeatureScaffold extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
 
     return SafeArea(
       child: RefreshIndicator(
@@ -30,32 +32,30 @@ class FlowFiFeatureScaffold extends StatelessWidget {
           slivers: [
             SliverToBoxAdapter(
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(20, 16, 20, 12),
+                padding: const EdgeInsets.fromLTRB(20, 14, 20, 10),
                 child: Row(
                   children: [
                     Container(
                       width: 44,
                       height: 44,
                       decoration: BoxDecoration(
-                        color: colors.secondaryContainer,
-                        borderRadius: BorderRadius.circular(16),
+                        color: colors.primaryContainer,
+                        borderRadius: BorderRadius.circular(14),
                       ),
-                      child: Icon(icon, color: const Color(0xFF49672A)),
+                      child: Icon(icon, color: colors.primary),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            title,
-                            style: Theme.of(context).textTheme.titleLarge,
-                          ),
+                          Text(title, style: textTheme.titleLarge),
                           const SizedBox(height: 2),
                           Text(
                             subtitle,
-                            style: Theme.of(context).textTheme.bodyMedium
-                                ?.copyWith(color: const Color(0xFF757872)),
+                            style: textTheme.bodyMedium?.copyWith(
+                              color: colors.onSurfaceVariant,
+                            ),
                           ),
                         ],
                       ),
@@ -69,7 +69,7 @@ class FlowFiFeatureScaffold extends StatelessWidget {
               ),
             ),
             SliverPadding(
-              padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
+              padding: const EdgeInsets.fromLTRB(20, 8, 20, 28),
               sliver: child,
             ),
           ],
@@ -88,6 +88,7 @@ Future<T?> showFlowFiFormSheet<T>({
     context: context,
     isScrollControlled: true,
     useSafeArea: true,
+    backgroundColor: Colors.transparent,
     builder: (context) {
       return FlowFiFormSheet(title: title, child: child);
     },
@@ -103,34 +104,52 @@ class FlowFiFormSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final viewInsets = MediaQuery.viewInsetsOf(context);
+    final colors = Theme.of(context).colorScheme;
 
     return Padding(
       padding: EdgeInsets.only(bottom: viewInsets.bottom),
-      child: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 18, 20, 24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      title,
-                      style: Theme.of(context).textTheme.titleLarge,
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: colors.surface,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 10, 20, 24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Center(
+                  child: Container(
+                    width: 42,
+                    height: 4,
+                    margin: const EdgeInsets.only(bottom: 14),
+                    decoration: BoxDecoration(
+                      color: colors.outlineVariant,
+                      borderRadius: BorderRadius.circular(999),
                     ),
                   ),
-                  IconButton(
-                    onPressed: () => Navigator.of(context).pop(),
-                    icon: const Icon(Icons.close_rounded),
-                    tooltip: 'Close',
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              child,
-            ],
+                ),
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        title,
+                        style: Theme.of(context).textTheme.titleLarge,
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: () => Navigator.of(context).pop(),
+                      icon: const Icon(Icons.close_rounded),
+                      tooltip: 'Đóng',
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                child,
+              ],
+            ),
           ),
         ),
       ),
@@ -139,25 +158,33 @@ class FlowFiFormSheet extends StatelessWidget {
 }
 
 class FlowFiCard extends StatelessWidget {
-  const FlowFiCard({super.key, required this.child, this.color});
+  const FlowFiCard({
+    super.key,
+    required this.child,
+    this.color,
+    this.padding = const EdgeInsets.all(16),
+  });
 
   final Widget child;
   final Color? color;
+  final EdgeInsetsGeometry padding;
 
   @override
   Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(16),
+      padding: padding,
       decoration: BoxDecoration(
-        color: color ?? Colors.white,
+        color: color ?? colors.surface,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: const Color(0xFFE7E5DC)),
+        border: Border.all(color: colors.outlineVariant),
         boxShadow: const [
           BoxShadow(
-            color: Color(0x0D1B211A),
-            blurRadius: 20,
-            offset: Offset(0, 6),
+            color: Color(0x0F172015),
+            blurRadius: 24,
+            offset: Offset(0, 10),
           ),
         ],
       ),
@@ -183,27 +210,27 @@ class FlowFiEmptyState extends StatelessWidget {
     return SliverFillRemaining(
       hasScrollBody: false,
       child: Center(
-        child: FlowFiCard(
-          color: const Color(0xFFFFF6EB),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(icon, size: 36, color: const Color(0xFF49672A)),
-              const SizedBox(height: 12),
-              Text(title, style: Theme.of(context).textTheme.titleMedium),
-              const SizedBox(height: 6),
-              Text(
-                message,
-                textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: const Color(0xFF757872),
-                ),
-              ),
-            ],
-          ),
-        ),
+        child: FlowFiStateContent(icon: icon, title: title, message: message),
       ),
     );
+  }
+}
+
+class FlowFiInlineEmptyState extends StatelessWidget {
+  const FlowFiInlineEmptyState({
+    super.key,
+    required this.icon,
+    required this.title,
+    required this.message,
+  });
+
+  final IconData icon;
+  final String title;
+  final String message;
+
+  @override
+  Widget build(BuildContext context) {
+    return FlowFiStateContent(icon: icon, title: title, message: message);
   }
 }
 
@@ -218,7 +245,6 @@ class FlowFiErrorState extends StatelessWidget {
       hasScrollBody: false,
       child: Center(
         child: FlowFiCard(
-          color: const Color(0xFFFFF6EB),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -229,19 +255,19 @@ class FlowFiErrorState extends StatelessWidget {
               ),
               const SizedBox(height: 12),
               Text(
-                'Could not load data',
+                'Không tải được dữ liệu',
                 style: Theme.of(context).textTheme.titleMedium,
               ),
               const SizedBox(height: 6),
               Text(
-                'Check the backend connection and try again.',
+                'Kiểm tra kết nối backend rồi thử lại.',
                 textAlign: TextAlign.center,
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: const Color(0xFF757872),
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
               ),
               const SizedBox(height: 14),
-              FilledButton(onPressed: onRetry, child: const Text('Retry')),
+              FilledButton(onPressed: onRetry, child: const Text('Thử lại')),
             ],
           ),
         ),
@@ -259,4 +285,79 @@ SliverList separatedSliverList({
     itemBuilder: itemBuilder,
     separatorBuilder: (_, _) => const SizedBox(height: 10),
   );
+}
+
+class FlowFiInlineLoading extends StatelessWidget {
+  const FlowFiInlineLoading({super.key, this.label = 'Đang tải dữ liệu'});
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return FlowFiCard(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Lottie.asset(
+            'assets/lottie/loading_state.json',
+            width: 88,
+            height: 88,
+            fit: BoxFit.contain,
+          ),
+          const SizedBox(height: 8),
+          Text(label, style: Theme.of(context).textTheme.labelMedium),
+        ],
+      ),
+    );
+  }
+}
+
+class FlowFiStateContent extends StatelessWidget {
+  const FlowFiStateContent({
+    super.key,
+    required this.icon,
+    required this.title,
+    required this.message,
+  });
+
+  final IconData icon;
+  final String title;
+  final String message;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+
+    return FlowFiCard(
+      color: colors.surfaceContainerLowest,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Stack(
+            alignment: Alignment.center,
+            children: [
+              Lottie.asset(
+                'assets/lottie/empty_state.json',
+                width: 104,
+                height: 104,
+                fit: BoxFit.contain,
+                repeat: false,
+              ),
+              Icon(icon, size: 30, color: colors.primary),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(title, style: Theme.of(context).textTheme.titleMedium),
+          const SizedBox(height: 6),
+          Text(
+            message,
+            textAlign: TextAlign.center,
+            style: Theme.of(
+              context,
+            ).textTheme.bodyMedium?.copyWith(color: colors.onSurfaceVariant),
+          ),
+        ],
+      ),
+    );
+  }
 }
