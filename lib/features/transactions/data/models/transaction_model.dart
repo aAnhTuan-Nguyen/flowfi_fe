@@ -5,6 +5,7 @@ import '../../domain/entities/transaction.dart';
 final class TransactionModel {
   const TransactionModel({
     required this.id,
+    this.clientId,
     this.walletId,
     this.tagId,
     required this.title,
@@ -18,6 +19,7 @@ final class TransactionModel {
   });
 
   final String id;
+  final String? clientId;
   final String? walletId;
   final String? tagId;
   final String title;
@@ -32,6 +34,7 @@ final class TransactionModel {
   factory TransactionModel.fromJson(JsonMap json) {
     return TransactionModel(
       id: json['id']?.toString() ?? '',
+      clientId: json['clientId']?.toString(),
       walletId: _readRelationId(json, 'walletId', 'wallet'),
       tagId: _readRelationId(json, 'tagId', 'tag'),
       title: json['title']?.toString() ?? '',
@@ -48,6 +51,7 @@ final class TransactionModel {
   Transaction toDomain() {
     return Transaction(
       id: id,
+      clientId: clientId,
       walletId: walletId,
       tagId: tagId,
       title: title,
@@ -58,6 +62,7 @@ final class TransactionModel {
       status: status,
       inputMethod: inputMethod,
       merchantName: merchantName,
+      isPendingSync: false,
     );
   }
 }

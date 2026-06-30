@@ -27,7 +27,7 @@ void main() {
             'transactionType': 'Expense',
             'transactionDate': '2026-06-26T10:00:00.000Z',
             'inputMethod': 'OCR',
-            'status': 'Confirmed',
+            'status': 'Draft',
             'merchantName': 'Winmart',
           },
         },
@@ -55,7 +55,7 @@ void main() {
     );
     expect(
       result.createdTransactions.single.transaction.status,
-      TransactionStatus.confirmed,
+      TransactionStatus.draft,
     );
   });
 }

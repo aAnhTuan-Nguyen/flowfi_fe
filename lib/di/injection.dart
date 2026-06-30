@@ -1,11 +1,15 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:get_it/get_it.dart';
+import 'package:uuid/uuid.dart';
 
 import '../core/auth/auth_session_manager.dart';
 import '../core/auth/token_storage.dart';
+import '../core/local/flowfi_database.dart';
+import '../core/local/flowfi_local_store.dart';
 import '../core/network/auth_interceptor.dart';
 import '../core/network/dio_client.dart';
+import '../core/sync/network_status_service.dart';
 import '../features/auth/data/datasources/auth_remote_data_source.dart';
 import '../features/auth/data/repositories/auth_repository_impl.dart';
 import '../features/auth/domain/repositories/auth_repository.dart';
@@ -13,6 +17,7 @@ import '../features/auth/domain/usecases/bootstrap_auth_session_use_case.dart';
 import '../features/auth/domain/usecases/sign_in_use_case.dart';
 import '../features/auth/domain/usecases/sign_out_use_case.dart';
 import '../features/auth/domain/usecases/sign_up_use_case.dart';
+import '../features/auth/domain/usecases/update_profile_use_case.dart';
 import '../features/ai_processing/data/datasources/ai_processing_remote_data_source.dart';
 import '../features/ai_processing/data/repositories/ai_processing_repository_impl.dart';
 import '../features/ai_processing/domain/repositories/ai_processing_repository.dart';
@@ -25,6 +30,8 @@ import '../features/goals/domain/repositories/goal_repository.dart';
 import '../features/notifications/data/datasources/notification_remote_data_source.dart';
 import '../features/notifications/data/repositories/notification_repository_impl.dart';
 import '../features/notifications/domain/repositories/notification_repository.dart';
+import '../features/sync/data/datasources/sync_remote_data_source.dart';
+import '../features/sync/data/offline_sync_service.dart';
 import '../features/tags/data/datasources/tag_remote_data_source.dart';
 import '../features/tags/data/repositories/tag_repository_impl.dart';
 import '../features/tags/domain/repositories/tag_repository.dart';
@@ -54,6 +61,19 @@ void configureDependencies() {
   if (!serviceLocator.isRegistered<AuthSessionManager>()) {
     serviceLocator.registerLazySingleton<AuthSessionManager>(
       () => AuthSessionManager(serviceLocator<TokenStorage>()),
+    );
+  }
+  if (!serviceLocator.isRegistered<FlowFiDatabase>()) {
+    serviceLocator.registerLazySingleton<FlowFiDatabase>(FlowFiDatabase.new);
+  }
+  if (!serviceLocator.isRegistered<FlowFiLocalStore>()) {
+    serviceLocator.registerLazySingleton<FlowFiLocalStore>(
+      () => FlowFiLocalStore(serviceLocator<FlowFiDatabase>()),
+    );
+  }
+  if (!serviceLocator.isRegistered<NetworkStatusService>()) {
+    serviceLocator.registerLazySingleton<NetworkStatusService>(
+      ConnectivityNetworkStatusService.new,
     );
   }
   if (!serviceLocator.isRegistered<AuthRemoteDataSource>()) {
@@ -89,6 +109,11 @@ void configureDependencies() {
       () => SignOutUseCase(serviceLocator<AuthRepository>()),
     );
   }
+  if (!serviceLocator.isRegistered<UpdateProfileUseCase>()) {
+    serviceLocator.registerLazySingleton<UpdateProfileUseCase>(
+      () => UpdateProfileUseCase(serviceLocator<AuthRepository>()),
+    );
+  }
   if (!serviceLocator.isRegistered<WalletRemoteDataSource>()) {
     serviceLocator.registerLazySingleton<WalletRemoteDataSource>(
       () => DioWalletRemoteDataSource(serviceLocator<Dio>()),
@@ -96,7 +121,11 @@ void configureDependencies() {
   }
   if (!serviceLocator.isRegistered<WalletRepository>()) {
     serviceLocator.registerLazySingleton<WalletRepository>(
-      () => WalletRepositoryImpl(serviceLocator<WalletRemoteDataSource>()),
+      () => WalletRepositoryImpl(
+        serviceLocator<WalletRemoteDataSource>(),
+        localStore: serviceLocator<FlowFiLocalStore>(),
+        networkStatus: serviceLocator<NetworkStatusService>(),
+      ),
     );
   }
   if (!serviceLocator.isRegistered<TagRemoteDataSource>()) {
@@ -106,7 +135,11 @@ void configureDependencies() {
   }
   if (!serviceLocator.isRegistered<TagRepository>()) {
     serviceLocator.registerLazySingleton<TagRepository>(
-      () => TagRepositoryImpl(serviceLocator<TagRemoteDataSource>()),
+      () => TagRepositoryImpl(
+        serviceLocator<TagRemoteDataSource>(),
+        localStore: serviceLocator<FlowFiLocalStore>(),
+        networkStatus: serviceLocator<NetworkStatusService>(),
+      ),
     );
   }
   if (!serviceLocator.isRegistered<TransactionRemoteDataSource>()) {
@@ -118,6 +151,24 @@ void configureDependencies() {
     serviceLocator.registerLazySingleton<TransactionRepository>(
       () => TransactionRepositoryImpl(
         serviceLocator<TransactionRemoteDataSource>(),
+        localStore: serviceLocator<FlowFiLocalStore>(),
+        networkStatus: serviceLocator<NetworkStatusService>(),
+      ),
+    );
+  }
+  if (!serviceLocator.isRegistered<SyncRemoteDataSource>()) {
+    serviceLocator.registerLazySingleton<SyncRemoteDataSource>(
+      () => DioSyncRemoteDataSource(serviceLocator<Dio>()),
+    );
+  }
+  if (!serviceLocator.isRegistered<OfflineSyncService>()) {
+    serviceLocator.registerLazySingleton<OfflineSyncService>(
+      () => OfflineSyncService(
+        localStore: serviceLocator<FlowFiLocalStore>(),
+        remoteDataSource: serviceLocator<SyncRemoteDataSource>(),
+        networkStatus: serviceLocator<NetworkStatusService>(),
+        deviceIdProvider: () => serviceLocator<FlowFiLocalStore>()
+            .readOrCreateDeviceId(() => const Uuid().v4()),
       ),
     );
   }

@@ -152,5 +152,6 @@ String _transactionMeta(Transaction transaction) {
     TransactionInputMethod.ocr => 'Scan',
     TransactionInputMethod.unknown => 'Không rõ',
   };
-  return '$dateLabel · $status · $input';
+  final pending = transaction.isPendingSync ? ' · Đang chờ đồng bộ' : '';
+  return '$dateLabel · $status · $input$pending';
 }

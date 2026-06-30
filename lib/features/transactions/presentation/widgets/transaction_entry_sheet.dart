@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/finance/money_flow_type.dart';
 import '../../../shared/presentation/widgets/crud_helpers.dart';
 import '../../../shared/presentation/widgets/feature_states.dart';
+import '../../../sync/sync_status_provider.dart';
 import '../../../tags/domain/entities/tag.dart';
 import '../../../tags/presentation/providers/tags_provider.dart';
 import '../../../wallets/domain/entities/wallet.dart';
@@ -240,6 +241,8 @@ class _QuickTransactionSheetState extends ConsumerState<QuickTransactionSheet> {
             status: TransactionStatus.confirmed,
             description: emptyToNull(note),
           );
+      ref.invalidate(syncStatusProvider);
+      await ref.read(walletsProvider.notifier).reload();
       if (mounted) {
         Navigator.of(context).pop();
       }

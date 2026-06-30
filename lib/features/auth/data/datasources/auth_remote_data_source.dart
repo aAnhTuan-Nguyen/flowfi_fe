@@ -20,6 +20,12 @@ abstract interface class AuthRemoteDataSource {
 
   Future<RemoteUser> me();
 
+  Future<RemoteUser> updateProfile({
+    String? fullName,
+    String? currencyCode,
+    String? monthlyBudgetLimit,
+  });
+
   Future<void> logout(String? refreshToken);
 }
 
@@ -76,6 +82,24 @@ final class DioAuthRemoteDataSource implements AuthRemoteDataSource {
   }
 
   @override
+  Future<RemoteUser> updateProfile({
+    String? fullName,
+    String? currencyCode,
+    String? monthlyBudgetLimit,
+  }) async {
+    final data = <String, Object?>{
+      'fullName': fullName,
+      'currencyCode': currencyCode,
+      'monthlyBudgetLimit': monthlyBudgetLimit,
+    }..removeWhere((_, value) => value == null);
+    final response = await _dio.patch<Map<String, Object?>>(
+      'users/me',
+      data: data,
+    );
+    return RemoteUser.fromJson(response.data ?? {});
+  }
+
+  @override
   Future<void> logout(String? refreshToken) async {
     final data = refreshToken == null ? null : {'refreshToken': refreshToken};
     await _dio.post<void>('auth/logout', data: data);
@@ -115,12 +139,14 @@ final class RemoteUser {
     required this.email,
     this.fullName,
     required this.currencyCode,
+    this.monthlyBudgetLimit,
   });
 
   final String id;
   final String email;
   final String? fullName;
   final String currencyCode;
+  final String? monthlyBudgetLimit;
 
   factory RemoteUser.fromJson(Map<String, Object?> json) {
     final model = UserModel.fromJson(json);
@@ -129,6 +155,7 @@ final class RemoteUser {
       email: model.email,
       fullName: model.fullName,
       currencyCode: model.currencyCode,
+      monthlyBudgetLimit: model.monthlyBudgetLimit,
     );
   }
 
@@ -138,6 +165,7 @@ final class RemoteUser {
       email: email,
       fullName: fullName,
       currencyCode: currencyCode,
+      monthlyBudgetLimit: monthlyBudgetLimit,
     ).toDomain();
   }
 }

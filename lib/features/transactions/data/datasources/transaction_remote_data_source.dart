@@ -35,17 +35,13 @@ abstract interface class TransactionRemoteDataSource {
 
   Future<TransactionModel> updateTransaction(
     String id, {
-    String? walletId,
     String? tagId,
     String? title,
     String? amount,
     MoneyFlowType? type,
     DateTime? date,
-    TransactionStatus? status,
-    TransactionInputMethod? inputMethod,
     String? merchantName,
     String? description,
-    String? clientId,
   });
 
   Future<void> deleteTransaction(String id);
@@ -133,30 +129,22 @@ final class DioTransactionRemoteDataSource
   @override
   Future<TransactionModel> updateTransaction(
     String id, {
-    String? walletId,
     String? tagId,
     String? title,
     String? amount,
     MoneyFlowType? type,
     DateTime? date,
-    TransactionStatus? status,
-    TransactionInputMethod? inputMethod,
     String? merchantName,
     String? description,
-    String? clientId,
   }) async {
     final data = <String, Object?>{
-      'walletId': walletId,
       'tagId': tagId,
       'title': title,
       'description': description,
       'amount': amount,
       'transactionType': type?.apiValue,
       'transactionDate': date?.toIso8601String(),
-      'inputMethod': inputMethod?.apiValue,
-      'status': status?.apiValue,
       'merchantName': merchantName,
-      'clientId': clientId,
     }..removeWhere((_, value) => value == null);
     final response = await _dio.patch<Object?>('transactions/$id', data: data);
     return TransactionModel.fromJson(readApiObject(response.data));

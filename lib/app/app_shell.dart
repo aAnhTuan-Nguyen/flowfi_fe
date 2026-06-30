@@ -9,6 +9,7 @@ import '../features/transactions/presentation/widgets/transaction_entry_sheet.da
 import '../features/wallets/presentation/screens/wallets_screen.dart';
 import '../features/ai_processing/presentation/widgets/image_transaction_import_sheet.dart';
 import '../features/shared/presentation/widgets/feature_states.dart';
+import '../features/sync/sync_status_banner.dart';
 import '../routes/app_routes.dart';
 
 class FlowFiAppShell extends StatelessWidget {
@@ -38,10 +39,17 @@ class FlowFiAppShell extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: IndexedStack(
-        index: selectedIndex,
-        sizing: StackFit.expand,
-        children: _screens,
+      body: Column(
+        children: [
+          const SyncStatusBanner(),
+          Expanded(
+            child: IndexedStack(
+              index: selectedIndex,
+              sizing: StackFit.expand,
+              children: _screens,
+            ),
+          ),
+        ],
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
       floatingActionButton: FloatingActionButton(

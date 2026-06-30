@@ -6,12 +6,14 @@ final class UserModel {
     required this.email,
     this.fullName,
     required this.currencyCode,
+    this.monthlyBudgetLimit,
   });
 
   final String id;
   final String email;
   final String? fullName;
   final String currencyCode;
+  final String? monthlyBudgetLimit;
 
   factory UserModel.fromJson(Map<String, Object?> json) {
     final source = _unwrapData(json);
@@ -20,6 +22,7 @@ final class UserModel {
       email: source['email'] as String? ?? '',
       fullName: source['fullName'] as String?,
       currencyCode: source['currencyCode'] as String? ?? 'VND',
+      monthlyBudgetLimit: source['monthlyBudgetLimit']?.toString(),
     );
   }
 
@@ -29,6 +32,7 @@ final class UserModel {
       email: email,
       fullName: fullName,
       currencyCode: currencyCode,
+      monthlyBudgetLimit: monthlyBudgetLimit,
     );
   }
 }

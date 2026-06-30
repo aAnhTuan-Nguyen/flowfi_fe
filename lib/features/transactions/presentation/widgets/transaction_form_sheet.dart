@@ -4,7 +4,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/finance/money_flow_type.dart';
 import '../../../shared/presentation/widgets/crud_helpers.dart';
 import '../../../shared/presentation/widgets/feature_states.dart';
+import '../../../sync/sync_status_provider.dart';
 import '../../../tags/presentation/providers/tags_provider.dart';
+import '../../../wallets/domain/entities/wallet.dart';
 import '../../../wallets/presentation/providers/wallets_provider.dart';
 import '../../domain/entities/transaction.dart';
 import '../providers/transactions_provider.dart';
@@ -28,7 +30,6 @@ class _TransactionFormSheetState extends ConsumerState<TransactionFormSheet> {
   String? _walletId;
   String? _tagId;
   late MoneyFlowType _type;
-  late TransactionStatus _status;
   late DateTime _date;
   bool _isSubmitting = false;
 
@@ -47,9 +48,6 @@ class _TransactionFormSheetState extends ConsumerState<TransactionFormSheet> {
     _type = transaction?.type == MoneyFlowType.unknown
         ? MoneyFlowType.expense
         : transaction?.type ?? MoneyFlowType.expense;
-    _status = transaction?.status == TransactionStatus.unknown
-        ? TransactionStatus.draft
-        : transaction?.status ?? TransactionStatus.draft;
     _date = transaction?.date ?? DateTime.now();
   }
 
@@ -93,18 +91,24 @@ class _TransactionFormSheetState extends ConsumerState<TransactionFormSheet> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                DropdownButtonFormField<String>(
-                  initialValue: _walletId,
-                  decoration: const InputDecoration(labelText: 'Ví'),
-                  items: [
-                    for (final wallet in walletItems)
-                      DropdownMenuItem(
-                        value: wallet.id,
-                        child: Text(wallet.name),
-                      ),
-                  ],
-                  onChanged: (value) => setState(() => _walletId = value),
-                ),
+                if (widget.transaction == null)
+                  DropdownButtonFormField<String>(
+                    initialValue: _walletId,
+                    decoration: const InputDecoration(labelText: 'Ví'),
+                    items: [
+                      for (final wallet in walletItems)
+                        DropdownMenuItem(
+                          value: wallet.id,
+                          child: Text(wallet.name),
+                        ),
+                    ],
+                    onChanged: (value) => setState(() => _walletId = value),
+                  )
+                else
+                  _ReadOnlyField(
+                    label: 'Ví',
+                    value: _walletName(_walletId, walletItems),
+                  ),
                 const SizedBox(height: 12),
                 DropdownButtonFormField<String>(
                   initialValue: _tagId,
@@ -131,50 +135,22 @@ class _TransactionFormSheetState extends ConsumerState<TransactionFormSheet> {
                   validator: requiredAmount,
                 ),
                 const SizedBox(height: 12),
-                Row(
-                  children: [
-                    Expanded(
-                      child: DropdownButtonFormField<MoneyFlowType>(
-                        initialValue: _type,
-                        decoration: const InputDecoration(labelText: 'Loại'),
-                        items: const [
-                          DropdownMenuItem(
-                            value: MoneyFlowType.expense,
-                            child: Text('Chi'),
-                          ),
-                          DropdownMenuItem(
-                            value: MoneyFlowType.income,
-                            child: Text('Thu'),
-                          ),
-                        ],
-                        onChanged: (value) {
-                          if (value != null) setState(() => _type = value);
-                        },
-                      ),
+                DropdownButtonFormField<MoneyFlowType>(
+                  initialValue: _type,
+                  decoration: const InputDecoration(labelText: 'Loại'),
+                  items: const [
+                    DropdownMenuItem(
+                      value: MoneyFlowType.expense,
+                      child: Text('Chi'),
                     ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: DropdownButtonFormField<TransactionStatus>(
-                        initialValue: _status,
-                        decoration: const InputDecoration(
-                          labelText: 'Trạng thái',
-                        ),
-                        items: const [
-                          DropdownMenuItem(
-                            value: TransactionStatus.draft,
-                            child: Text('Nháp'),
-                          ),
-                          DropdownMenuItem(
-                            value: TransactionStatus.confirmed,
-                            child: Text('Đã xác nhận'),
-                          ),
-                        ],
-                        onChanged: (value) {
-                          if (value != null) setState(() => _status = value);
-                        },
-                      ),
+                    DropdownMenuItem(
+                      value: MoneyFlowType.income,
+                      child: Text('Thu'),
                     ),
                   ],
+                  onChanged: (value) {
+                    if (value != null) setState(() => _type = value);
+                  },
                 ),
                 const SizedBox(height: 12),
                 ListTile(
@@ -243,20 +219,20 @@ class _TransactionFormSheetState extends ConsumerState<TransactionFormSheet> {
           amount: _amountController.text.trim(),
           type: _type,
           date: _date,
-          status: _status,
+          status: TransactionStatus.confirmed,
+          inputMethod: TransactionInputMethod.manual,
           merchantName: emptyToNull(_merchantController.text.trim()),
           description: emptyToNull(_descriptionController.text.trim()),
         );
+        ref.invalidate(syncStatusProvider);
       } else {
         await notifier.updateTransaction(
           widget.transaction!.id,
-          walletId: _walletId,
           tagId: _tagId,
           title: _titleController.text.trim(),
           amount: _amountController.text.trim(),
           type: _type,
           date: _date,
-          status: _status,
           merchantName: emptyToNull(_merchantController.text.trim()),
           description: emptyToNull(_descriptionController.text.trim()),
         );
@@ -271,11 +247,43 @@ class _TransactionFormSheetState extends ConsumerState<TransactionFormSheet> {
   }
 }
 
+class _ReadOnlyField extends StatelessWidget {
+  const _ReadOnlyField({required this.label, required this.value});
+
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+
+    return InputDecorator(
+      decoration: InputDecoration(labelText: label),
+      child: Text(
+        value,
+        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+          color: colors.onSurface,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+    );
+  }
+}
+
 String _initialId(String? preferredId, Iterable<String> availableIds) {
   if (preferredId != null && availableIds.contains(preferredId)) {
     return preferredId;
   }
   return availableIds.first;
+}
+
+String _walletName(String? walletId, Iterable<Wallet> wallets) {
+  for (final wallet in wallets) {
+    if (wallet.id == walletId) {
+      return wallet.name;
+    }
+  }
+  return 'Ví hiện tại';
 }
 
 String _formatDate(DateTime date) {

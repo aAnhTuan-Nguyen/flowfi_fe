@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/finance/money_flow_type.dart';
 import '../../../../routes/app_routes.dart';
 import '../../../ai_processing/presentation/widgets/image_transaction_import_sheet.dart';
+import '../../../auth/domain/entities/auth_user.dart';
 import '../../../auth/presentation/providers/auth_controller.dart';
 import '../../../budgets/domain/entities/budget.dart';
 import '../../../budgets/presentation/providers/budgets_provider.dart';
@@ -44,7 +45,7 @@ class HomeScreen extends ConsumerWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _HomeHeader(userName: auth?.user?.fullName, ref: ref),
+              _HomeHeader(user: auth?.user, ref: ref),
               const SizedBox(height: 18),
               _BalanceOverview(wallets: wallets, currency: currency),
               const SizedBox(height: 12),
@@ -71,15 +72,15 @@ class HomeScreen extends ConsumerWidget {
 }
 
 class _HomeHeader extends StatelessWidget {
-  const _HomeHeader({required this.userName, required this.ref});
+  const _HomeHeader({required this.user, required this.ref});
 
-  final String? userName;
+  final AuthUser? user;
   final WidgetRef ref;
 
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
-    final name = _firstName(userName);
+    final name = _firstName(user?.fullName);
 
     return Row(
       children: [
@@ -123,6 +124,13 @@ class _HomeHeader extends StatelessWidget {
           icon: const Icon(Icons.account_circle_outlined),
           onSelected: (action) async {
             switch (action) {
+              case _AccountAction.editProfile:
+                await showFlowFiFormSheet<void>(
+                  context: context,
+                  title: 'Hồ sơ cá nhân',
+                  child: _ProfileEditSheet(user: user),
+                );
+                break;
               case _AccountAction.signOut:
                 final confirmed = await confirmDestructiveAction(
                   context,
@@ -144,6 +152,10 @@ class _HomeHeader extends StatelessWidget {
           },
           itemBuilder: (context) => const [
             PopupMenuItem(
+              value: _AccountAction.editProfile,
+              child: Text('Chỉnh sửa hồ sơ'),
+            ),
+            PopupMenuItem(
               value: _AccountAction.signOut,
               child: Text('Đăng xuất'),
             ),
@@ -154,7 +166,129 @@ class _HomeHeader extends StatelessWidget {
   }
 }
 
-enum _AccountAction { signOut }
+enum _AccountAction { editProfile, signOut }
+
+class _ProfileEditSheet extends ConsumerStatefulWidget {
+  const _ProfileEditSheet({required this.user});
+
+  final AuthUser? user;
+
+  @override
+  ConsumerState<_ProfileEditSheet> createState() => _ProfileEditSheetState();
+}
+
+class _ProfileEditSheetState extends ConsumerState<_ProfileEditSheet> {
+  final _formKey = GlobalKey<FormState>();
+  late final TextEditingController _fullNameController;
+  late final TextEditingController _currencyCodeController;
+  late final TextEditingController _monthlyBudgetLimitController;
+  bool _isSaving = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _fullNameController = TextEditingController(
+      text: widget.user?.fullName ?? '',
+    );
+    _currencyCodeController = TextEditingController(
+      text: widget.user?.currencyCode ?? 'VND',
+    );
+    _monthlyBudgetLimitController = TextEditingController(
+      text: widget.user?.monthlyBudgetLimit ?? '',
+    );
+  }
+
+  @override
+  void dispose() {
+    _fullNameController.dispose();
+    _currencyCodeController.dispose();
+    _monthlyBudgetLimitController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Form(
+      key: _formKey,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          TextFormField(
+            controller: _fullNameController,
+            textInputAction: TextInputAction.next,
+            decoration: const InputDecoration(labelText: 'Họ tên'),
+          ),
+          const SizedBox(height: 12),
+          TextFormField(
+            controller: _currencyCodeController,
+            textCapitalization: TextCapitalization.characters,
+            textInputAction: TextInputAction.next,
+            decoration: const InputDecoration(labelText: 'Tiền tệ'),
+            validator: (value) {
+              final normalized = value?.trim();
+              if (normalized == null || normalized.isEmpty) {
+                return 'Nhập mã tiền tệ';
+              }
+              return null;
+            },
+          ),
+          const SizedBox(height: 12),
+          TextFormField(
+            controller: _monthlyBudgetLimitController,
+            keyboardType: TextInputType.number,
+            textInputAction: TextInputAction.done,
+            decoration: const InputDecoration(labelText: 'Hạn mức tháng'),
+          ),
+          const SizedBox(height: 18),
+          FilledButton(
+            onPressed: _isSaving ? null : _submit,
+            child: _isSaving
+                ? const SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Text('Lưu hồ sơ'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _submit() async {
+    if (!_formKey.currentState!.validate()) {
+      return;
+    }
+    setState(() => _isSaving = true);
+    try {
+      final fullName = _fullNameController.text.trim();
+      final currencyCode = _currencyCodeController.text.trim().toUpperCase();
+      final monthlyBudgetLimit = _monthlyBudgetLimitController.text.trim();
+      await ref
+          .read(authControllerProvider.notifier)
+          .updateProfile(
+            fullName: fullName.isEmpty ? null : fullName,
+            currencyCode: currencyCode.isEmpty ? 'VND' : currencyCode,
+            monthlyBudgetLimit: monthlyBudgetLimit.isEmpty
+                ? null
+                : monthlyBudgetLimit,
+          );
+      if (!mounted) {
+        return;
+      }
+      Navigator.of(context).pop();
+    } catch (_) {
+      if (mounted) {
+        showGenericMutationError(context);
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isSaving = false);
+      }
+    }
+  }
+}
 
 class _BalanceOverview extends StatelessWidget {
   const _BalanceOverview({required this.wallets, required this.currency});

@@ -37,11 +37,32 @@ void main() {
     expect(sessionManager.accessToken, isNull);
     expect(await sessionManager.readRefreshToken(), isNull);
   });
+
+  test('updates profile through the remote data source', () async {
+    final sessionManager = AuthSessionManager(FakeTokenStorage());
+    final remote = FakeAuthRemoteDataSource();
+    final repository = AuthRepositoryImpl(remote, sessionManager);
+
+    final user = await repository.updateProfile(
+      fullName: 'Alex Nguyen',
+      currencyCode: 'VND',
+      monthlyBudgetLimit: '5000000',
+    );
+
+    expect(remote.updatedFullName, 'Alex Nguyen');
+    expect(remote.updatedCurrencyCode, 'VND');
+    expect(remote.updatedMonthlyBudgetLimit, '5000000');
+    expect(user.fullName, 'Alex Nguyen');
+    expect(user.monthlyBudgetLimit, '5000000');
+  });
 }
 
 class FakeAuthRemoteDataSource implements AuthRemoteDataSource {
   String? loginEmail;
   String? logoutRefreshToken;
+  String? updatedFullName;
+  String? updatedCurrencyCode;
+  String? updatedMonthlyBudgetLimit;
 
   @override
   Future<AuthRemoteSession> login({
@@ -97,5 +118,23 @@ class FakeAuthRemoteDataSource implements AuthRemoteDataSource {
   @override
   Future<void> logout(String? refreshToken) async {
     logoutRefreshToken = refreshToken;
+  }
+
+  @override
+  Future<RemoteUser> updateProfile({
+    String? fullName,
+    String? currencyCode,
+    String? monthlyBudgetLimit,
+  }) async {
+    updatedFullName = fullName;
+    updatedCurrencyCode = currencyCode;
+    updatedMonthlyBudgetLimit = monthlyBudgetLimit;
+    return RemoteUser(
+      id: 'user-1',
+      email: 'alex@example.com',
+      fullName: fullName,
+      currencyCode: currencyCode ?? 'VND',
+      monthlyBudgetLimit: monthlyBudgetLimit,
+    );
   }
 }

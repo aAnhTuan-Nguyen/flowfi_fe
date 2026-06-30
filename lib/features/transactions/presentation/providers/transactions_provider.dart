@@ -53,33 +53,25 @@ class TransactionsNotifier extends AsyncNotifier<List<Transaction>> {
 
   Future<void> updateTransaction(
     String id, {
-    String? walletId,
     String? tagId,
     String? title,
     String? amount,
     MoneyFlowType? type,
     DateTime? date,
-    TransactionStatus? status,
-    TransactionInputMethod? inputMethod,
     String? merchantName,
     String? description,
-    String? clientId,
   }) async {
     await ref
         .read(transactionRepositoryProvider)
         .updateTransaction(
           id,
-          walletId: walletId,
           tagId: tagId,
           title: title,
           amount: amount,
           type: type,
           date: date,
-          status: status,
-          inputMethod: inputMethod,
           merchantName: merchantName,
           description: description,
-          clientId: clientId,
         );
     await reload();
   }

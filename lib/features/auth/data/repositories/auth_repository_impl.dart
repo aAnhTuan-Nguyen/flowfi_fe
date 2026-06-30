@@ -58,6 +58,20 @@ final class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
+  Future<AuthUser> updateProfile({
+    String? fullName,
+    String? currencyCode,
+    String? monthlyBudgetLimit,
+  }) async {
+    final user = await _remoteDataSource.updateProfile(
+      fullName: fullName,
+      currencyCode: currencyCode,
+      monthlyBudgetLimit: monthlyBudgetLimit,
+    );
+    return user.toDomain();
+  }
+
+  @override
   Future<void> signOut() async {
     final refreshToken = await _sessionManager.readRefreshToken();
     try {
