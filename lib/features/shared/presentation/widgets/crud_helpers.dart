@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'forui_controls.dart';
+
 final _amountPattern = RegExp(r'^\d+(\.\d{1,2})?$');
 
 String? requiredText(String? value) {
@@ -47,19 +49,44 @@ Future<bool> confirmDestructiveAction(
 }) async {
   return await showDialog<bool>(
         context: context,
-        builder: (context) => AlertDialog(
-          title: Text(title),
-          content: Text(message),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(false),
-              child: const Text('Hủy'),
+        builder: (context) => Dialog(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(title, style: Theme.of(context).textTheme.titleLarge),
+                const SizedBox(height: 8),
+                Text(
+                  message,
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+                ),
+                const SizedBox(height: 18),
+                Row(
+                  children: [
+                    Expanded(
+                      child: FlowFiButton(
+                        label: 'Hủy',
+                        variant: FlowFiButtonVariant.outline,
+                        onPressed: () => Navigator.of(context).pop(false),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: FlowFiButton(
+                        label: actionLabel,
+                        variant: FlowFiButtonVariant.destructive,
+                        onPressed: () => Navigator.of(context).pop(true),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
             ),
-            FilledButton(
-              onPressed: () => Navigator.of(context).pop(true),
-              child: Text(actionLabel),
-            ),
-          ],
+          ),
         ),
       ) ??
       false;

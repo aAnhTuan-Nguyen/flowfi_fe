@@ -15,6 +15,7 @@ import 'package:flowfi_fe/features/budgets/presentation/providers/budgets_provid
 import 'package:flowfi_fe/features/goals/domain/entities/goal.dart';
 import 'package:flowfi_fe/features/goals/domain/repositories/goal_repository.dart';
 import 'package:flowfi_fe/features/goals/presentation/providers/goals_provider.dart';
+import 'package:flowfi_fe/features/home/presentation/current_date_provider.dart';
 import 'package:flowfi_fe/features/notifications/domain/entities/app_notification.dart';
 import 'package:flowfi_fe/features/notifications/domain/repositories/notification_repository.dart';
 import 'package:flowfi_fe/features/notifications/presentation/providers/notifications_provider.dart';
@@ -44,6 +45,7 @@ Future<GoRouter> pumpFlowFiApp(
   TestBudgetRepository? budgetRepository,
   TestGoalRepository? goalRepository,
   TestNotificationRepository? notificationRepository,
+  DateTime? currentDate,
 }) async {
   final router = createAppRouter(initialLocation: initialLocation);
   addTearDown(router.dispose);
@@ -57,6 +59,7 @@ Future<GoRouter> pumpFlowFiApp(
         budgetRepository: budgetRepository,
         goalRepository: goalRepository,
         notificationRepository: notificationRepository,
+        currentDate: currentDate,
       ),
       child: FlowFiApp(router: router),
     ),
@@ -73,6 +76,7 @@ Future<void> pumpFlowFiShell(
   TestBudgetRepository? budgetRepository,
   TestGoalRepository? goalRepository,
   TestNotificationRepository? notificationRepository,
+  DateTime? currentDate,
 }) async {
   final repository = authRepository ?? authenticatedAuthRepository();
   await tester.pumpWidget(
@@ -85,6 +89,7 @@ Future<void> pumpFlowFiShell(
         budgetRepository: budgetRepository,
         goalRepository: goalRepository,
         notificationRepository: notificationRepository,
+        currentDate: currentDate,
       ),
       child: const MaterialApp(home: FlowFiAppShell()),
     ),
@@ -99,6 +104,7 @@ dynamic flowFiTestOverrides({
   TestBudgetRepository? budgetRepository,
   TestGoalRepository? goalRepository,
   TestNotificationRepository? notificationRepository,
+  DateTime? currentDate,
 }) {
   return [
     authRepositoryProvider.overrideWithValue(authRepository),
@@ -129,6 +135,7 @@ dynamic flowFiTestOverrides({
     notificationRepositoryProvider.overrideWithValue(
       notificationRepository ?? TestNotificationRepository(),
     ),
+    if (currentDate != null) currentDateProvider.overrideWithValue(currentDate),
   ];
 }
 
@@ -255,7 +262,10 @@ class TestTransactionRepository implements TransactionRepository {
   String? createdTagId;
   String? createdTitle;
   String? createdAmount;
+  MoneyFlowType? createdType;
   TransactionStatus? createdStatus;
+  TransactionInputMethod? createdInputMethod;
+  DateTime? createdDate;
   String? createdDescription;
   String? updatedId;
   String? confirmedId;
@@ -295,7 +305,10 @@ class TestTransactionRepository implements TransactionRepository {
     createdTagId = tagId;
     createdTitle = title;
     createdAmount = amount;
+    createdType = type;
     createdStatus = status;
+    createdInputMethod = inputMethod;
+    createdDate = date;
     createdDescription = description;
     final transaction = Transaction(
       id: 'tx-new',
@@ -437,8 +450,9 @@ class TestWalletRepository implements WalletRepository {
 }
 
 class TestTagRepository implements TagRepository {
-  @override
-  Future<List<Tag>> listTags({int page = 1, int limit = 50}) async {
+  TestTagRepository({List<Tag>? tags}) : tags = tags?.toList() ?? defaultTags();
+
+  static List<Tag> defaultTags() {
     return const [
       Tag(
         id: 'tag-1',
@@ -453,6 +467,13 @@ class TestTagRepository implements TagRepository {
         isDefault: false,
       ),
     ];
+  }
+
+  final List<Tag> tags;
+
+  @override
+  Future<List<Tag>> listTags({int page = 1, int limit = 50}) async {
+    return tags;
   }
 
   @override

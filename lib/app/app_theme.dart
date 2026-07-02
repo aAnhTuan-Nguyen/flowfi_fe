@@ -15,9 +15,9 @@ FThemeData buildForuiTheme() {
 }
 
 ThemeData buildAppTheme() {
-  const canvas = Color(0xFFFAFBF6);
+  const canvas = Color(0xFFFFF8F3);
   const surface = Color(0xFFFFFFFF);
-  const surfaceSoft = Color(0xFFF1F5EA);
+  const surfaceSoft = Color(0xFFFFF1E3);
   const primaryDark = Color(0xFF172015);
   const primaryGreen = Color(0xFF4F6F39);
   const accentGreen = Color(0xFF8BAE66);

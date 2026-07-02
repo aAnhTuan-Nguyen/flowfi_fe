@@ -42,6 +42,12 @@ GoRouter createAppRouter({String initialLocation = AppRoutes.root}) {
           authenticatedChild: FlowFiAppShell(selectedIndex: 4),
         ),
       ),
+      GoRoute(
+        path: AppRoutes.profile,
+        builder: (context, state) => const AuthGate(
+          authenticatedChild: FlowFiAppShell(selectedIndex: 5),
+        ),
+      ),
     ],
   );
 }

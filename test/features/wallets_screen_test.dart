@@ -1,4 +1,5 @@
 import 'package:flowfi_fe/routes/app_routes.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import '../helpers/flowfi_test_helpers.dart';
@@ -23,6 +24,7 @@ void main() {
     expect(find.text('Mặc định'), findsOneWidget);
     expect(find.text('Tiền mặt'), findsOneWidget);
     expect(find.text('Ngân hàng'), findsOneWidget);
+    expect(find.byType(PopupMenuButton), findsNothing);
 
     await tester.tap(find.text('Thêm ví'));
     await tester.pumpAndSettle();

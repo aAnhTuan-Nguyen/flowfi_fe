@@ -1,4 +1,5 @@
 import 'package:flowfi_fe/core/finance/money_flow_type.dart';
+import 'package:flowfi_fe/features/shared/presentation/widgets/forui_controls.dart';
 import 'package:flowfi_fe/features/transactions/domain/entities/transaction.dart';
 import 'package:flowfi_fe/features/transactions/presentation/widgets/transaction_form_sheet.dart';
 import 'package:flowfi_fe/routes/app_routes.dart';
@@ -43,11 +44,8 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(
-      find.byType(DropdownButtonFormField<TransactionStatus>),
-      findsNothing,
-    );
-    expect(find.byType(DropdownButtonFormField<String>), findsOneWidget);
+    expect(find.byType(FlowFiSelectField<TransactionStatus>), findsNothing);
+    expect(find.byType(FlowFiSelectField<String>), findsOneWidget);
 
     await tester.ensureVisible(find.text('Lưu thay đổi'));
     await tester.pumpAndSettle();
@@ -65,6 +63,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
+    expect(find.byType(PopupMenuButton), findsNothing);
     expect(find.text('Tất cả'), findsOneWidget);
     expect(find.text('Thu'), findsOneWidget);
     expect(find.text('Chi'), findsOneWidget);
@@ -133,7 +132,7 @@ void main() {
     await tester.tap(find.byTooltip('Quản lý danh mục'));
     await tester.pumpAndSettle();
     expect(find.text('Quản lý danh mục'), findsOneWidget);
-    expect(find.text('Add tag'), findsOneWidget);
+    expect(find.text('Thêm danh mục'), findsOneWidget);
   });
 
   testWidgets('empty transaction views use a Lottie-backed state', (

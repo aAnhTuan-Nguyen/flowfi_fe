@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../shared/presentation/widgets/feature_states.dart';
+import '../../../shared/presentation/widgets/forui_controls.dart';
 import '../providers/auth_controller.dart';
 
 class SignUpScreen extends ConsumerStatefulWidget {
@@ -63,34 +65,31 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                         style: Theme.of(context).textTheme.titleMedium,
                       ),
                       const Spacer(),
-                      IconButton(
-                        tooltip: 'Back to login',
+                      FlowFiIconButton(
+                        tooltip: 'Quay lại đăng nhập',
                         onPressed: isLoading ? null : _returnToSignIn,
-                        icon: const Icon(Icons.arrow_back_rounded, size: 18),
+                        icon: Icons.arrow_back_rounded,
+                        variant: FlowFiButtonVariant.ghost,
                       ),
                     ],
                   ),
                   const SizedBox(height: 42),
-                  Container(
+                  FlowFiCard(
                     padding: const EdgeInsets.all(28),
-                    decoration: BoxDecoration(
-                      color: colors.surface,
-                      borderRadius: BorderRadius.circular(18),
-                      border: Border.all(color: colors.outlineVariant),
-                    ),
+                    color: colors.surface,
                     child: Form(
                       key: _formKey,
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
                           Text(
-                            'Create account',
+                            'Tạo tài khoản',
                             textAlign: TextAlign.center,
                             style: Theme.of(context).textTheme.titleLarge,
                           ),
                           const SizedBox(height: 8),
                           Text(
-                            'Experience next-gen financial clarity.',
+                            'Bắt đầu theo dõi dòng tiền và ngân sách rõ ràng hơn.',
                             textAlign: TextAlign.center,
                             style: Theme.of(context).textTheme.bodyMedium
                                 ?.copyWith(
@@ -99,86 +98,64 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                                 ),
                           ),
                           const SizedBox(height: 26),
-                          _Label('Full Name'),
-                          TextFormField(
+                          FlowFiTextField(
+                            label: 'Họ tên',
+                            hint: 'Alex Morgan',
                             controller: _nameController,
                             textInputAction: TextInputAction.next,
-                            decoration: _decor(
-                              'Alex Morgan',
-                              Icons.person_outline_rounded,
-                            ),
+                            prefixIcon: Icons.person_outline_rounded,
                           ),
                           const SizedBox(height: 14),
-                          _Label('Email Address'),
-                          TextFormField(
+                          FlowFiTextField(
+                            label: 'Email',
+                            hint: 'alex@flowfi.com',
                             controller: _emailController,
                             keyboardType: TextInputType.emailAddress,
                             textInputAction: TextInputAction.next,
-                            decoration: _decor(
-                              'alex@flowfi.com',
-                              Icons.mail_outline_rounded,
-                            ),
+                            prefixIcon: Icons.mail_outline_rounded,
                             validator: _required,
                           ),
                           const SizedBox(height: 14),
-                          _Label('Password'),
-                          TextFormField(
+                          FlowFiTextField(
+                            label: 'Mật khẩu',
+                            hint: '••••••••',
                             controller: _passwordController,
                             obscureText: true,
                             textInputAction: TextInputAction.next,
-                            decoration: _decor(
-                              '........',
-                              Icons.lock_outline_rounded,
-                            ),
+                            prefixIcon: Icons.lock_outline_rounded,
                             validator: _required,
                           ),
                           const SizedBox(height: 14),
-                          _Label('Confirm Password'),
-                          TextFormField(
+                          FlowFiTextField(
+                            label: 'Xác nhận mật khẩu',
+                            hint: '••••••••',
                             controller: _confirmPasswordController,
                             obscureText: true,
-                            decoration: _decor(
-                              '........',
-                              Icons.shield_outlined,
-                            ),
+                            prefixIcon: Icons.shield_outlined,
                             validator: (value) {
                               final requiredError = _required(value);
                               if (requiredError != null) return requiredError;
                               if (value != _passwordController.text) {
-                                return 'Passwords do not match';
+                                return 'Mật khẩu xác nhận không khớp';
                               }
                               return null;
                             },
                           ),
                           const SizedBox(height: 12),
-                          Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Checkbox(
-                                value: _acceptedTerms,
-                                onChanged: (value) {
-                                  setState(() {
-                                    _acceptedTerms = value ?? false;
-                                  });
-                                },
-                              ),
-                              Expanded(
-                                child: Padding(
-                                  padding: const EdgeInsets.only(top: 12),
-                                  child: Text(
-                                    'I agree to the Terms and Privacy Policy.',
-                                    style: Theme.of(
-                                      context,
-                                    ).textTheme.labelMedium,
-                                  ),
-                                ),
-                              ),
-                            ],
+                          FlowFiCheckboxField(
+                            label:
+                                'Tôi đồng ý với Điều khoản và Chính sách riêng tư.',
+                            value: _acceptedTerms,
+                            onChanged: (value) {
+                              setState(() {
+                                _acceptedTerms = value;
+                              });
+                            },
                           ),
                           if (authValue.hasError) ...[
                             const SizedBox(height: 8),
                             Text(
-                              'Could not create your account. Please try again.',
+                              'Không thể tạo tài khoản. Vui lòng thử lại.',
                               textAlign: TextAlign.center,
                               style: Theme.of(context).textTheme.labelMedium
                                   ?.copyWith(
@@ -187,25 +164,20 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                             ),
                           ],
                           const SizedBox(height: 16),
-                          FilledButton.icon(
+                          FlowFiButton(
+                            label: 'Tạo tài khoản',
                             onPressed: isLoading || !_acceptedTerms
                                 ? null
                                 : _submit,
-                            label: const Text('Create Account'),
-                            icon: isLoading
-                                ? const SizedBox.square(
-                                    dimension: 18,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                    ),
-                                  )
-                                : const Icon(Icons.arrow_forward_rounded),
+                            icon: Icons.arrow_forward_rounded,
+                            isLoading: isLoading,
                           ),
                           const SizedBox(height: 12),
-                          TextButton.icon(
+                          FlowFiButton(
+                            label: 'Quay lại đăng nhập',
                             onPressed: isLoading ? null : _returnToSignIn,
-                            icon: const Icon(Icons.arrow_back_rounded),
-                            label: const Text('Back to Login'),
+                            icon: Icons.arrow_back_rounded,
+                            variant: FlowFiButtonVariant.ghost,
                           ),
                         ],
                       ),
@@ -240,37 +212,9 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
   }
 }
 
-class _Label extends StatelessWidget {
-  const _Label(this.text);
-
-  final String text;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 6),
-      child: Text(
-        text.toUpperCase(),
-        style: Theme.of(context).textTheme.labelMedium?.copyWith(
-          fontSize: 10,
-          color: Theme.of(context).colorScheme.onSurfaceVariant,
-        ),
-      ),
-    );
-  }
-}
-
-InputDecoration _decor(String hintText, IconData icon) {
-  return InputDecoration(
-    hintText: hintText,
-    prefixIcon: Icon(icon, size: 18),
-    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-  );
-}
-
 String? _required(String? value) {
   if (value == null || value.trim().isEmpty) {
-    return 'Required';
+    return 'Bắt buộc';
   }
   return null;
 }

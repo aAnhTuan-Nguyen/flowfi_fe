@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'forui_controls.dart';
+
 class PlaceholderTabScreen extends StatelessWidget {
   const PlaceholderTabScreen({
     super.key,
@@ -25,10 +27,10 @@ class PlaceholderTabScreen extends StatelessWidget {
               width: 48,
               height: 48,
               decoration: BoxDecoration(
-                color: const Color(0xFFE7F1DA),
+                color: FlowFiColors.positiveSurface,
                 borderRadius: BorderRadius.circular(16),
               ),
-              child: Icon(icon, color: const Color(0xFF49672A)),
+              child: Icon(icon, color: FlowFiColors.income),
             ),
             const SizedBox(height: 18),
             Text(title, style: Theme.of(context).textTheme.headlineMedium),

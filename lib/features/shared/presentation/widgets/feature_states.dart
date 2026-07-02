@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:forui/forui.dart';
 import 'package:lottie/lottie.dart';
+
+import 'forui_controls.dart';
 
 class FlowFiFeatureScaffold extends StatelessWidget {
   const FlowFiFeatureScaffold({
@@ -140,10 +141,11 @@ class FlowFiFormSheet extends StatelessWidget {
                         style: Theme.of(context).textTheme.titleLarge,
                       ),
                     ),
-                    IconButton(
+                    FlowFiIconButton(
                       onPressed: () => Navigator.of(context).pop(),
-                      icon: const Icon(Icons.close_rounded),
                       tooltip: 'Đóng',
+                      icon: Icons.close_rounded,
+                      variant: FlowFiButtonVariant.ghost,
                     ),
                   ],
                 ),
@@ -194,6 +196,144 @@ class FlowFiCard extends StatelessWidget {
   }
 }
 
+class FlowFiIconBadge extends StatelessWidget {
+  const FlowFiIconBadge({
+    super.key,
+    required this.icon,
+    this.color,
+    this.foregroundColor,
+    this.tone,
+    this.size = 44,
+    this.radius = 16,
+  });
+
+  final IconData icon;
+  final Color? color;
+  final Color? foregroundColor;
+  final FlowFiTone? tone;
+  final double size;
+  final double radius;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    final toneStyle = tone == null ? null : flowFiToneStyle(context, tone!);
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        color: color ?? toneStyle?.background ?? colors.primaryContainer,
+        borderRadius: BorderRadius.circular(radius),
+      ),
+      child: Icon(
+        icon,
+        color: foregroundColor ?? toneStyle?.foreground ?? colors.primary,
+        size: size <= 36 ? 18 : 22,
+      ),
+    );
+  }
+}
+
+class FlowFiMetricCard extends StatelessWidget {
+  const FlowFiMetricCard({
+    super.key,
+    required this.label,
+    required this.value,
+    required this.icon,
+    this.color,
+    this.iconColor,
+  });
+
+  final String label;
+  final String value;
+  final IconData icon;
+  final Color? color;
+  final Color? iconColor;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    final resolvedIconColor = iconColor ?? colors.primary;
+
+    return FlowFiCard(
+      color: color,
+      padding: const EdgeInsets.all(14),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          FlowFiIconBadge(
+            icon: icon,
+            color: resolvedIconColor.withValues(alpha: 0.12),
+            foregroundColor: resolvedIconColor,
+            size: 36,
+            radius: 13,
+          ),
+          const SizedBox(height: 10),
+          Text(
+            label,
+            style: Theme.of(
+              context,
+            ).textTheme.labelMedium?.copyWith(color: colors.onSurfaceVariant),
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+          ),
+          const SizedBox(height: 4),
+          Text(
+            value,
+            style: Theme.of(context).textTheme.titleMedium,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class FlowFiProfileRow extends StatelessWidget {
+  const FlowFiProfileRow({
+    super.key,
+    required this.icon,
+    required this.label,
+    required this.value,
+  });
+
+  final IconData icon;
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    return Row(
+      children: [
+        FlowFiIconBadge(icon: icon, size: 38, radius: 14),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                label,
+                style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                  color: colors.onSurfaceVariant,
+                ),
+              ),
+              const SizedBox(height: 3),
+              Text(
+                value,
+                style: Theme.of(context).textTheme.titleMedium,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
 class FlowFiAmountText extends StatelessWidget {
   const FlowFiAmountText({
     super.key,
@@ -231,21 +371,23 @@ class FlowFiStatusBadge extends StatelessWidget {
     this.icon,
     this.color,
     this.foregroundColor,
+    this.tone = FlowFiTone.info,
   });
 
   final String label;
   final IconData? icon;
   final Color? color;
   final Color? foregroundColor;
+  final FlowFiTone tone;
 
   @override
   Widget build(BuildContext context) {
-    final colors = Theme.of(context).colorScheme;
-    final textColor = foregroundColor ?? colors.onPrimaryContainer;
+    final toneStyle = flowFiToneStyle(context, tone);
+    final textColor = foregroundColor ?? toneStyle.foreground;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
-        color: color ?? colors.primaryContainer,
+        color: color ?? toneStyle.background,
         borderRadius: BorderRadius.circular(999),
       ),
       child: Row(
@@ -423,6 +565,229 @@ class FlowFiActionTile extends StatelessWidget {
   }
 }
 
+class FlowFiListItemCard extends StatelessWidget {
+  const FlowFiListItemCard({
+    super.key,
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    this.tone = FlowFiTone.info,
+    this.trailing,
+    this.status,
+    this.action,
+    this.color,
+    this.onTap,
+  });
+
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final FlowFiTone tone;
+  final Widget? trailing;
+  final Widget? status;
+  final Widget? action;
+  final Color? color;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    final content = Row(
+      children: [
+        FlowFiIconBadge(icon: icon, tone: tone, size: 44, radius: 14),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      title,
+                      style: Theme.of(context).textTheme.titleMedium,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  if (status != null) ...[
+                    const SizedBox(width: 8),
+                    Flexible(child: status!),
+                  ],
+                ],
+              ),
+              const SizedBox(height: 3),
+              Text(
+                subtitle,
+                style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                  color: colors.onSurfaceVariant,
+                  fontWeight: FontWeight.w500,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
+          ),
+        ),
+        if (trailing != null) ...[const SizedBox(width: 12), trailing!],
+        if (action != null) ...[const SizedBox(width: 6), action!],
+      ],
+    );
+
+    if (onTap == null) {
+      return FlowFiCard(
+        color: color,
+        padding: const EdgeInsets.all(14),
+        child: content,
+      );
+    }
+
+    return FlowFiCard(
+      color: color,
+      padding: EdgeInsets.zero,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(18),
+          child: Padding(padding: const EdgeInsets.all(14), child: content),
+        ),
+      ),
+    );
+  }
+}
+
+class FlowFiProgressBar extends StatelessWidget {
+  const FlowFiProgressBar({
+    super.key,
+    required this.value,
+    this.tone = FlowFiTone.positive,
+    this.height = 8,
+  });
+
+  final double value;
+  final FlowFiTone tone;
+  final double height;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    final toneStyle = flowFiToneStyle(context, tone);
+    final clamped = value.clamp(0.0, 1.0).toDouble();
+
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(999),
+      child: Stack(
+        children: [
+          Container(height: height, color: colors.surfaceContainerHigh),
+          FractionallySizedBox(
+            widthFactor: clamped,
+            child: Container(height: height, color: toneStyle.foreground),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class FlowFiChartCard extends StatelessWidget {
+  const FlowFiChartCard({
+    super.key,
+    required this.title,
+    required this.chart,
+    this.subtitle,
+    this.trailing,
+    this.legend = const [],
+  });
+
+  final String title;
+  final String? subtitle;
+  final Widget chart;
+  final Widget? trailing;
+  final List<Widget> legend;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    return FlowFiCard(
+      color: colors.surfaceContainerLowest,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  title,
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+              ),
+              ?trailing,
+            ],
+          ),
+          if (subtitle != null) ...[
+            const SizedBox(height: 6),
+            Text(
+              subtitle!,
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.copyWith(color: colors.onSurfaceVariant),
+            ),
+          ],
+          const SizedBox(height: 16),
+          chart,
+          if (legend.isNotEmpty) ...[const SizedBox(height: 14), ...legend],
+        ],
+      ),
+    );
+  }
+}
+
+class FlowFiLegendRow extends StatelessWidget {
+  const FlowFiLegendRow({
+    super.key,
+    required this.color,
+    required this.label,
+    this.value,
+  });
+
+  final Color color;
+  final String label;
+  final String? value;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    return Row(
+      children: [
+        Container(
+          width: 10,
+          height: 10,
+          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Text(
+            label,
+            style: Theme.of(context).textTheme.labelMedium,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
+        if (value != null) ...[
+          const SizedBox(width: 8),
+          Text(
+            value!,
+            style: Theme.of(
+              context,
+            ).textTheme.labelMedium?.copyWith(color: colors.onSurfaceVariant),
+          ),
+        ],
+      ],
+    );
+  }
+}
+
 class FlowFiForuiButton extends StatelessWidget {
   const FlowFiForuiButton({
     super.key,
@@ -439,18 +804,11 @@ class FlowFiForuiButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      width: double.infinity,
-      child: FButton(
-        onPress: isLoading ? null : onPressed,
-        prefix: icon == null ? null : Icon(icon, size: 18),
-        child: isLoading
-            ? const SizedBox.square(
-                dimension: 18,
-                child: CircularProgressIndicator(strokeWidth: 2),
-              )
-            : Text(label),
-      ),
+    return FlowFiButton(
+      label: label,
+      onPressed: onPressed,
+      icon: icon,
+      isLoading: isLoading,
     );
   }
 }
@@ -513,7 +871,7 @@ class FlowFiErrorState extends StatelessWidget {
               const Icon(
                 Icons.cloud_off_rounded,
                 size: 36,
-                color: Color(0xFFBA1A1A),
+                color: FlowFiColors.danger,
               ),
               const SizedBox(height: 12),
               Text(
@@ -529,11 +887,63 @@ class FlowFiErrorState extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 14),
-              FilledButton(onPressed: onRetry, child: const Text('Thử lại')),
+              FlowFiButton(
+                label: 'Thử lại',
+                onPressed: onRetry,
+                fullWidth: false,
+                icon: Icons.refresh_rounded,
+              ),
             ],
           ),
         ),
       ),
+    );
+  }
+}
+
+class FlowFiInlineError extends StatelessWidget {
+  const FlowFiInlineError({
+    super.key,
+    required this.message,
+    required this.onRetry,
+  });
+
+  final String message;
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    return FlowFiCard(
+      child: Row(
+        children: [
+          FlowFiIconBadge(
+            icon: Icons.cloud_off_rounded,
+            tone: FlowFiTone.negative,
+          ),
+          const SizedBox(width: 12),
+          Expanded(child: Text(message)),
+          FlowFiButton(
+            label: 'Thử lại',
+            onPressed: onRetry,
+            fullWidth: false,
+            variant: FlowFiButtonVariant.ghost,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class FlowFiSliverLoading extends StatelessWidget {
+  const FlowFiSliverLoading({super.key, this.label = 'Đang tải dữ liệu'});
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return SliverFillRemaining(
+      hasScrollBody: false,
+      child: Center(child: FlowFiInlineLoading(label: label)),
     );
   }
 }

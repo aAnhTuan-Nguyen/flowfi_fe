@@ -12,8 +12,8 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('FlowFi'), findsOneWidget);
-    expect(find.text('Welcome Back'), findsOneWidget);
-    expect(find.text('Login'), findsOneWidget);
+    expect(find.text('Chào mừng trở lại'), findsOneWidget);
+    expect(find.text('Đăng nhập'), findsOneWidget);
     expect(find.text('Disposable architecture example'), findsNothing);
   });
 

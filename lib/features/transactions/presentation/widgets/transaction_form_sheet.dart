@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/finance/money_flow_type.dart';
 import '../../../shared/presentation/widgets/crud_helpers.dart';
 import '../../../shared/presentation/widgets/feature_states.dart';
+import '../../../shared/presentation/widgets/forui_controls.dart';
 import '../../../sync/sync_status_provider.dart';
 import '../../../tags/presentation/providers/tags_provider.dart';
 import '../../../wallets/domain/entities/wallet.dart';
@@ -92,14 +93,15 @@ class _TransactionFormSheetState extends ConsumerState<TransactionFormSheet> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 if (widget.transaction == null)
-                  DropdownButtonFormField<String>(
-                    initialValue: _walletId,
-                    decoration: const InputDecoration(labelText: 'Ví'),
+                  FlowFiSelectField<String>(
+                    label: 'Ví',
+                    value: _walletId,
                     items: [
                       for (final wallet in walletItems)
-                        DropdownMenuItem(
+                        FlowFiSelectItem(
                           value: wallet.id,
-                          child: Text(wallet.name),
+                          label: wallet.name,
+                          icon: Icons.account_balance_wallet_rounded,
                         ),
                     ],
                     onChanged: (value) => setState(() => _walletId = value),
@@ -110,42 +112,44 @@ class _TransactionFormSheetState extends ConsumerState<TransactionFormSheet> {
                     value: _walletName(_walletId, walletItems),
                   ),
                 const SizedBox(height: 12),
-                DropdownButtonFormField<String>(
-                  initialValue: _tagId,
-                  decoration: const InputDecoration(labelText: 'Danh mục'),
+                FlowFiSelectField<String>(
+                  label: 'Danh mục',
+                  value: _tagId,
                   items: [
                     for (final tag in tagItems)
-                      DropdownMenuItem(value: tag.id, child: Text(tag.name)),
+                      FlowFiSelectItem(value: tag.id, label: tag.name),
                   ],
                   onChanged: (value) => setState(() => _tagId = value),
                 ),
                 const SizedBox(height: 12),
-                TextFormField(
+                FlowFiTextField(
+                  label: 'Tên giao dịch',
                   controller: _titleController,
-                  decoration: const InputDecoration(labelText: 'Tên giao dịch'),
                   validator: requiredText,
                 ),
                 const SizedBox(height: 12),
-                TextFormField(
+                FlowFiTextField(
+                  label: 'Số tiền',
                   controller: _amountController,
-                  decoration: const InputDecoration(labelText: 'Số tiền'),
                   keyboardType: const TextInputType.numberWithOptions(
                     decimal: true,
                   ),
                   validator: requiredAmount,
                 ),
                 const SizedBox(height: 12),
-                DropdownButtonFormField<MoneyFlowType>(
-                  initialValue: _type,
-                  decoration: const InputDecoration(labelText: 'Loại'),
+                FlowFiSelectField<MoneyFlowType>(
+                  label: 'Loại',
+                  value: _type,
                   items: const [
-                    DropdownMenuItem(
+                    FlowFiSelectItem(
                       value: MoneyFlowType.expense,
-                      child: Text('Chi'),
+                      label: 'Chi',
+                      icon: Icons.trending_down_rounded,
                     ),
-                    DropdownMenuItem(
+                    FlowFiSelectItem(
                       value: MoneyFlowType.income,
-                      child: Text('Thu'),
+                      label: 'Thu',
+                      icon: Icons.trending_up_rounded,
                     ),
                   ],
                   onChanged: (value) {
@@ -153,34 +157,30 @@ class _TransactionFormSheetState extends ConsumerState<TransactionFormSheet> {
                   },
                 ),
                 const SizedBox(height: 12),
-                ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  title: const Text('Ngày'),
-                  subtitle: Text(_formatDate(_date)),
-                  trailing: const Icon(Icons.calendar_month_rounded),
+                FlowFiDateField(
+                  label: 'Ngày',
+                  value: _formatDate(_date),
                   onTap: _pickDate,
                 ),
-                TextFormField(
+                const SizedBox(height: 12),
+                FlowFiTextField(
+                  label: 'Người bán',
                   controller: _merchantController,
-                  decoration: const InputDecoration(labelText: 'Người bán'),
                 ),
                 const SizedBox(height: 12),
-                TextFormField(
+                FlowFiTextField(
+                  label: 'Ghi chú',
                   controller: _descriptionController,
-                  decoration: const InputDecoration(labelText: 'Ghi chú'),
                   maxLines: 2,
                 ),
                 const SizedBox(height: 18),
-                SizedBox(
-                  width: double.infinity,
-                  child: FilledButton(
-                    onPressed: _isSubmitting ? null : _submit,
-                    child: Text(
-                      widget.transaction == null
-                          ? 'Tạo giao dịch'
-                          : 'Lưu thay đổi',
-                    ),
-                  ),
+                FlowFiButton(
+                  label: widget.transaction == null
+                      ? 'Tạo giao dịch'
+                      : 'Lưu thay đổi',
+                  icon: Icons.check_rounded,
+                  isLoading: _isSubmitting,
+                  onPressed: _submit,
                 ),
               ],
             ),
@@ -257,14 +257,31 @@ class _ReadOnlyField extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
 
-    return InputDecorator(
-      decoration: InputDecoration(labelText: label),
-      child: Text(
-        value,
-        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-          color: colors.onSurface,
-          fontWeight: FontWeight.w600,
-        ),
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      decoration: BoxDecoration(
+        color: colors.surfaceContainerLowest,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: colors.outlineVariant),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: Theme.of(
+              context,
+            ).textTheme.labelMedium?.copyWith(color: colors.onSurfaceVariant),
+          ),
+          const SizedBox(height: 3),
+          Text(
+            value,
+            style: Theme.of(
+              context,
+            ).textTheme.titleMedium?.copyWith(color: colors.onSurface),
+          ),
+        ],
       ),
     );
   }

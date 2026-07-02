@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../ai_processing/presentation/widgets/image_transaction_import_sheet.dart';
 import '../../../shared/presentation/widgets/feature_states.dart';
+import '../../../shared/presentation/widgets/forui_controls.dart';
 import '../../../tags/presentation/widgets/tag_manager_sheet.dart';
 import '../../domain/entities/transaction.dart';
 import '../providers/transactions_provider.dart';
@@ -30,19 +31,20 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
       subtitle: 'Duyệt giao dịch mới, nháp và đã xác nhận.',
       onRefresh: () => ref.read(transactionsProvider.notifier).reload(),
       actions: [
-        IconButton.outlined(
+        FlowFiIconButton(
           onPressed: () => _showImageImport(context),
-          icon: const Icon(Icons.document_scanner_rounded),
+          icon: Icons.document_scanner_rounded,
           tooltip: 'Quét hóa đơn',
         ),
-        FilledButton.icon(
+        FlowFiButton(
+          label: 'Thêm',
           onPressed: () => _showTransactionForm(context),
-          icon: const Icon(Icons.add_rounded),
-          label: const Text('Thêm'),
+          icon: Icons.add_rounded,
+          fullWidth: false,
         ),
-        IconButton.outlined(
+        FlowFiIconButton(
           onPressed: () => _showTagManager(context),
-          icon: const Icon(Icons.sell_outlined),
+          icon: Icons.sell_outlined,
           tooltip: 'Quản lý danh mục',
         ),
       ],
@@ -110,7 +112,12 @@ class _InlineError extends StatelessWidget {
       child: Row(
         children: [
           const Expanded(child: Text('Không tải được giao dịch.')),
-          TextButton(onPressed: onRetry, child: const Text('Thử lại')),
+          FlowFiButton(
+            label: 'Thử lại',
+            onPressed: onRetry,
+            fullWidth: false,
+            variant: FlowFiButtonVariant.ghost,
+          ),
         ],
       ),
     );
