@@ -1,5 +1,6 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flowfi_fe/routes/app_routes.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import '../helpers/flowfi_test_helpers.dart';
@@ -22,7 +23,8 @@ void main() {
       findsOneWidget,
     );
     expect(find.byType(PieChart), findsOneWidget);
-    expect(find.text('Food'), findsOneWidget);
+    expect(find.text('Food'), findsWidgets);
+    expect(find.byType(PopupMenuButton), findsNothing);
     expect(find.text('Emergency Fund'), findsNothing);
 
     await tester.tap(find.text('Mục tiêu'));

@@ -9,6 +9,7 @@ import '../../../goals/presentation/providers/goals_provider.dart';
 import '../../../notifications/presentation/providers/notifications_provider.dart';
 import '../../../shared/presentation/widgets/crud_helpers.dart';
 import '../../../shared/presentation/widgets/feature_states.dart';
+import '../../../shared/presentation/widgets/forui_controls.dart';
 import '../../../tags/presentation/providers/tags_provider.dart';
 import '../../../transactions/domain/entities/transaction.dart';
 import '../../../transactions/presentation/providers/transactions_provider.dart';
@@ -48,21 +49,10 @@ class _ImageTransactionImportSheetState
     final wallets = ref.watch(walletsProvider);
 
     return wallets.when(
-      loading: () => const Padding(
-        padding: EdgeInsets.symmetric(vertical: 24),
-        child: Center(child: CircularProgressIndicator()),
-      ),
-      error: (_, _) => FlowFiCard(
-        color: const Color(0xFFFFF6EB),
-        child: Row(
-          children: [
-            const Expanded(child: Text('Không tải được ví.')),
-            TextButton(
-              onPressed: () => ref.read(walletsProvider.notifier).reload(),
-              child: const Text('Thử lại'),
-            ),
-          ],
-        ),
+      loading: () => const FlowFiInlineLoading(label: 'Đang tải ví'),
+      error: (_, _) => FlowFiInlineError(
+        message: 'Không tải được ví.',
+        onRetry: () => ref.read(walletsProvider.notifier).reload(),
       ),
       data: _buildContent,
     );
@@ -71,7 +61,7 @@ class _ImageTransactionImportSheetState
   Widget _buildContent(List<Wallet> wallets) {
     if (wallets.isEmpty) {
       return const FlowFiCard(
-        color: Color(0xFFFFF6EB),
+        color: FlowFiColors.warmSurface,
         child: Text('Tạo ít nhất một ví trước khi quét hóa đơn.'),
       );
     }
@@ -84,12 +74,16 @@ class _ImageTransactionImportSheetState
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          DropdownButtonFormField<String>(
-            initialValue: _walletId,
-            decoration: const InputDecoration(labelText: 'Ví'),
+          FlowFiSelectField<String>(
+            label: 'Ví',
+            value: _walletId,
             items: [
               for (final wallet in wallets)
-                DropdownMenuItem(value: wallet.id, child: Text(wallet.name)),
+                FlowFiSelectItem(
+                  value: wallet.id,
+                  label: wallet.name,
+                  icon: Icons.account_balance_wallet_rounded,
+                ),
             ],
             onChanged: _isSubmitting
                 ? null
@@ -97,7 +91,7 @@ class _ImageTransactionImportSheetState
           ),
           const SizedBox(height: 12),
           const FlowFiCard(
-            color: Color(0xFFFFF6EB),
+            color: FlowFiColors.warmSurface,
             child: Row(
               children: [
                 Icon(Icons.info_outline_rounded, size: 20),
@@ -114,22 +108,24 @@ class _ImageTransactionImportSheetState
           Row(
             children: [
               Expanded(
-                child: OutlinedButton.icon(
+                child: FlowFiButton(
+                  label: 'Chụp ảnh',
                   onPressed: _isSubmitting
                       ? null
                       : () => _pickImage(ImageSource.camera),
-                  icon: const Icon(Icons.photo_camera_rounded),
-                  label: const Text('Chụp ảnh'),
+                  icon: Icons.photo_camera_rounded,
+                  variant: FlowFiButtonVariant.outline,
                 ),
               ),
               const SizedBox(width: 10),
               Expanded(
-                child: OutlinedButton.icon(
+                child: FlowFiButton(
+                  label: 'Chọn ảnh',
                   onPressed: _isSubmitting
                       ? null
                       : () => _pickImage(ImageSource.gallery),
-                  icon: const Icon(Icons.image_rounded),
-                  label: const Text('Chọn ảnh'),
+                  icon: Icons.image_rounded,
+                  variant: FlowFiButtonVariant.outline,
                 ),
               ),
             ],
@@ -137,7 +133,7 @@ class _ImageTransactionImportSheetState
           if (_image != null) ...[
             const SizedBox(height: 12),
             FlowFiCard(
-              color: const Color(0xFFFFF6EB),
+              color: FlowFiColors.warmSurface,
               child: Row(
                 children: [
                   ClipRRect(
@@ -151,7 +147,7 @@ class _ImageTransactionImportSheetState
                         return Container(
                           width: 52,
                           height: 52,
-                          color: const Color(0xFFE7E5DC),
+                          color: FlowFiColors.imagePlaceholder,
                           child: const Icon(Icons.receipt_long_rounded),
                         );
                       },
@@ -179,18 +175,11 @@ class _ImageTransactionImportSheetState
             ),
           ],
           const SizedBox(height: 14),
-          SizedBox(
-            width: double.infinity,
-            child: FilledButton.icon(
-              onPressed: _canSubmit ? _submit : null,
-              icon: _isSubmitting
-                  ? const SizedBox.square(
-                      dimension: 18,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : const Icon(Icons.document_scanner_rounded),
-              label: Text(_isSubmitting ? 'Đang quét...' : 'Quét ảnh'),
-            ),
+          FlowFiButton(
+            label: _isSubmitting ? 'Đang quét...' : 'Quét ảnh',
+            onPressed: _canSubmit ? _submit : null,
+            icon: Icons.document_scanner_rounded,
+            isLoading: _isSubmitting,
           ),
           if (result != null) ...[
             const SizedBox(height: 16),
@@ -275,20 +264,10 @@ class _ImageTransactionImportSheetState
   }
 
   Future<void> _editDraft(Transaction transaction) async {
-    await showModalBottomSheet<void>(
+    await showFlowFiFormSheet<void>(
       context: context,
-      isScrollControlled: true,
-      builder: (context) => Padding(
-        padding: EdgeInsets.only(
-          left: 20,
-          right: 20,
-          top: 20,
-          bottom: MediaQuery.of(context).viewInsets.bottom + 20,
-        ),
-        child: SingleChildScrollView(
-          child: TransactionFormSheet(transaction: transaction),
-        ),
-      ),
+      title: 'Sửa giao dịch nháp',
+      child: TransactionFormSheet(transaction: transaction),
     );
     if (!mounted) {
       return;
@@ -397,7 +376,7 @@ class _ImportResultCard extends StatelessWidget {
     final drafts = result.createdTransactions;
 
     return FlowFiCard(
-      color: const Color(0xFFE7F1DA),
+      color: FlowFiColors.positiveSurface,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -450,13 +429,9 @@ class _OcrDraftTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
 
-    return Container(
+    return FlowFiCard(
       padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.72),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFFD9E7C9)),
-      ),
+      color: colors.surfaceContainerLowest.withValues(alpha: 0.78),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -482,22 +457,9 @@ class _OcrDraftTile extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 6),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 4,
-                      ),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFE7F1DA),
-                        borderRadius: BorderRadius.circular(999),
-                      ),
-                      child: Text(
-                        'Nháp · OCR',
-                        style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                          color: const Color(0xFF49672A),
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
+                    const FlowFiStatusBadge(
+                      label: 'Nháp · OCR',
+                      tone: FlowFiTone.info,
                     ),
                   ],
                 ),
@@ -506,7 +468,10 @@ class _OcrDraftTile extends StatelessWidget {
               Text(
                 transaction.amount,
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  color: const Color(0xFFB84A3F),
+                  color: flowFiToneStyle(
+                    context,
+                    FlowFiTone.negative,
+                  ).foreground,
                   fontWeight: FontWeight.w700,
                 ),
               ),
@@ -529,22 +494,23 @@ class _OcrDraftTile extends StatelessWidget {
             spacing: 8,
             runSpacing: 8,
             children: [
-              OutlinedButton(
+              FlowFiButton(
+                label: 'Sửa',
                 onPressed: isBusy ? null : () => onEdit(transaction),
-                child: const Text('Sửa'),
+                variant: FlowFiButtonVariant.outline,
+                fullWidth: false,
               ),
-              FilledButton(
+              FlowFiButton(
+                label: 'Xác nhận',
                 onPressed: isBusy ? null : () => onConfirm(transaction),
-                child: isBusy
-                    ? const SizedBox.square(
-                        dimension: 16,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : const Text('Xác nhận'),
+                isLoading: isBusy,
+                fullWidth: false,
               ),
-              TextButton(
+              FlowFiButton(
+                label: 'Xóa',
                 onPressed: isBusy ? null : () => onDelete(transaction),
-                child: const Text('Xóa'),
+                variant: FlowFiButtonVariant.ghost,
+                fullWidth: false,
               ),
             ],
           ),

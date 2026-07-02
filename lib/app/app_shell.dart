@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../features/budgets/presentation/screens/budgets_screen.dart';
 import '../features/home/presentation/screens/home_screen.dart';
 import '../features/insights/presentation/screens/insights_screen.dart';
+import '../features/profile/presentation/screens/profile_screen.dart';
 import '../features/transactions/presentation/screens/transactions_screen.dart';
 import '../features/transactions/presentation/widgets/transaction_entry_sheet.dart';
 import '../features/wallets/presentation/screens/wallets_screen.dart';
@@ -18,7 +19,7 @@ class FlowFiAppShell extends StatelessWidget {
 
   final int selectedIndex;
 
-  static const _tabCount = 5;
+  static const _tabCount = 6;
   static const _navigationCount = 4;
 
   static const _screens = <Widget>[
@@ -27,6 +28,7 @@ class FlowFiAppShell extends StatelessWidget {
     WalletsScreen(),
     BudgetsScreen(),
     InsightsScreen(),
+    ProfileScreen(),
   ];
 
   static const _navigationRoutes = <String>[
@@ -118,17 +120,19 @@ class _FlowFiBottomBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
     final activeIndex = selectedIndex < FlowFiAppShell._navigationCount
         ? selectedIndex
         : -1;
 
     return BottomAppBar(
-      height: 78,
-      color: Colors.white,
-      surfaceTintColor: Colors.white,
+      height: 82,
+      color: colors.surfaceContainerLowest,
+      surfaceTintColor: Colors.transparent,
       shape: const CircularNotchedRectangle(),
-      notchMargin: 8,
-      elevation: 8,
+      notchMargin: 9,
+      elevation: 10,
+      shadowColor: const Color(0x1F172015),
       child: Row(
         children: [
           _BottomBarItem(
@@ -183,7 +187,8 @@ class _BottomBarItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = selected ? const Color(0xFF49672A) : const Color(0xFF757872);
+    final colors = Theme.of(context).colorScheme;
+    final color = selected ? colors.primary : colors.onSurfaceVariant;
 
     return Expanded(
       child: InkWell(

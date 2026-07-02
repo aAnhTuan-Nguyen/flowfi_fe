@@ -1,3 +1,4 @@
+import 'package:flowfi_fe/core/finance/money_flow_type.dart';
 import 'package:flowfi_fe/features/transactions/domain/entities/transaction.dart';
 import 'package:flowfi_fe/routes/app_routes.dart';
 import 'package:flutter/material.dart';
@@ -34,7 +35,7 @@ void main() {
       find.text('Theo dõi hạn mức tháng và tiến độ tiết kiệm.'),
       findsOneWidget,
     );
-    expect(find.text('Food'), findsOneWidget);
+    expect(find.text('Food'), findsWidgets);
     expect(find.text('Emergency Fund'), findsNothing);
 
     await tester.tap(find.text('Trang chủ'));
@@ -83,7 +84,10 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Nói giao dịch'), findsOneWidget);
-    expect(find.text('Voice sẽ tạo gợi ý để bạn xác nhận.'), findsOneWidget);
+    expect(
+      find.text('Giọng nói sẽ tạo gợi ý để bạn xác nhận.'),
+      findsOneWidget,
+    );
   });
 
   testWidgets('transaction launcher opens the quick manual form', (
@@ -118,20 +122,9 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text('Nhập nhanh'));
     await tester.pumpAndSettle();
-    await tester.enterText(
-      find.ancestor(
-        of: find.text('Số tiền'),
-        matching: find.byType(TextFormField),
-      ),
-      '50000',
-    );
-    await tester.enterText(
-      find.ancestor(
-        of: find.text('Ghi chú'),
-        matching: find.byType(TextFormField),
-      ),
-      'Cà phê sáng',
-    );
+    await tester.enterText(find.byType(EditableText).at(0), '50000');
+    await tester.enterText(find.byType(EditableText).at(2), 'Cà phê sáng');
+    await tester.pumpAndSettle();
     await tester.tap(find.text('Lưu giao dịch'));
     await tester.pumpAndSettle();
 
@@ -139,6 +132,7 @@ void main() {
     expect(transactionRepository.createdTagId, 'tag-1');
     expect(transactionRepository.createdTitle, 'Cà phê sáng');
     expect(transactionRepository.createdAmount, '50000');
+    expect(transactionRepository.createdType, MoneyFlowType.expense);
     expect(transactionRepository.createdStatus, TransactionStatus.confirmed);
     expect(transactionRepository.createdDescription, 'Cà phê sáng');
   });
@@ -152,6 +146,21 @@ void main() {
     expect(router.state.uri.path, AppRoutes.root);
     expect(find.text('Giao dịch gần đây'), findsOneWidget);
     expect(find.text('Groceries'), findsOneWidget);
+  });
+
+  testWidgets('opens the profile route for authenticated users', (
+    tester,
+  ) async {
+    final router = await pumpFlowFiApp(
+      tester,
+      authenticatedAuthRepository(),
+      initialLocation: '/profile',
+    );
+    await tester.pumpAndSettle();
+
+    expect(router.state.uri.path, '/profile');
+    expect(find.text('Hồ sơ cá nhân'), findsOneWidget);
+    expect(find.text('alex@example.com'), findsWidgets);
   });
 
   for (final routeCase in [
@@ -168,10 +177,7 @@ void main() {
       path: AppRoutes.budgets,
       text: 'Theo dõi hạn mức tháng và tiến độ tiết kiệm.',
     ),
-    (
-      path: AppRoutes.insights,
-      text: 'Notifications and backend-driven insights.',
-    ),
+    (path: AppRoutes.insights, text: 'Thông báo và gợi ý từ hệ thống.'),
   ]) {
     testWidgets('opens ${routeCase.path} on the matching authenticated tab', (
       tester,

@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/finance/money_flow_type.dart';
 import '../../../shared/presentation/widgets/crud_helpers.dart';
 import '../../../shared/presentation/widgets/feature_states.dart';
+import '../../../shared/presentation/widgets/forui_controls.dart';
 import '../../../sync/sync_status_provider.dart';
 import '../../../tags/domain/entities/tag.dart';
 import '../../../tags/presentation/providers/tags_provider.dart';
@@ -60,31 +61,25 @@ class VoiceTransactionPlaceholder extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+
     return FlowFiCard(
-      color: const Color(0xFFFFF6EB),
+      color: FlowFiColors.warmSurface,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            width: 44,
-            height: 44,
-            decoration: BoxDecoration(
-              color: const Color(0xFFE7F1DA),
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: const Icon(Icons.mic_rounded, color: Color(0xFF49672A)),
-          ),
+          const FlowFiIconBadge(icon: Icons.mic_rounded, tone: FlowFiTone.info),
           const SizedBox(height: 12),
           Text(
-            'Voice sẽ tạo gợi ý để bạn xác nhận.',
+            'Giọng nói sẽ tạo gợi ý để bạn xác nhận.',
             style: Theme.of(context).textTheme.titleMedium,
           ),
           const SizedBox(height: 6),
           Text(
-            'Frontend đã dành chỗ cho flow này. Bước backend nên trả về draft hoặc suggestion thay vì tự xác nhận giao dịch.',
+            'Flow này đang dành chỗ cho backend trả về bản nháp hoặc gợi ý để bạn kiểm tra.',
             style: Theme.of(
               context,
-            ).textTheme.bodyMedium?.copyWith(color: const Color(0xFF757872)),
+            ).textTheme.bodyMedium?.copyWith(color: colors.onSurfaceVariant),
           ),
         ],
       ),
@@ -140,7 +135,7 @@ class _QuickTransactionSheetState extends ConsumerState<QuickTransactionSheet> {
   Widget _buildForm(List<Wallet> wallets, List<Tag> tags) {
     if (wallets.isEmpty || tags.isEmpty) {
       return const FlowFiCard(
-        color: Color(0xFFFFF6EB),
+        color: FlowFiColors.warmSurface,
         child: Text('Cần có ít nhất một ví và một danh mục để nhập nhanh.'),
       );
     }
@@ -152,36 +147,33 @@ class _QuickTransactionSheetState extends ConsumerState<QuickTransactionSheet> {
       key: _formKey,
       child: Column(
         mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          TextFormField(
+          FlowFiTextField(
+            label: 'Số tiền',
+            hint: 'VD: 50000',
             controller: _amountController,
-            decoration: const InputDecoration(
-              labelText: 'Số tiền',
-              hintText: 'VD: 50000',
-            ),
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
             textInputAction: TextInputAction.next,
             validator: requiredAmount,
           ),
           const SizedBox(height: 12),
-          DropdownButtonFormField<String>(
-            initialValue: _tagId,
-            decoration: const InputDecoration(labelText: 'Danh mục'),
+          FlowFiSelectField<String>(
+            label: 'Danh mục',
+            value: _tagId,
             items: [
               for (final tag in tags)
-                DropdownMenuItem(value: tag.id, child: Text(tag.name)),
+                FlowFiSelectItem(value: tag.id, label: tag.name),
             ],
             onChanged: _isSubmitting
                 ? null
                 : (value) => setState(() => _tagId = value),
           ),
           const SizedBox(height: 12),
-          TextFormField(
+          FlowFiTextField(
+            label: 'Ghi chú',
+            hint: 'VD: Cà phê sáng',
             controller: _noteController,
-            decoration: const InputDecoration(
-              labelText: 'Ghi chú',
-              hintText: 'VD: Cà phê sáng',
-            ),
             textInputAction: TextInputAction.done,
           ),
           const SizedBox(height: 14),
@@ -189,9 +181,9 @@ class _QuickTransactionSheetState extends ConsumerState<QuickTransactionSheet> {
             alignment: Alignment.centerLeft,
             child: Text(
               'Dùng ví ${_defaultWallet(wallets).name}, hôm nay, trạng thái đã xác nhận.',
-              style: Theme.of(
-                context,
-              ).textTheme.labelMedium?.copyWith(color: const Color(0xFF757872)),
+              style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
             ),
           ),
           const SizedBox(height: 18),
@@ -254,10 +246,7 @@ class _InlineLoading extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Padding(
-      padding: EdgeInsets.symmetric(vertical: 24),
-      child: Center(child: CircularProgressIndicator()),
-    );
+    return const FlowFiInlineLoading();
   }
 }
 
@@ -269,14 +258,7 @@ class _InlineError extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return FlowFiCard(
-      child: Row(
-        children: [
-          Expanded(child: Text(message)),
-          TextButton(onPressed: onRetry, child: const Text('Thử lại')),
-        ],
-      ),
-    );
+    return FlowFiInlineError(message: message, onRetry: onRetry);
   }
 }
 

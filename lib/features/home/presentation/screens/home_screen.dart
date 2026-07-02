@@ -5,19 +5,17 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/finance/money_flow_type.dart';
 import '../../../../routes/app_routes.dart';
-import '../../../ai_processing/presentation/widgets/image_transaction_import_sheet.dart';
 import '../../../auth/domain/entities/auth_user.dart';
 import '../../../auth/presentation/providers/auth_controller.dart';
 import '../../../budgets/domain/entities/budget.dart';
 import '../../../budgets/presentation/providers/budgets_provider.dart';
-import '../../../shared/presentation/widgets/crud_helpers.dart';
 import '../../../shared/presentation/widgets/feature_states.dart';
-import '../../../tags/presentation/widgets/tag_manager_sheet.dart';
+import '../../../shared/presentation/widgets/forui_controls.dart';
 import '../../../transactions/domain/entities/transaction.dart';
 import '../../../transactions/presentation/providers/transactions_provider.dart';
-import '../../../transactions/presentation/widgets/transaction_entry_sheet.dart';
 import '../../../wallets/domain/entities/wallet.dart';
 import '../../../wallets/presentation/providers/wallets_provider.dart';
+import '../current_date_provider.dart';
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
@@ -28,6 +26,7 @@ class HomeScreen extends ConsumerWidget {
     final wallets = ref.watch(walletsProvider);
     final transactions = ref.watch(transactionsProvider);
     final budgets = ref.watch(budgetsProvider);
+    final currentDate = ref.watch(currentDateProvider);
     final currency = auth?.user?.currencyCode ?? 'VND';
 
     return SafeArea(
@@ -45,15 +44,19 @@ class HomeScreen extends ConsumerWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _HomeHeader(user: auth?.user, ref: ref),
+              _HomeHeader(user: auth?.user),
               const SizedBox(height: 18),
               _BalanceOverview(wallets: wallets, currency: currency),
               const SizedBox(height: 12),
-              _MonthSnapshot(transactions: transactions, currency: currency),
-              const SizedBox(height: 14),
-              _QuickActions(),
+              _MonthSnapshot(
+                transactions: transactions,
+                currency: currency,
+                now: currentDate,
+              ),
               const SizedBox(height: 18),
               _SpendingChartCard(transactions: transactions),
+              const SizedBox(height: 18),
+              _CashFlowTrendCard(transactions: transactions),
               const SizedBox(height: 18),
               _InsightNudge(transactions: transactions),
               const SizedBox(height: 18),
@@ -72,10 +75,9 @@ class HomeScreen extends ConsumerWidget {
 }
 
 class _HomeHeader extends StatelessWidget {
-  const _HomeHeader({required this.user, required this.ref});
+  const _HomeHeader({required this.user});
 
   final AuthUser? user;
-  final WidgetRef ref;
 
   @override
   Widget build(BuildContext context) {
@@ -114,179 +116,20 @@ class _HomeHeader extends StatelessWidget {
             ],
           ),
         ),
-        IconButton(
+        FlowFiIconButton(
           onPressed: () {},
-          icon: const Icon(Icons.notifications_none_rounded),
+          icon: Icons.notifications_none_rounded,
           tooltip: 'Thông báo',
+          variant: FlowFiButtonVariant.ghost,
         ),
-        PopupMenuButton<_AccountAction>(
+        FlowFiIconButton(
+          onPressed: () => context.go(AppRoutes.profile),
+          icon: Icons.account_circle_outlined,
           tooltip: 'Tài khoản',
-          icon: const Icon(Icons.account_circle_outlined),
-          onSelected: (action) async {
-            switch (action) {
-              case _AccountAction.editProfile:
-                await showFlowFiFormSheet<void>(
-                  context: context,
-                  title: 'Hồ sơ cá nhân',
-                  child: _ProfileEditSheet(user: user),
-                );
-                break;
-              case _AccountAction.signOut:
-                final confirmed = await confirmDestructiveAction(
-                  context,
-                  title: 'Đăng xuất?',
-                  message: 'Bạn cần đăng nhập lại để tiếp tục dùng FlowFi.',
-                  actionLabel: 'Đăng xuất',
-                );
-                if (!confirmed || !context.mounted) {
-                  return;
-                }
-                try {
-                  await ref.read(authControllerProvider.notifier).signOut();
-                } catch (_) {
-                  if (context.mounted) {
-                    showGenericMutationError(context);
-                  }
-                }
-            }
-          },
-          itemBuilder: (context) => const [
-            PopupMenuItem(
-              value: _AccountAction.editProfile,
-              child: Text('Chỉnh sửa hồ sơ'),
-            ),
-            PopupMenuItem(
-              value: _AccountAction.signOut,
-              child: Text('Đăng xuất'),
-            ),
-          ],
+          variant: FlowFiButtonVariant.ghost,
         ),
       ],
     );
-  }
-}
-
-enum _AccountAction { editProfile, signOut }
-
-class _ProfileEditSheet extends ConsumerStatefulWidget {
-  const _ProfileEditSheet({required this.user});
-
-  final AuthUser? user;
-
-  @override
-  ConsumerState<_ProfileEditSheet> createState() => _ProfileEditSheetState();
-}
-
-class _ProfileEditSheetState extends ConsumerState<_ProfileEditSheet> {
-  final _formKey = GlobalKey<FormState>();
-  late final TextEditingController _fullNameController;
-  late final TextEditingController _currencyCodeController;
-  late final TextEditingController _monthlyBudgetLimitController;
-  bool _isSaving = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _fullNameController = TextEditingController(
-      text: widget.user?.fullName ?? '',
-    );
-    _currencyCodeController = TextEditingController(
-      text: widget.user?.currencyCode ?? 'VND',
-    );
-    _monthlyBudgetLimitController = TextEditingController(
-      text: widget.user?.monthlyBudgetLimit ?? '',
-    );
-  }
-
-  @override
-  void dispose() {
-    _fullNameController.dispose();
-    _currencyCodeController.dispose();
-    _monthlyBudgetLimitController.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Form(
-      key: _formKey,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          TextFormField(
-            controller: _fullNameController,
-            textInputAction: TextInputAction.next,
-            decoration: const InputDecoration(labelText: 'Họ tên'),
-          ),
-          const SizedBox(height: 12),
-          TextFormField(
-            controller: _currencyCodeController,
-            textCapitalization: TextCapitalization.characters,
-            textInputAction: TextInputAction.next,
-            decoration: const InputDecoration(labelText: 'Tiền tệ'),
-            validator: (value) {
-              final normalized = value?.trim();
-              if (normalized == null || normalized.isEmpty) {
-                return 'Nhập mã tiền tệ';
-              }
-              return null;
-            },
-          ),
-          const SizedBox(height: 12),
-          TextFormField(
-            controller: _monthlyBudgetLimitController,
-            keyboardType: TextInputType.number,
-            textInputAction: TextInputAction.done,
-            decoration: const InputDecoration(labelText: 'Hạn mức tháng'),
-          ),
-          const SizedBox(height: 18),
-          FilledButton(
-            onPressed: _isSaving ? null : _submit,
-            child: _isSaving
-                ? const SizedBox(
-                    width: 18,
-                    height: 18,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : const Text('Lưu hồ sơ'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Future<void> _submit() async {
-    if (!_formKey.currentState!.validate()) {
-      return;
-    }
-    setState(() => _isSaving = true);
-    try {
-      final fullName = _fullNameController.text.trim();
-      final currencyCode = _currencyCodeController.text.trim().toUpperCase();
-      final monthlyBudgetLimit = _monthlyBudgetLimitController.text.trim();
-      await ref
-          .read(authControllerProvider.notifier)
-          .updateProfile(
-            fullName: fullName.isEmpty ? null : fullName,
-            currencyCode: currencyCode.isEmpty ? 'VND' : currencyCode,
-            monthlyBudgetLimit: monthlyBudgetLimit.isEmpty
-                ? null
-                : monthlyBudgetLimit,
-          );
-      if (!mounted) {
-        return;
-      }
-      Navigator.of(context).pop();
-    } catch (_) {
-      if (mounted) {
-        showGenericMutationError(context);
-      }
-    } finally {
-      if (mounted) {
-        setState(() => _isSaving = false);
-      }
-    }
   }
 }
 
@@ -368,15 +211,18 @@ class _BalanceOverview extends StatelessWidget {
 }
 
 class _MonthSnapshot extends StatelessWidget {
-  const _MonthSnapshot({required this.transactions, required this.currency});
+  const _MonthSnapshot({
+    required this.transactions,
+    required this.currency,
+    required this.now,
+  });
 
   final AsyncValue<List<Transaction>> transactions;
   final String currency;
+  final DateTime now;
 
   @override
   Widget build(BuildContext context) {
-    final now = DateTime.now();
-
     return transactions.when(
       loading: () => const SizedBox.shrink(),
       error: (_, _) => const SizedBox.shrink(),
@@ -426,97 +272,6 @@ class _MonthSnapshot extends StatelessWidget {
           ],
         );
       },
-    );
-  }
-}
-
-class _QuickActions extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Expanded(
-          child: _QuickActionCard(
-            icon: Icons.document_scanner_outlined,
-            label: 'Quét',
-            onTap: () => showFlowFiFormSheet<void>(
-              context: context,
-              title: 'Quét hóa đơn',
-              child: const ImageTransactionImportSheet(),
-            ),
-          ),
-        ),
-        const SizedBox(width: 10),
-        Expanded(
-          child: _QuickActionCard(
-            icon: Icons.mic_none_rounded,
-            label: 'Voice',
-            onTap: () => showFlowFiFormSheet<void>(
-              context: context,
-              title: 'Nói giao dịch',
-              child: const VoiceTransactionPlaceholder(),
-            ),
-          ),
-        ),
-        const SizedBox(width: 10),
-        Expanded(
-          child: _QuickActionCard(
-            icon: Icons.sell_outlined,
-            label: 'Danh mục',
-            onTap: () => showFlowFiFormSheet<void>(
-              context: context,
-              title: 'Quản lý danh mục',
-              child: const TagManagerSheet(),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _QuickActionCard extends StatelessWidget {
-  const _QuickActionCard({
-    required this.icon,
-    required this.label,
-    required this.onTap,
-  });
-
-  final IconData icon;
-  final String label;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = Theme.of(context).colorScheme;
-
-    return Material(
-      color: colors.surface,
-      borderRadius: BorderRadius.circular(16),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
-        child: Container(
-          height: 76,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: colors.outlineVariant),
-          ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(icon, size: 22, color: colors.primary),
-              const SizedBox(height: 8),
-              Text(
-                label,
-                style: Theme.of(context).textTheme.labelMedium,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ],
-          ),
-        ),
-      ),
     );
   }
 }
@@ -586,14 +341,14 @@ class _SpendingChartCard extends StatelessWidget {
                                 context,
                                 value: expense,
                                 title: 'Chi',
-                                color: const Color(0xFFB84A3F),
+                                color: FlowFiColors.expense,
                               ),
                             if (income > BigInt.zero)
                               _chartSection(
                                 context,
                                 value: income,
                                 title: 'Thu',
-                                color: const Color(0xFF4F6F39),
+                                color: FlowFiColors.income,
                               ),
                           ],
                         ),
@@ -608,13 +363,13 @@ class _SpendingChartCard extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           _LegendRow(
-                            color: const Color(0xFFB84A3F),
+                            color: FlowFiColors.expense,
                             label: 'Chi tiêu',
                             value: _compactAmount(expense),
                           ),
                           const SizedBox(height: 10),
                           _LegendRow(
-                            color: const Color(0xFF4F6F39),
+                            color: FlowFiColors.income,
                             label: 'Thu nhập',
                             value: _compactAmount(income),
                           ),
@@ -662,13 +417,146 @@ class _InsightNudge extends StatelessWidget {
               data: (items) => Text(
                 items.any((item) => item.status == TransactionStatus.draft)
                     ? 'Có giao dịch nháp cần bạn kiểm tra trước khi tính vào báo cáo.'
-                    : 'Scan và voice sẽ tạo gợi ý, bạn vẫn là người xác nhận cuối cùng.',
+                    : 'Dùng dấu cộng ở thanh dưới để nhập nhanh, scan hoặc tạo gợi ý bằng giọng nói.',
                 style: Theme.of(context).textTheme.bodyMedium,
               ),
             ),
           ),
         ],
       ),
+    );
+  }
+}
+
+class _CashFlowTrendCard extends StatelessWidget {
+  const _CashFlowTrendCard({required this.transactions});
+
+  final AsyncValue<List<Transaction>> transactions;
+
+  @override
+  Widget build(BuildContext context) {
+    return transactions.when(
+      loading: () => const FlowFiInlineLoading(label: 'Đang tải dòng tiền'),
+      error: (_, _) =>
+          const FlowFiCard(child: Text('Không tải được dòng tiền.')),
+      data: (items) {
+        final daily = <DateTime, BigInt>{};
+        for (final transaction in items) {
+          if (transaction.status != TransactionStatus.confirmed ||
+              transaction.date == null) {
+            continue;
+          }
+          final date = transaction.date!;
+          final day = DateTime(date.year, date.month, date.day);
+          daily.update(
+            day,
+            (value) => value + _signedAmount(transaction),
+            ifAbsent: () => _signedAmount(transaction),
+          );
+        }
+
+        final entries = daily.entries.toList()
+          ..sort((left, right) => left.key.compareTo(right.key));
+        final visible = entries.length > 5
+            ? entries.sublist(entries.length - 5)
+            : entries;
+
+        if (visible.isEmpty) {
+          return const FlowFiInlineEmptyState(
+            icon: Icons.bar_chart_rounded,
+            title: 'Chưa có dòng tiền',
+            message: 'Giao dịch đã xác nhận sẽ tạo biểu đồ theo ngày.',
+          );
+        }
+
+        final maxValue = visible
+            .map((entry) => _absBigInt(entry.value))
+            .fold<BigInt>(BigInt.one, (max, value) => value > max ? value : max)
+            .toDouble();
+
+        return FlowFiCard(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      'Dòng tiền gần đây',
+                      style: Theme.of(context).textTheme.titleMedium,
+                    ),
+                  ),
+                  const FlowFiStatusBadge(
+                    label: 'Theo ngày',
+                    icon: Icons.calendar_today_rounded,
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              SizedBox(
+                height: 150,
+                child: BarChart(
+                  BarChartData(
+                    minY: 0,
+                    maxY: maxValue * 1.2,
+                    borderData: FlBorderData(show: false),
+                    gridData: const FlGridData(show: false),
+                    barTouchData: BarTouchData(enabled: false),
+                    titlesData: FlTitlesData(
+                      topTitles: const AxisTitles(
+                        sideTitles: SideTitles(showTitles: false),
+                      ),
+                      rightTitles: const AxisTitles(
+                        sideTitles: SideTitles(showTitles: false),
+                      ),
+                      leftTitles: const AxisTitles(
+                        sideTitles: SideTitles(showTitles: false),
+                      ),
+                      bottomTitles: AxisTitles(
+                        sideTitles: SideTitles(
+                          showTitles: true,
+                          reservedSize: 28,
+                          getTitlesWidget: (value, meta) {
+                            final index = value.toInt();
+                            if (index < 0 || index >= visible.length) {
+                              return const SizedBox.shrink();
+                            }
+                            return Padding(
+                              padding: const EdgeInsets.only(top: 8),
+                              child: Text(
+                                _shortDate(visible[index].key),
+                                style: Theme.of(context).textTheme.labelMedium,
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                    ),
+                    barGroups: [
+                      for (var index = 0; index < visible.length; index++)
+                        BarChartGroupData(
+                          x: index,
+                          barRods: [
+                            BarChartRodData(
+                              toY: _absBigInt(visible[index].value).toDouble(),
+                              width: 18,
+                              borderRadius: BorderRadius.circular(9),
+                              color: visible[index].value >= BigInt.zero
+                                  ? FlowFiColors.income
+                                  : FlowFiColors.expense,
+                            ),
+                          ],
+                        ),
+                    ],
+                  ),
+                  duration: const Duration(milliseconds: 260),
+                  curve: Curves.easeOutCubic,
+                ),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }
@@ -693,7 +581,7 @@ class _RecentTransactions extends StatelessWidget {
           return const FlowFiInlineEmptyState(
             icon: Icons.receipt_long_rounded,
             title: 'Chưa có giao dịch',
-            message: 'Nhấn dấu cộng để nhập nhanh, scan hoặc dùng voice.',
+            message: 'Nhấn dấu cộng ở thanh dưới để tạo giao dịch đầu tiên.',
           );
         }
 
@@ -781,35 +669,15 @@ class _MiniMetricCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = Theme.of(context).colorScheme;
     final toneColor = tone == _MetricTone.income
-        ? const Color(0xFF4F6F39)
-        : const Color(0xFFB84A3F);
+        ? FlowFiColors.income
+        : FlowFiColors.expense;
 
-    return FlowFiCard(
-      padding: const EdgeInsets.all(14),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(icon, color: toneColor, size: 20),
-          const SizedBox(height: 10),
-          Text(
-            label,
-            style: Theme.of(
-              context,
-            ).textTheme.labelMedium?.copyWith(color: colors.onSurfaceVariant),
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-          ),
-          const SizedBox(height: 4),
-          Text(
-            value,
-            style: Theme.of(context).textTheme.titleMedium,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-        ],
-      ),
+    return FlowFiMetricCard(
+      label: label,
+      value: value,
+      icon: icon,
+      iconColor: toneColor,
     );
   }
 }
@@ -869,7 +737,12 @@ class _SectionHeader extends StatelessWidget {
         Expanded(
           child: Text(title, style: Theme.of(context).textTheme.titleMedium),
         ),
-        TextButton(onPressed: onActionPressed, child: Text(actionLabel)),
+        FlowFiButton(
+          label: actionLabel,
+          onPressed: onActionPressed,
+          fullWidth: false,
+          variant: FlowFiButtonVariant.ghost,
+        ),
       ],
     );
   }
@@ -885,9 +758,7 @@ class _TransactionTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final isIncome = transaction.type == MoneyFlowType.income;
     final colors = Theme.of(context).colorScheme;
-    final toneColor = isIncome
-        ? const Color(0xFF4F6F39)
-        : const Color(0xFFB84A3F);
+    final toneColor = isIncome ? FlowFiColors.income : FlowFiColors.expense;
     final amount = _formatMoney(
       _parseWholeAmount(transaction.amount),
       currency,
@@ -976,18 +847,9 @@ class _BudgetProgress extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 6),
-        ClipRRect(
-          borderRadius: BorderRadius.circular(999),
-          child: LinearProgressIndicator(
-            minHeight: 8,
-            value: threshold / 100,
-            backgroundColor: Theme.of(context).colorScheme.outlineVariant,
-            valueColor: AlwaysStoppedAnimation(
-              threshold >= 80
-                  ? const Color(0xFFC9872B)
-                  : Theme.of(context).colorScheme.primary,
-            ),
-          ),
+        FlowFiProgressBar(
+          value: threshold / 100,
+          tone: threshold >= 80 ? FlowFiTone.warning : FlowFiTone.positive,
         ),
       ],
     );
@@ -1006,7 +868,7 @@ PieChartSectionData _chartSection(
     radius: 44,
     color: color,
     titleStyle: Theme.of(context).textTheme.labelMedium?.copyWith(
-      color: Colors.white,
+      color: FlowFiColors.onStrong,
       fontWeight: FontWeight.w800,
     ),
   );
@@ -1019,6 +881,15 @@ BigInt _sumByType(List<Transaction> transactions, MoneyFlowType type) {
         BigInt.zero,
         (sum, transaction) => sum + _parseWholeAmount(transaction.amount),
       );
+}
+
+BigInt _signedAmount(Transaction transaction) {
+  final amount = _parseWholeAmount(transaction.amount);
+  return transaction.type == MoneyFlowType.income ? amount : -amount;
+}
+
+BigInt _absBigInt(BigInt value) {
+  return value < BigInt.zero ? -value : value;
 }
 
 BigInt _parseWholeAmount(String value) {
@@ -1047,6 +918,10 @@ String _compactAmount(BigInt value) {
     return '${thousands}k';
   }
   return value.toString();
+}
+
+String _shortDate(DateTime date) {
+  return '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}';
 }
 
 String _groupDigits(String digits) {
