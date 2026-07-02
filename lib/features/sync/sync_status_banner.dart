@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../shared/presentation/widgets/forui_controls.dart';
 import 'sync_status_provider.dart';
 
 class SyncStatusBanner extends ConsumerWidget {
@@ -15,17 +16,23 @@ class SyncStatusBanner extends ConsumerWidget {
       data: (status) {
         if (status.isOnline &&
             status.pendingCount == 0 &&
+            !status.isSynchronizing &&
             status.error == null) {
           return const SizedBox.shrink();
         }
-        final colors = Theme.of(context).colorScheme;
-        final text = !status.isOnline
-            ? 'Đang ngoại tuyến · thao tác mới sẽ chờ đồng bộ'
+        final tone = !status.isOnline || status.error != null
+            ? FlowFiTone.warning
+            : FlowFiTone.info;
+        final toneStyle = flowFiToneStyle(context, tone);
+        final text = status.isSynchronizing
+            ? 'Đang đồng bộ ${status.pendingCount} thao tác...'
+            : !status.isOnline
+            ? 'Đang ngoại tuyến. Thao tác mới sẽ chờ đồng bộ.'
             : status.error != null
-            ? 'Đồng bộ chưa thành công · ${status.pendingCount} thao tác đang chờ'
-            : '${status.pendingCount} thao tác đang chờ đồng bộ';
+            ? 'Đồng bộ chưa thành công. ${status.pendingCount} thao tác đang chờ.'
+            : '${status.pendingCount} thao tác đang chờ đồng bộ.';
         return Material(
-          color: colors.tertiaryContainer,
+          color: toneStyle.background,
           child: SafeArea(
             bottom: false,
             child: Padding(
@@ -33,27 +40,33 @@ class SyncStatusBanner extends ConsumerWidget {
               child: Row(
                 children: [
                   Icon(
-                    status.isOnline
+                    status.isSynchronizing || status.isOnline
                         ? Icons.sync_rounded
                         : Icons.wifi_off_rounded,
                     size: 18,
-                    color: colors.onTertiaryContainer,
+                    color: toneStyle.foreground,
                   ),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
                       text,
                       style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                        color: colors.onTertiaryContainer,
+                        color: toneStyle.foreground,
                       ),
                     ),
                   ),
-                  if (status.isOnline && status.pendingCount > 0)
-                    TextButton(
+                  if (status.isOnline &&
+                      status.pendingCount > 0 &&
+                      !status.isSynchronizing) ...[
+                    const SizedBox(width: 8),
+                    FlowFiButton(
+                      label: status.error == null ? 'Đồng bộ' : 'Thử lại',
                       onPressed: () =>
                           ref.read(syncStatusProvider.notifier).synchronize(),
-                      child: const Text('Đồng bộ'),
+                      fullWidth: false,
+                      variant: FlowFiButtonVariant.ghost,
                     ),
+                  ],
                 ],
               ),
             ),

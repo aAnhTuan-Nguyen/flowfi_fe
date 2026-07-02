@@ -275,6 +275,9 @@ final class _FixedNetworkStatus implements NetworkStatusService {
 
   @override
   Future<bool> hasNetwork() async => isOnline;
+
+  @override
+  Stream<bool> get onlineChanges => const Stream<bool>.empty();
 }
 
 final class _FailingTransactionRemoteDataSource
