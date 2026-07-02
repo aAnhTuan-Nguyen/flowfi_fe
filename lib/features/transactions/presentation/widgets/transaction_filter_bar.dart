@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/finance/money_flow_type.dart';
+import '../../../shared/presentation/widgets/feature_states.dart';
 import '../../domain/entities/transaction.dart';
 
 enum TransactionFilter { all, income, expense, draft, confirmed }
@@ -40,20 +41,11 @@ class TransactionFilterBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: Row(
-        children: [
-          for (final filter in TransactionFilter.values) ...[
-            ChoiceChip(
-              label: Text(filter.label),
-              selected: selected == filter,
-              onSelected: (_) => onSelected(filter),
-            ),
-            const SizedBox(width: 8),
-          ],
-        ],
-      ),
+    return FlowFiSegmentedFilter<TransactionFilter>(
+      values: TransactionFilter.values,
+      selected: selected,
+      labelBuilder: (filter) => filter.label,
+      onSelected: onSelected,
     );
   }
 }

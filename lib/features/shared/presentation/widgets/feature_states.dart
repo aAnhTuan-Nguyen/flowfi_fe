@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:forui/forui.dart';
 import 'package:lottie/lottie.dart';
 
 class FlowFiFeatureScaffold extends StatelessWidget {
@@ -189,6 +190,267 @@ class FlowFiCard extends StatelessWidget {
         ],
       ),
       child: child,
+    );
+  }
+}
+
+class FlowFiAmountText extends StatelessWidget {
+  const FlowFiAmountText({
+    super.key,
+    required this.amount,
+    this.currencyCode,
+    this.align = TextAlign.start,
+    this.color,
+  });
+
+  final String amount;
+  final String? currencyCode;
+  final TextAlign align;
+  final Color? color;
+
+  @override
+  Widget build(BuildContext context) {
+    final label = currencyCode == null ? amount : '$amount $currencyCode';
+    return Text(
+      label,
+      textAlign: align,
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
+      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+        color: color ?? Theme.of(context).colorScheme.onSurface,
+        fontWeight: FontWeight.w800,
+      ),
+    );
+  }
+}
+
+class FlowFiStatusBadge extends StatelessWidget {
+  const FlowFiStatusBadge({
+    super.key,
+    required this.label,
+    this.icon,
+    this.color,
+    this.foregroundColor,
+  });
+
+  final String label;
+  final IconData? icon;
+  final Color? color;
+  final Color? foregroundColor;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    final textColor = foregroundColor ?? colors.onPrimaryContainer;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: color ?? colors.primaryContainer,
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (icon != null) ...[
+            Icon(icon, size: 14, color: textColor),
+            const SizedBox(width: 5),
+          ],
+          Text(
+            label,
+            style: Theme.of(context).textTheme.labelMedium?.copyWith(
+              color: textColor,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class FlowFiSegmentedFilter<T> extends StatelessWidget {
+  const FlowFiSegmentedFilter({
+    super.key,
+    required this.values,
+    required this.selected,
+    required this.labelBuilder,
+    required this.onSelected,
+  });
+
+  final List<T> values;
+  final T selected;
+  final String Function(T value) labelBuilder;
+  final ValueChanged<T> onSelected;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Container(
+        padding: const EdgeInsets.all(4),
+        decoration: BoxDecoration(
+          color: colors.surfaceContainerLow,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: colors.outlineVariant),
+        ),
+        child: Row(
+          children: [
+            for (final value in values)
+              _FlowFiSegment<T>(
+                value: value,
+                selected: selected == value,
+                label: labelBuilder(value),
+                onSelected: onSelected,
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _FlowFiSegment<T> extends StatelessWidget {
+  const _FlowFiSegment({
+    required this.value,
+    required this.selected,
+    required this.label,
+    required this.onSelected,
+  });
+
+  final T value;
+  final bool selected;
+  final String label;
+  final ValueChanged<T> onSelected;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+
+    return Padding(
+      padding: const EdgeInsets.only(right: 4),
+      child: Material(
+        color: selected ? colors.surfaceContainerLowest : Colors.transparent,
+        borderRadius: BorderRadius.circular(12),
+        child: InkWell(
+          onTap: () => onSelected(value),
+          borderRadius: BorderRadius.circular(12),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(minHeight: 36, minWidth: 72),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
+              child: Text(
+                label,
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                  color: selected ? colors.primary : colors.onSurfaceVariant,
+                  fontWeight: selected ? FontWeight.w900 : FontWeight.w700,
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class FlowFiActionTile extends StatelessWidget {
+  const FlowFiActionTile({
+    super.key,
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    return Material(
+      color: colors.surfaceContainerLowest,
+      borderRadius: BorderRadius.circular(18),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(18),
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(color: colors.outlineVariant),
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: colors.primaryContainer,
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Icon(icon, color: colors.primary),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(title, style: Theme.of(context).textTheme.titleMedium),
+                    const SizedBox(height: 3),
+                    Text(
+                      subtitle,
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: colors.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 8),
+              Icon(Icons.chevron_right_rounded, color: colors.onSurfaceVariant),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class FlowFiForuiButton extends StatelessWidget {
+  const FlowFiForuiButton({
+    super.key,
+    required this.label,
+    required this.onPressed,
+    this.icon,
+    this.isLoading = false,
+  });
+
+  final String label;
+  final VoidCallback? onPressed;
+  final IconData? icon;
+  final bool isLoading;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: double.infinity,
+      child: FButton(
+        onPress: isLoading ? null : onPressed,
+        prefix: icon == null ? null : Icon(icon, size: 18),
+        child: isLoading
+            ? const SizedBox.square(
+                dimension: 18,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              )
+            : Text(label),
+      ),
     );
   }
 }

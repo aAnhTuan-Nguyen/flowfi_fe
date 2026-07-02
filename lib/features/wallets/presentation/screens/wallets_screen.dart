@@ -15,14 +15,14 @@ class WalletsScreen extends ConsumerWidget {
 
     return FlowFiFeatureScaffold(
       icon: Icons.account_balance_wallet_rounded,
-      title: 'Wallets',
-      subtitle: 'Track balances across cash, bank, and e-wallets.',
+      title: 'Ví',
+      subtitle: 'Theo dõi tiền mặt, ngân hàng và ví điện tử.',
       onRefresh: () => ref.read(walletsProvider.notifier).reload(),
       actions: [
         FilledButton.icon(
           onPressed: () => _showWalletForm(context, ref),
           icon: const Icon(Icons.add_rounded),
-          label: const Text('Add wallet'),
+          label: const Text('Thêm ví'),
         ),
       ],
       child: wallets.when(
@@ -34,8 +34,8 @@ class WalletsScreen extends ConsumerWidget {
           if (items.isEmpty) {
             return const FlowFiEmptyState(
               icon: Icons.account_balance_wallet_outlined,
-              title: 'No wallets yet',
-              message: 'Add a wallet to start testing the API.',
+              title: 'Chưa có ví',
+              message: 'Thêm ví đầu tiên để FlowFi tính số dư chính xác hơn.',
             );
           }
           return separatedSliverList(
@@ -106,13 +106,21 @@ class _WalletCard extends ConsumerWidget {
             ),
           ),
           const SizedBox(width: 12),
-          Text(
-            wallet.balance,
-            style: Theme.of(context).textTheme.titleMedium,
-            textAlign: TextAlign.end,
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              FlowFiAmountText(amount: wallet.balance, align: TextAlign.end),
+              if (wallet.isDefault) ...[
+                const SizedBox(height: 6),
+                const FlowFiStatusBadge(
+                  label: 'Mặc định',
+                  icon: Icons.check_rounded,
+                ),
+              ],
+            ],
           ),
           PopupMenuButton<_WalletAction>(
-            tooltip: 'Wallet actions',
+            tooltip: 'Tùy chọn ví',
             onSelected: (action) async {
               switch (action) {
                 case _WalletAction.edit:
@@ -130,8 +138,8 @@ class _WalletCard extends ConsumerWidget {
                 case _WalletAction.delete:
                   final confirmed = await confirmDestructiveAction(
                     context,
-                    title: 'Delete wallet?',
-                    message: 'This removes the wallet from FlowFi.',
+                    title: 'Xóa ví?',
+                    message: 'Ví này sẽ bị xóa khỏi FlowFi.',
                   );
                   if (confirmed && context.mounted) {
                     try {
@@ -149,16 +157,16 @@ class _WalletCard extends ConsumerWidget {
             itemBuilder: (context) => [
               const PopupMenuItem(
                 value: _WalletAction.edit,
-                child: Text('Edit'),
+                child: Text('Sửa'),
               ),
               if (!wallet.isDefault)
                 const PopupMenuItem(
                   value: _WalletAction.setDefault,
-                  child: Text('Set default'),
+                  child: Text('Đặt mặc định'),
                 ),
               const PopupMenuItem(
                 value: _WalletAction.delete,
-                child: Text('Delete'),
+                child: Text('Xóa'),
               ),
             ],
           ),
@@ -177,7 +185,7 @@ Future<void> _showWalletForm(
 }) {
   return showFlowFiFormSheet<void>(
     context: context,
-    title: wallet == null ? 'Add wallet' : 'Edit wallet',
+    title: wallet == null ? 'Thêm ví mới' : 'Sửa ví',
     child: _WalletForm(wallet: wallet),
   );
 }
@@ -226,20 +234,23 @@ class _WalletFormState extends ConsumerState<_WalletForm> {
         children: [
           TextFormField(
             controller: _nameController,
-            decoration: const InputDecoration(labelText: 'Name'),
+            decoration: const InputDecoration(labelText: 'Tên ví'),
             textInputAction: TextInputAction.next,
             validator: requiredText,
           ),
           const SizedBox(height: 12),
           DropdownButtonFormField<WalletType>(
             initialValue: _type,
-            decoration: const InputDecoration(labelText: 'Type'),
+            decoration: const InputDecoration(labelText: 'Loại ví'),
             items: const [
-              DropdownMenuItem(value: WalletType.cash, child: Text('Cash')),
-              DropdownMenuItem(value: WalletType.bank, child: Text('Bank')),
+              DropdownMenuItem(value: WalletType.cash, child: Text('Tiền mặt')),
+              DropdownMenuItem(
+                value: WalletType.bank,
+                child: Text('Ngân hàng'),
+              ),
               DropdownMenuItem(
                 value: WalletType.eWallet,
-                child: Text('E-Wallet'),
+                child: Text('Ví điện tử'),
               ),
             ],
             onChanged: (value) {
@@ -251,23 +262,16 @@ class _WalletFormState extends ConsumerState<_WalletForm> {
           const SizedBox(height: 12),
           TextFormField(
             controller: _balanceController,
-            decoration: const InputDecoration(labelText: 'Balance'),
+            decoration: const InputDecoration(labelText: 'Số dư ban đầu'),
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
             validator: optionalAmount,
           ),
           const SizedBox(height: 18),
-          SizedBox(
-            width: double.infinity,
-            child: FilledButton(
-              onPressed: _isSubmitting ? null : _submit,
-              child: _isSubmitting
-                  ? const SizedBox(
-                      width: 18,
-                      height: 18,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : Text(widget.wallet == null ? 'Create wallet' : 'Save'),
-            ),
+          FlowFiForuiButton(
+            label: widget.wallet == null ? 'Tạo ví' : 'Lưu thay đổi',
+            icon: Icons.check_rounded,
+            isLoading: _isSubmitting,
+            onPressed: _submit,
           ),
         ],
       ),
@@ -315,7 +319,7 @@ class _LoadingState extends StatelessWidget {
   Widget build(BuildContext context) {
     return const SliverFillRemaining(
       hasScrollBody: false,
-      child: Center(child: CircularProgressIndicator()),
+      child: Center(child: FlowFiInlineLoading()),
     );
   }
 }
@@ -331,9 +335,9 @@ IconData _walletIcon(WalletType type) {
 
 String _walletTypeLabel(WalletType type) {
   return switch (type) {
-    WalletType.cash => 'Cash',
-    WalletType.bank => 'Bank',
-    WalletType.eWallet => 'E-Wallet',
-    WalletType.unknown => 'Wallet',
+    WalletType.cash => 'Tiền mặt',
+    WalletType.bank => 'Ngân hàng',
+    WalletType.eWallet => 'Ví điện tử',
+    WalletType.unknown => 'Ví',
   };
 }

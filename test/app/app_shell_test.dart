@@ -23,7 +23,7 @@ void main() {
     await tester.tap(find.text('Ví'));
     await tester.pumpAndSettle();
     expect(
-      find.text('Track balances across cash, bank, and e-wallets.'),
+      find.text('Theo dõi tiền mặt, ngân hàng và ví điện tử.'),
       findsOneWidget,
     );
     expect(find.text('500000'), findsOneWidget);
@@ -31,11 +31,11 @@ void main() {
     await tester.tap(find.text('Ngân sách'));
     await tester.pumpAndSettle();
     expect(
-      find.text('Watch monthly limits and savings progress.'),
+      find.text('Theo dõi hạn mức tháng và tiến độ tiết kiệm.'),
       findsOneWidget,
     );
     expect(find.text('Food'), findsOneWidget);
-    expect(find.text('Emergency Fund'), findsOneWidget);
+    expect(find.text('Emergency Fund'), findsNothing);
 
     await tester.tap(find.text('Trang chủ'));
     await tester.pumpAndSettle();
@@ -162,11 +162,11 @@ void main() {
     ),
     (
       path: AppRoutes.wallets,
-      text: 'Track balances across cash, bank, and e-wallets.',
+      text: 'Theo dõi tiền mặt, ngân hàng và ví điện tử.',
     ),
     (
       path: AppRoutes.budgets,
-      text: 'Watch monthly limits and savings progress.',
+      text: 'Theo dõi hạn mức tháng và tiến độ tiết kiệm.',
     ),
     (
       path: AppRoutes.insights,
@@ -204,7 +204,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(router.state.uri.path, AppRoutes.wallets);
     expect(
-      find.text('Track balances across cash, bank, and e-wallets.'),
+      find.text('Theo dõi tiền mặt, ngân hàng và ví điện tử.'),
       findsOneWidget,
     );
 
@@ -212,7 +212,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(router.state.uri.path, AppRoutes.budgets);
     expect(
-      find.text('Watch monthly limits and savings progress.'),
+      find.text('Theo dõi hạn mức tháng và tiến độ tiết kiệm.'),
       findsOneWidget,
     );
 

@@ -29,7 +29,7 @@ class TransactionEntryLauncherSheet extends StatelessWidget {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        _EntryActionTile(
+        FlowFiActionTile(
           icon: Icons.document_scanner_rounded,
           title: 'Quét hóa đơn',
           subtitle:
@@ -37,14 +37,14 @@ class TransactionEntryLauncherSheet extends StatelessWidget {
           onTap: onScan,
         ),
         const SizedBox(height: 10),
-        _EntryActionTile(
+        FlowFiActionTile(
           icon: Icons.mic_rounded,
           title: 'Nói giao dịch',
           subtitle: 'Nói tự nhiên, app chuyển thành gợi ý để xác nhận.',
           onTap: onVoice,
         ),
         const SizedBox(height: 10),
-        _EntryActionTile(
+        FlowFiActionTile(
           icon: Icons.edit_note_rounded,
           title: 'Nhập nhanh',
           subtitle: 'Chỉ nhập số tiền, danh mục và ghi chú nếu cần.',
@@ -195,17 +195,11 @@ class _QuickTransactionSheetState extends ConsumerState<QuickTransactionSheet> {
             ),
           ),
           const SizedBox(height: 18),
-          SizedBox(
-            width: double.infinity,
-            child: FilledButton(
-              onPressed: _isSubmitting ? null : () => _submit(wallets, tags),
-              child: _isSubmitting
-                  ? const SizedBox.square(
-                      dimension: 18,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : const Text('Lưu giao dịch'),
-            ),
+          FlowFiForuiButton(
+            label: 'Lưu giao dịch',
+            icon: Icons.check_rounded,
+            isLoading: _isSubmitting,
+            onPressed: () => _submit(wallets, tags),
           ),
         ],
       ),
@@ -252,71 +246,6 @@ class _QuickTransactionSheetState extends ConsumerState<QuickTransactionSheet> {
         setState(() => _isSubmitting = false);
       }
     }
-  }
-}
-
-class _EntryActionTile extends StatelessWidget {
-  const _EntryActionTile({
-    required this.icon,
-    required this.title,
-    required this.subtitle,
-    required this.onTap,
-  });
-
-  final IconData icon;
-  final String title;
-  final String subtitle;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: Colors.white,
-      borderRadius: BorderRadius.circular(18),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(18),
-        child: Container(
-          width: double.infinity,
-          padding: const EdgeInsets.all(14),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(18),
-            border: Border.all(color: const Color(0xFFE7E5DC)),
-          ),
-          child: Row(
-            children: [
-              Container(
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(
-                  color: const Color(0xFFE7F1DA),
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Icon(icon, color: const Color(0xFF49672A)),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(title, style: Theme.of(context).textTheme.titleMedium),
-                    const SizedBox(height: 3),
-                    Text(
-                      subtitle,
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: const Color(0xFF757872),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 8),
-              const Icon(Icons.chevron_right_rounded),
-            ],
-          ),
-        ),
-      ),
-    );
   }
 }
 
