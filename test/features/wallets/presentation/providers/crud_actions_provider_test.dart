@@ -110,12 +110,7 @@ void main() {
           );
       await container
           .read(transactionsProvider.notifier)
-          .updateTransaction(
-            'transaction-1',
-            title: 'Dinner',
-            amount: '20',
-            status: TransactionStatus.confirmed,
-          );
+          .updateTransaction('transaction-1', title: 'Dinner', amount: '20');
       await container
           .read(transactionsProvider.notifier)
           .confirmTransaction('transaction-1');
@@ -393,17 +388,13 @@ class FakeTransactionRepository implements TransactionRepository {
   @override
   Future<Transaction> updateTransaction(
     String id, {
-    String? walletId,
     String? tagId,
     String? title,
     String? amount,
     MoneyFlowType? type,
     DateTime? date,
-    TransactionStatus? status,
-    TransactionInputMethod? inputMethod,
     String? merchantName,
     String? description,
-    String? clientId,
   }) async {
     events.add('update:$id:$title');
     return Transaction(
@@ -412,8 +403,8 @@ class FakeTransactionRepository implements TransactionRepository {
       amount: amount ?? '0',
       type: type ?? MoneyFlowType.expense,
       date: date,
-      status: status ?? TransactionStatus.draft,
-      inputMethod: inputMethod ?? TransactionInputMethod.manual,
+      status: TransactionStatus.draft,
+      inputMethod: TransactionInputMethod.manual,
       merchantName: merchantName,
       description: description,
     );

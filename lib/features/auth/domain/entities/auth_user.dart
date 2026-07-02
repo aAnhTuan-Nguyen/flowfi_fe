@@ -4,10 +4,12 @@ final class AuthUser {
     required this.email,
     this.fullName,
     required this.currencyCode,
+    this.monthlyBudgetLimit,
   });
 
   final String id;
   final String email;
   final String? fullName;
   final String currencyCode;
+  final String? monthlyBudgetLimit;
 }

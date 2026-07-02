@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../shared/presentation/widgets/feature_states.dart';
+import '../../../shared/presentation/widgets/forui_controls.dart';
 import '../providers/auth_controller.dart';
 import 'sign_up_screen.dart';
 
@@ -17,7 +19,6 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-  bool _obscurePassword = true;
 
   @override
   void dispose() {
@@ -31,8 +32,9 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
     final authValue = ref.watch(authControllerProvider);
     final isLoading = authValue.isLoading;
     final errorText = authValue.hasError
-        ? 'Could not login. Please check your credentials.'
+        ? 'Không thể đăng nhập. Kiểm tra email và mật khẩu.'
         : widget.initialMessage;
+    final colors = Theme.of(context).colorScheme;
 
     return Scaffold(
       body: SafeArea(
@@ -46,7 +48,7 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
                   Text(
                     'FlowFi',
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      color: const Color(0xFF2F7A32),
+                      color: colors.primary,
                       fontWeight: FontWeight.w800,
                     ),
                   ),
@@ -58,77 +60,42 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
                           Text(
-                            'Welcome Back',
+                            'Chào mừng trở lại',
                             textAlign: TextAlign.center,
                             style: Theme.of(context).textTheme.headlineMedium
                                 ?.copyWith(
-                                  color: const Color(0xFF0D5C16),
+                                  color: colors.onSurface,
                                   fontWeight: FontWeight.w800,
                                 ),
                           ),
                           const SizedBox(height: 8),
                           Text(
-                            'Manage your finances with AI-powered clarity.',
+                            'Quản lý tài chính rõ ràng hơn với FlowFi.',
                             textAlign: TextAlign.center,
                             style: Theme.of(context).textTheme.bodyMedium
                                 ?.copyWith(
                                   fontSize: 12,
-                                  color: const Color(0xFF5B604E),
+                                  color: colors.onSurfaceVariant,
                                 ),
                           ),
                           const SizedBox(height: 22),
-                          _FieldLabel('Email Address'),
-                          const SizedBox(height: 6),
-                          TextFormField(
+                          FlowFiTextField(
+                            label: 'Email',
+                            hint: 'alex@example.com',
                             controller: _emailController,
                             keyboardType: TextInputType.emailAddress,
                             textInputAction: TextInputAction.next,
-                            decoration: _inputDecoration(
-                              hintText: 'alex@example.com',
-                              icon: Icons.mail_outline_rounded,
-                            ),
+                            prefixIcon: Icons.mail_outline_rounded,
                             validator: _required,
                           ),
                           const SizedBox(height: 14),
-                          Row(
-                            children: [
-                              const _FieldLabel('Password'),
-                              const Spacer(),
-                              Text(
-                                'Forgot Password?',
-                                style: Theme.of(context).textTheme.labelMedium
-                                    ?.copyWith(
-                                      fontSize: 10,
-                                      color: const Color(0xFF49672A),
-                                    ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 6),
-                          TextFormField(
+                          FlowFiTextField(
+                            label: 'Mật khẩu',
+                            hint: '••••••••',
                             controller: _passwordController,
-                            obscureText: _obscurePassword,
+                            obscureText: true,
                             textInputAction: TextInputAction.done,
-                            decoration: _inputDecoration(
-                              hintText: '........',
-                              icon: Icons.lock_outline_rounded,
-                              suffix: IconButton(
-                                tooltip: _obscurePassword
-                                    ? 'Show password'
-                                    : 'Hide password',
-                                onPressed: () {
-                                  setState(() {
-                                    _obscurePassword = !_obscurePassword;
-                                  });
-                                },
-                                icon: Icon(
-                                  _obscurePassword
-                                      ? Icons.visibility_outlined
-                                      : Icons.visibility_off_outlined,
-                                  size: 18,
-                                ),
-                              ),
-                            ),
+                            prefixIcon: Icons.lock_outline_rounded,
                             validator: _required,
                           ),
                           if (errorText != null) ...[
@@ -143,16 +110,10 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
                             ),
                           ],
                           const SizedBox(height: 18),
-                          FilledButton(
+                          FlowFiButton(
+                            label: 'Đăng nhập',
                             onPressed: isLoading ? null : _submit,
-                            child: isLoading
-                                ? const SizedBox.square(
-                                    dimension: 18,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                    ),
-                                  )
-                                : const Text('Login'),
+                            isLoading: isLoading,
                           ),
                           const SizedBox(height: 18),
                           Row(
@@ -163,10 +124,11 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
                                   horizontal: 12,
                                 ),
                                 child: Text(
-                                  'OR CONTINUE WITH',
+                                  'HOẶC',
                                   style: Theme.of(context).textTheme.labelMedium
                                       ?.copyWith(
                                         color: const Color(0xFFB5AA76),
+                                        letterSpacing: 0,
                                         fontSize: 10,
                                       ),
                                 ),
@@ -175,7 +137,9 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
                             ],
                           ),
                           const SizedBox(height: 12),
-                          OutlinedButton(
+                          FlowFiButton(
+                            label: 'Tạo tài khoản',
+                            variant: FlowFiButtonVariant.outline,
                             onPressed: () {
                               Navigator.of(context).push(
                                 MaterialPageRoute<void>(
@@ -183,7 +147,6 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
                                 ),
                               );
                             },
-                            child: const Text('Create Account'),
                           ),
                         ],
                       ),
@@ -218,60 +181,19 @@ class _AuthCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    final colors = Theme.of(context).colorScheme;
+
+    return FlowFiCard(
       padding: const EdgeInsets.fromLTRB(18, 22, 18, 18),
-      decoration: BoxDecoration(
-        color: const Color(0xFFEFE9B8),
-        borderRadius: BorderRadius.circular(8),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x141B211A),
-            blurRadius: 20,
-            offset: Offset(0, 8),
-          ),
-        ],
-      ),
+      color: colors.surface,
       child: child,
     );
   }
 }
 
-class _FieldLabel extends StatelessWidget {
-  const _FieldLabel(this.text);
-
-  final String text;
-
-  @override
-  Widget build(BuildContext context) {
-    return Text(
-      text.toUpperCase(),
-      style: Theme.of(context).textTheme.labelMedium?.copyWith(
-        fontSize: 10,
-        color: const Color(0xFF5B604E),
-      ),
-    );
-  }
-}
-
-InputDecoration _inputDecoration({
-  required String hintText,
-  required IconData icon,
-  Widget? suffix,
-}) {
-  return InputDecoration(
-    hintText: hintText,
-    prefixIcon: Icon(icon, size: 18),
-    suffixIcon: suffix,
-    filled: true,
-    fillColor: Colors.white,
-    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-    border: OutlineInputBorder(borderRadius: BorderRadius.circular(6)),
-  );
-}
-
 String? _required(String? value) {
   if (value == null || value.trim().isEmpty) {
-    return 'Required';
+    return 'Bắt buộc';
   }
   return null;
 }

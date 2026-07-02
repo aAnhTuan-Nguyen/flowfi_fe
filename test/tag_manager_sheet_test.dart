@@ -20,10 +20,10 @@ void main() {
     );
     await tester.pump();
 
-    await tester.tap(find.text('Add tag'));
+    await tester.tap(find.text('Thêm danh mục'));
     await tester.pumpAndSettle();
-    await tester.enterText(find.byType(TextFormField), 'Utilities');
-    await tester.tap(find.text('Create tag'));
+    await tester.enterText(find.byType(EditableText).first, 'Utilities');
+    await tester.tap(find.text('Tạo danh mục'));
     await tester.pumpAndSettle();
 
     expect(repository.createdName, 'Utilities');

@@ -11,5 +11,11 @@ abstract interface class AuthRepository {
     String? fullName,
   });
 
+  Future<AuthUser> updateProfile({
+    String? fullName,
+    String? currencyCode,
+    String? monthlyBudgetLimit,
+  });
+
   Future<void> signOut();
 }

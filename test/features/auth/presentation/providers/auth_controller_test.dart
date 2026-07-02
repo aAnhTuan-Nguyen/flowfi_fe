@@ -4,6 +4,7 @@ import 'package:flowfi_fe/features/auth/domain/usecases/bootstrap_auth_session_u
 import 'package:flowfi_fe/features/auth/domain/usecases/sign_in_use_case.dart';
 import 'package:flowfi_fe/features/auth/domain/usecases/sign_out_use_case.dart';
 import 'package:flowfi_fe/features/auth/domain/usecases/sign_up_use_case.dart';
+import 'package:flowfi_fe/features/auth/domain/usecases/update_profile_use_case.dart';
 import 'package:flowfi_fe/features/auth/presentation/providers/auth_controller.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -50,6 +51,33 @@ void main() {
     expect(state.status, AuthStatus.unauthenticated);
     expect(repository.signOutCalled, isTrue);
   });
+
+  test('updates the authenticated profile in state', () async {
+    final repository = FakeAuthRepository(
+      bootstrappedUser: const AuthUser(
+        id: 'user-1',
+        email: 'alex@example.com',
+        fullName: 'Alex Morgan',
+        currencyCode: 'VND',
+      ),
+    );
+    final container = _container(repository);
+    await container.read(authControllerProvider.future);
+
+    await container
+        .read(authControllerProvider.notifier)
+        .updateProfile(
+          fullName: 'Alex Nguyen',
+          currencyCode: 'VND',
+          monthlyBudgetLimit: '5000000',
+        );
+
+    final state = container.read(authControllerProvider).requireValue;
+    expect(state.status, AuthStatus.authenticated);
+    expect(state.user?.fullName, 'Alex Nguyen');
+    expect(state.user?.monthlyBudgetLimit, '5000000');
+    expect(repository.updatedFullName, 'Alex Nguyen');
+  });
 }
 
 ProviderContainer _container(FakeAuthRepository repository) {
@@ -62,6 +90,9 @@ ProviderContainer _container(FakeAuthRepository repository) {
       signInUseCaseProvider.overrideWithValue(SignInUseCase(repository)),
       signUpUseCaseProvider.overrideWithValue(SignUpUseCase(repository)),
       signOutUseCaseProvider.overrideWithValue(SignOutUseCase(repository)),
+      updateProfileUseCaseProvider.overrideWithValue(
+        UpdateProfileUseCase(repository),
+      ),
     ],
   );
   addTearDown(container.dispose);
@@ -74,6 +105,7 @@ class FakeAuthRepository implements AuthRepository {
   final AuthUser? bootstrappedUser;
   bool signInCalled = false;
   bool signOutCalled = false;
+  String? updatedFullName;
 
   @override
   Future<AuthUser?> bootstrap() async => bootstrappedUser;
@@ -109,5 +141,21 @@ class FakeAuthRepository implements AuthRepository {
   @override
   Future<void> signOut() async {
     signOutCalled = true;
+  }
+
+  @override
+  Future<AuthUser> updateProfile({
+    String? fullName,
+    String? currencyCode,
+    String? monthlyBudgetLimit,
+  }) async {
+    updatedFullName = fullName;
+    return AuthUser(
+      id: 'user-1',
+      email: 'alex@example.com',
+      fullName: fullName,
+      currencyCode: currencyCode ?? 'VND',
+      monthlyBudgetLimit: monthlyBudgetLimit,
+    );
   }
 }

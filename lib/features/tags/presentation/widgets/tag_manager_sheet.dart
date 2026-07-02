@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/finance/money_flow_type.dart';
 import '../../../shared/presentation/widgets/crud_helpers.dart';
 import '../../../shared/presentation/widgets/feature_states.dart';
+import '../../../shared/presentation/widgets/forui_controls.dart';
 import '../../domain/entities/tag.dart';
 import '../providers/tags_provider.dart';
 
@@ -20,69 +21,81 @@ class TagManagerSheet extends ConsumerWidget {
       data: (items) => Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          SizedBox(
-            width: double.infinity,
-            child: OutlinedButton.icon(
-              onPressed: () => showFlowFiFormSheet<void>(
-                context: context,
-                title: 'Add tag',
-                child: const _TagForm(),
-              ),
-              icon: const Icon(Icons.add_rounded),
-              label: const Text('Add tag'),
+          FlowFiButton(
+            label: 'Thêm danh mục',
+            variant: FlowFiButtonVariant.outline,
+            icon: Icons.add_rounded,
+            onPressed: () => showFlowFiFormSheet<void>(
+              context: context,
+              title: 'Thêm danh mục',
+              child: const _TagForm(),
             ),
           ),
           const SizedBox(height: 12),
+          if (items.isEmpty)
+            const FlowFiInlineEmptyState(
+              icon: Icons.sell_outlined,
+              title: 'Chưa có danh mục',
+              message: 'Tạo danh mục để phân loại giao dịch.',
+            ),
           for (final tag in items)
-            ListTile(
-              title: Text(tag.name),
-              subtitle: Text(
-                tag.type == MoneyFlowType.income ? 'Income' : 'Expense',
-              ),
-              trailing: PopupMenuButton<_TagAction>(
-                onSelected: (action) async {
-                  switch (action) {
-                    case _TagAction.edit:
-                      await showFlowFiFormSheet<void>(
+            Padding(
+              padding: const EdgeInsets.only(bottom: 10),
+              child: FlowFiListItemCard(
+                icon: tag.type == MoneyFlowType.income
+                    ? Icons.trending_up_rounded
+                    : Icons.trending_down_rounded,
+                tone: tag.type == MoneyFlowType.income
+                    ? FlowFiTone.positive
+                    : FlowFiTone.negative,
+                title: tag.name,
+                subtitle: tag.type == MoneyFlowType.income
+                    ? 'Thu nhập'
+                    : 'Chi tiêu',
+                action: FlowFiActionMenu(
+                  tooltip: 'Tùy chọn danh mục',
+                  actions: [
+                    FlowFiMenuAction(
+                      label: 'Sửa',
+                      icon: Icons.edit_rounded,
+                      onSelected: () => showFlowFiFormSheet<void>(
                         context: context,
-                        title: 'Edit tag',
+                        title: 'Sửa danh mục',
                         child: _TagForm(tag: tag),
-                      );
-                    case _TagAction.delete:
-                      final confirmed = await confirmDestructiveAction(
-                        context,
-                        title: 'Delete tag?',
-                        message: 'This removes the tag from FlowFi.',
-                      );
-                      if (confirmed) {
-                        try {
-                          await ref
-                              .read(tagsProvider.notifier)
-                              .deleteTag(tag.id);
-                        } catch (_) {
-                          if (context.mounted) {
-                            showGenericMutationError(context);
-                          }
-                        }
-                      }
-                  }
-                },
-                itemBuilder: (context) => const [
-                  PopupMenuItem(value: _TagAction.edit, child: Text('Edit')),
-                  PopupMenuItem(
-                    value: _TagAction.delete,
-                    child: Text('Delete'),
-                  ),
-                ],
+                      ),
+                    ),
+                    FlowFiMenuAction(
+                      label: 'Xóa',
+                      icon: Icons.delete_outline_rounded,
+                      destructive: true,
+                      onSelected: () => _deleteTag(context, ref, tag),
+                    ),
+                  ],
+                ),
               ),
             ),
         ],
       ),
     );
   }
-}
 
-enum _TagAction { edit, delete }
+  Future<void> _deleteTag(BuildContext context, WidgetRef ref, Tag tag) async {
+    final confirmed = await confirmDestructiveAction(
+      context,
+      title: 'Xóa danh mục?',
+      message: 'Danh mục này sẽ bị xóa khỏi FlowFi.',
+    );
+    if (confirmed) {
+      try {
+        await ref.read(tagsProvider.notifier).deleteTag(tag.id);
+      } catch (_) {
+        if (context.mounted) {
+          showGenericMutationError(context);
+        }
+      }
+    }
+  }
+}
 
 class _TagForm extends ConsumerStatefulWidget {
   const _TagForm({this.tag});
@@ -121,23 +134,25 @@ class _TagFormState extends ConsumerState<_TagForm> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          TextFormField(
+          FlowFiTextField(
+            label: 'Tên danh mục',
             controller: _nameController,
-            decoration: const InputDecoration(labelText: 'Name'),
             validator: requiredText,
           ),
           const SizedBox(height: 12),
-          DropdownButtonFormField<MoneyFlowType>(
-            initialValue: _type,
-            decoration: const InputDecoration(labelText: 'Type'),
+          FlowFiSelectField<MoneyFlowType>(
+            label: 'Loại',
+            value: _type,
             items: const [
-              DropdownMenuItem(
+              FlowFiSelectItem(
                 value: MoneyFlowType.expense,
-                child: Text('Expense'),
+                label: 'Chi tiêu',
+                icon: Icons.trending_down_rounded,
               ),
-              DropdownMenuItem(
+              FlowFiSelectItem(
                 value: MoneyFlowType.income,
-                child: Text('Income'),
+                label: 'Thu nhập',
+                icon: Icons.trending_up_rounded,
               ),
             ],
             onChanged: (value) {
@@ -145,12 +160,11 @@ class _TagFormState extends ConsumerState<_TagForm> {
             },
           ),
           const SizedBox(height: 18),
-          SizedBox(
-            width: double.infinity,
-            child: FilledButton(
-              onPressed: _isSubmitting ? null : _submit,
-              child: Text(widget.tag == null ? 'Create tag' : 'Save'),
-            ),
+          FlowFiButton(
+            label: widget.tag == null ? 'Tạo danh mục' : 'Lưu thay đổi',
+            isLoading: _isSubmitting,
+            onPressed: _submit,
+            icon: Icons.check_rounded,
           ),
         ],
       ),
@@ -189,10 +203,7 @@ class _InlineLoading extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Padding(
-      padding: EdgeInsets.symmetric(vertical: 24),
-      child: Center(child: CircularProgressIndicator()),
-    );
+    return const FlowFiInlineLoading(label: 'Đang tải danh mục');
   }
 }
 
@@ -203,13 +214,9 @@ class _InlineError extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return FlowFiCard(
-      child: Row(
-        children: [
-          const Expanded(child: Text('Could not load this section.')),
-          TextButton(onPressed: onRetry, child: const Text('Retry')),
-        ],
-      ),
+    return FlowFiInlineError(
+      message: 'Không tải được danh mục.',
+      onRetry: onRetry,
     );
   }
 }

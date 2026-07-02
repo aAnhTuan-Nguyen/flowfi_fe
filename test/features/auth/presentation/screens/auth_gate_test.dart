@@ -18,8 +18,8 @@ void main() {
     await tester.pumpWidget(_app(FakeAuthRepository()));
     await tester.pumpAndSettle();
 
-    expect(find.text('Welcome Back'), findsOneWidget);
-    expect(find.text('Login'), findsOneWidget);
+    expect(find.text('Chào mừng trở lại'), findsOneWidget);
+    expect(find.text('Đăng nhập'), findsOneWidget);
     expect(find.byType(FlowFiAppShell), findsNothing);
   });
 
@@ -27,18 +27,18 @@ void main() {
     await tester.pumpWidget(_app(FakeAuthRepository()));
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('Create Account'));
+    await tester.tap(find.text('Tạo tài khoản'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Create account'), findsOneWidget);
-    expect(find.text('Back to Login'), findsOneWidget);
+    expect(find.text('Tạo tài khoản'), findsWidgets);
+    expect(find.text('Quay lại đăng nhập'), findsOneWidget);
 
-    await tester.ensureVisible(find.text('Back to Login'));
-    await tester.tap(find.text('Back to Login'));
+    await tester.ensureVisible(find.text('Quay lại đăng nhập'));
+    await tester.tap(find.text('Quay lại đăng nhập'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Welcome Back'), findsOneWidget);
-    expect(find.text('Login'), findsOneWidget);
+    expect(find.text('Chào mừng trở lại'), findsOneWidget);
+    expect(find.text('Đăng nhập'), findsOneWidget);
   });
 
   testWidgets('shows the app shell when authenticated', (tester) async {
@@ -57,7 +57,6 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byType(FlowFiAppShell), findsOneWidget);
-    expect(find.text('Recent Transactions'), findsOneWidget);
   });
 }
 

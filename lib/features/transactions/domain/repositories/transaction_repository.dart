@@ -31,17 +31,13 @@ abstract interface class TransactionRepository {
 
   Future<Transaction> updateTransaction(
     String id, {
-    String? walletId,
     String? tagId,
     String? title,
     String? amount,
     MoneyFlowType? type,
     DateTime? date,
-    TransactionStatus? status,
-    TransactionInputMethod? inputMethod,
     String? merchantName,
     String? description,
-    String? clientId,
   });
 
   Future<void> deleteTransaction(String id);

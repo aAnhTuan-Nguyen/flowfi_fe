@@ -7,6 +7,7 @@ import '../../domain/usecases/bootstrap_auth_session_use_case.dart';
 import '../../domain/usecases/sign_in_use_case.dart';
 import '../../domain/usecases/sign_out_use_case.dart';
 import '../../domain/usecases/sign_up_use_case.dart';
+import '../../domain/usecases/update_profile_use_case.dart';
 
 final authRepositoryProvider = Provider<AuthRepository>(
   (ref) => serviceLocator<AuthRepository>(),
@@ -27,6 +28,10 @@ final signUpUseCaseProvider = Provider<SignUpUseCase>(
 
 final signOutUseCaseProvider = Provider<SignOutUseCase>(
   (ref) => SignOutUseCase(ref.watch(authRepositoryProvider)),
+);
+
+final updateProfileUseCaseProvider = Provider<UpdateProfileUseCase>(
+  (ref) => UpdateProfileUseCase(ref.watch(authRepositoryProvider)),
 );
 
 enum AuthStatus { authenticated, unauthenticated }
@@ -87,6 +92,30 @@ class AuthController extends AsyncNotifier<AuthState> {
       await ref.read(signOutUseCaseProvider)();
       return const AuthState.unauthenticated();
     });
+  }
+
+  Future<void> updateProfile({
+    String? fullName,
+    String? currencyCode,
+    String? monthlyBudgetLimit,
+  }) async {
+    final previous = state.value;
+    state = const AsyncLoading();
+    try {
+      final user = await ref.read(updateProfileUseCaseProvider)(
+        fullName: fullName,
+        currencyCode: currencyCode,
+        monthlyBudgetLimit: monthlyBudgetLimit,
+      );
+      state = AsyncData(AuthState.authenticated(user));
+    } catch (error, stackTrace) {
+      if (previous != null) {
+        state = AsyncData(previous);
+      } else {
+        state = AsyncError(error, stackTrace);
+      }
+      Error.throwWithStackTrace(error, stackTrace);
+    }
   }
 }
 

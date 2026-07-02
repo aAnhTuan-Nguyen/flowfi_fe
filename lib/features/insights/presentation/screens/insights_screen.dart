@@ -5,6 +5,7 @@ import '../../../notifications/domain/entities/app_notification.dart';
 import '../../../notifications/presentation/providers/notifications_provider.dart';
 import '../../../shared/presentation/widgets/crud_helpers.dart';
 import '../../../shared/presentation/widgets/feature_states.dart';
+import '../../../shared/presentation/widgets/forui_controls.dart';
 
 class InsightsScreen extends ConsumerWidget {
   const InsightsScreen({super.key});
@@ -15,11 +16,11 @@ class InsightsScreen extends ConsumerWidget {
 
     return FlowFiFeatureScaffold(
       icon: Icons.insights_rounded,
-      title: 'Insights',
-      subtitle: 'Notifications and backend-driven insights.',
+      title: 'Thông báo',
+      subtitle: 'Thông báo và gợi ý từ hệ thống.',
       onRefresh: () => ref.read(notificationsProvider.notifier).reload(),
       actions: [
-        IconButton.filled(
+        FlowFiIconButton(
           onPressed: () async {
             try {
               await ref.read(notificationsProvider.notifier).markAllRead();
@@ -29,8 +30,9 @@ class InsightsScreen extends ConsumerWidget {
               }
             }
           },
-          icon: const Icon(Icons.done_all_rounded),
-          tooltip: 'Mark all read',
+          icon: Icons.done_all_rounded,
+          tooltip: 'Đánh dấu tất cả đã đọc',
+          variant: FlowFiButtonVariant.primary,
         ),
       ],
       child: notifications.when(
@@ -42,8 +44,9 @@ class InsightsScreen extends ConsumerWidget {
           if (items.isEmpty) {
             return const FlowFiEmptyState(
               icon: Icons.notifications_none_rounded,
-              title: 'No notifications',
-              message: 'Budget warnings and goal reminders will appear here.',
+              title: 'Chưa có thông báo',
+              message:
+                  'Cảnh báo ngân sách và nhắc mục tiêu sẽ xuất hiện tại đây.',
             );
           }
           return separatedSliverList(
@@ -65,108 +68,76 @@ class _NotificationCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return FlowFiCard(
-      color: notification.isRead ? Colors.white : const Color(0xFFFFF6EB),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            width: 42,
-            height: 42,
-            decoration: BoxDecoration(
-              color: const Color(0xFFE7F1DA),
-              borderRadius: BorderRadius.circular(14),
+    final content = notification.content;
+    final colors = Theme.of(context).colorScheme;
+
+    return FlowFiListItemCard(
+      icon: _notificationIcon(notification.type),
+      tone: notification.isRead ? FlowFiTone.neutral : FlowFiTone.info,
+      color: notification.isRead ? colors.surface : colors.surfaceContainerLow,
+      title: notification.title,
+      subtitle: content == null || content.isEmpty
+          ? 'Không có nội dung'
+          : content,
+      status: notification.isRead
+          ? null
+          : const FlowFiStatusBadge(label: 'Mới', tone: FlowFiTone.info),
+      action: FlowFiActionMenu(
+        tooltip: 'Tùy chọn thông báo',
+        actions: [
+          if (!notification.isRead)
+            FlowFiMenuAction(
+              label: 'Đánh dấu đã đọc',
+              icon: Icons.done_rounded,
+              onSelected: () => _markRead(context, ref),
             ),
-            child: Icon(
-              _notificationIcon(notification.type),
-              color: const Color(0xFF49672A),
-              size: 22,
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  notification.title,
-                  style: Theme.of(context).textTheme.titleMedium,
-                ),
-                if (notification.content != null &&
-                    notification.content!.isNotEmpty) ...[
-                  const SizedBox(height: 4),
-                  Text(
-                    notification.content!,
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: const Color(0xFF757872),
-                    ),
-                  ),
-                ],
-              ],
-            ),
-          ),
-          PopupMenuButton<_NotificationAction>(
-            tooltip: 'Notification actions',
-            onSelected: (action) async {
-              switch (action) {
-                case _NotificationAction.read:
-                  try {
-                    await ref
-                        .read(notificationsProvider.notifier)
-                        .markRead(notification.id);
-                  } catch (_) {
-                    if (context.mounted) {
-                      showGenericMutationError(context);
-                    }
-                  }
-                case _NotificationAction.delete:
-                  final confirmed = await confirmDestructiveAction(
-                    context,
-                    title: 'Delete notification?',
-                    message: 'This removes the notification from FlowFi.',
-                  );
-                  if (confirmed) {
-                    try {
-                      await ref
-                          .read(notificationsProvider.notifier)
-                          .deleteNotification(notification.id);
-                    } catch (_) {
-                      if (context.mounted) {
-                        showGenericMutationError(context);
-                      }
-                    }
-                  }
-              }
-            },
-            itemBuilder: (context) => [
-              if (!notification.isRead)
-                const PopupMenuItem(
-                  value: _NotificationAction.read,
-                  child: Text('Mark read'),
-                ),
-              const PopupMenuItem(
-                value: _NotificationAction.delete,
-                child: Text('Delete'),
-              ),
-            ],
+          FlowFiMenuAction(
+            label: 'Xóa',
+            icon: Icons.delete_outline_rounded,
+            destructive: true,
+            onSelected: () => _delete(context, ref),
           ),
         ],
       ),
     );
   }
-}
 
-enum _NotificationAction { read, delete }
+  Future<void> _markRead(BuildContext context, WidgetRef ref) async {
+    try {
+      await ref.read(notificationsProvider.notifier).markRead(notification.id);
+    } catch (_) {
+      if (context.mounted) {
+        showGenericMutationError(context);
+      }
+    }
+  }
+
+  Future<void> _delete(BuildContext context, WidgetRef ref) async {
+    final confirmed = await confirmDestructiveAction(
+      context,
+      title: 'Xóa thông báo?',
+      message: 'Thông báo này sẽ bị xóa khỏi FlowFi.',
+    );
+    if (confirmed) {
+      try {
+        await ref
+            .read(notificationsProvider.notifier)
+            .deleteNotification(notification.id);
+      } catch (_) {
+        if (context.mounted) {
+          showGenericMutationError(context);
+        }
+      }
+    }
+  }
+}
 
 class _LoadingState extends StatelessWidget {
   const _LoadingState();
 
   @override
   Widget build(BuildContext context) {
-    return const SliverFillRemaining(
-      hasScrollBody: false,
-      child: Center(child: CircularProgressIndicator()),
-    );
+    return const FlowFiSliverLoading(label: 'Đang tải thông báo');
   }
 }
 

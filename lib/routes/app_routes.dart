@@ -5,4 +5,5 @@ abstract final class AppRoutes {
   static const transactions = '/transactions';
   static const budgets = '/budgets';
   static const insights = '/insights';
+  static const profile = '/profile';
 }

@@ -28,6 +28,7 @@ extension TransactionInputMethodApi on TransactionInputMethod {
 final class Transaction {
   const Transaction({
     required this.id,
+    this.clientId,
     this.walletId,
     this.tagId,
     required this.title,
@@ -38,9 +39,11 @@ final class Transaction {
     required this.status,
     required this.inputMethod,
     this.merchantName,
+    this.isPendingSync = false,
   });
 
   final String id;
+  final String? clientId;
   final String? walletId;
   final String? tagId;
   final String title;
@@ -51,6 +54,7 @@ final class Transaction {
   final TransactionStatus status;
   final TransactionInputMethod inputMethod;
   final String? merchantName;
+  final bool isPendingSync;
 }
 
 TransactionStatus transactionStatusFromApi(Object? value) {

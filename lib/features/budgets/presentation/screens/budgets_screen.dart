@@ -1,3 +1,4 @@
+import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -7,6 +8,7 @@ import '../../../goals/domain/entities/goal.dart';
 import '../../../goals/presentation/providers/goals_provider.dart';
 import '../../../shared/presentation/widgets/crud_helpers.dart';
 import '../../../shared/presentation/widgets/feature_states.dart';
+import '../../../shared/presentation/widgets/forui_controls.dart';
 import '../../../tags/presentation/providers/tags_provider.dart';
 import '../../../wallets/presentation/providers/wallets_provider.dart';
 
@@ -18,6 +20,8 @@ class BudgetsScreen extends ConsumerStatefulWidget {
 }
 
 class _BudgetsScreenState extends ConsumerState<BudgetsScreen> {
+  _BudgetView _selectedView = _BudgetView.budgets;
+
   @override
   Widget build(BuildContext context) {
     final budgets = ref.watch(budgetsProvider);
@@ -25,83 +29,50 @@ class _BudgetsScreenState extends ConsumerState<BudgetsScreen> {
 
     return FlowFiFeatureScaffold(
       icon: Icons.savings_rounded,
-      title: 'Budgets',
-      subtitle: 'Watch monthly limits and savings progress.',
+      title: 'Ngân sách',
+      subtitle: 'Theo dõi hạn mức tháng và tiến độ tiết kiệm.',
       onRefresh: () async {
         await ref.read(budgetsProvider.notifier).reload();
         await ref.read(goalsProvider.notifier).reload();
       },
       actions: [
-        FilledButton.icon(
+        FlowFiButton(
+          label: 'Ngân sách',
           onPressed: () => _showBudgetForm(context),
-          icon: const Icon(Icons.add_rounded),
-          label: const Text('Budget'),
+          icon: Icons.add_rounded,
+          fullWidth: false,
         ),
-        IconButton.outlined(
+        FlowFiIconButton(
           onPressed: () => _showGoalForm(context),
-          icon: const Icon(Icons.flag_outlined),
-          tooltip: 'Add goal',
+          icon: Icons.flag_outlined,
+          tooltip: 'Thêm mục tiêu',
         ),
       ],
       child: SliverToBoxAdapter(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _SectionTitle(
-              title: 'Monthly Limits',
-              onRetry: () => ref.read(budgetsProvider.notifier).reload(),
+            FlowFiSegmentedFilter<_BudgetView>(
+              values: _BudgetView.values,
+              selected: _selectedView,
+              labelBuilder: _budgetViewLabel,
+              onSelected: (view) => setState(() => _selectedView = view),
             ),
             const SizedBox(height: 10),
-            budgets.when(
-              loading: () => const _InlineLoading(),
-              error: (_, _) => _InlineError(
+            if (_selectedView == _BudgetView.budgets)
+              _BudgetSection(
+                budgets: budgets,
                 onRetry: () => ref.read(budgetsProvider.notifier).reload(),
-              ),
-              data: (items) => items.isEmpty
-                  ? const _InlineEmpty(message: 'No budgets found.')
-                  : Column(
-                      children: [
-                        for (final budget in items) ...[
-                          _BudgetCard(
-                            budget: budget,
-                            onEdit: () =>
-                                _showBudgetForm(context, budget: budget),
-                          ),
-                          const SizedBox(height: 10),
-                        ],
-                      ],
-                    ),
-            ),
-            const SizedBox(height: 14),
-            _SectionTitle(
-              title: 'Goals',
-              onRetry: () => ref.read(goalsProvider.notifier).reload(),
-            ),
-            const SizedBox(height: 10),
-            goals.when(
-              loading: () => const _InlineLoading(),
-              error: (_, _) => _InlineError(
+                onEdit: (budget) => _showBudgetForm(context, budget: budget),
+              )
+            else
+              _GoalSection(
+                goals: goals,
                 onRetry: () => ref.read(goalsProvider.notifier).reload(),
+                onEdit: (goal) => _showGoalForm(context, goal: goal),
+                onUpdateProgress: (goal) =>
+                    _showGoalForm(context, goal: goal, progress: true),
               ),
-              data: (items) => items.isEmpty
-                  ? const _InlineEmpty(message: 'No goals found.')
-                  : Column(
-                      children: [
-                        for (final goal in items) ...[
-                          _GoalCard(
-                            goal: goal,
-                            onEdit: () => _showGoalForm(context, goal: goal),
-                            onUpdateProgress: () => _showGoalForm(
-                              context,
-                              goal: goal,
-                              progress: true,
-                            ),
-                          ),
-                          const SizedBox(height: 10),
-                        ],
-                      ],
-                    ),
-            ),
           ],
         ),
       ),
@@ -111,7 +82,7 @@ class _BudgetsScreenState extends ConsumerState<BudgetsScreen> {
   void _showBudgetForm(BuildContext context, {Budget? budget}) {
     showFlowFiFormSheet<void>(
       context: context,
-      title: budget == null ? 'Add budget' : 'Edit budget',
+      title: budget == null ? 'Thêm ngân sách' : 'Sửa ngân sách',
       child: _BudgetForm(budget: budget),
     );
   }
@@ -124,11 +95,185 @@ class _BudgetsScreenState extends ConsumerState<BudgetsScreen> {
     showFlowFiFormSheet<void>(
       context: context,
       title: progress
-          ? 'Update progress'
+          ? 'Cập nhật tiến độ'
           : goal == null
-          ? 'Add goal'
-          : 'Edit goal',
+          ? 'Thêm mục tiêu'
+          : 'Sửa mục tiêu',
       child: progress ? _GoalProgressForm(goal: goal!) : _GoalForm(goal: goal),
+    );
+  }
+}
+
+enum _BudgetView { budgets, goals }
+
+String _budgetViewLabel(_BudgetView view) {
+  return switch (view) {
+    _BudgetView.budgets => 'Ngân sách',
+    _BudgetView.goals => 'Mục tiêu',
+  };
+}
+
+class _BudgetSection extends StatelessWidget {
+  const _BudgetSection({
+    required this.budgets,
+    required this.onRetry,
+    required this.onEdit,
+  });
+
+  final AsyncValue<List<Budget>> budgets;
+  final VoidCallback onRetry;
+  final ValueChanged<Budget> onEdit;
+
+  @override
+  Widget build(BuildContext context) {
+    return budgets.when(
+      loading: () => const _InlineLoading(),
+      error: (_, _) => _InlineError(onRetry: onRetry),
+      data: (items) => items.isEmpty
+          ? const _InlineEmpty(message: 'Chưa có ngân sách.')
+          : Column(
+              children: [
+                _BudgetChartCard(budgets: items),
+                const SizedBox(height: 10),
+                for (final budget in items) ...[
+                  _BudgetCard(budget: budget, onEdit: () => onEdit(budget)),
+                  const SizedBox(height: 10),
+                ],
+              ],
+            ),
+    );
+  }
+}
+
+class _GoalSection extends StatelessWidget {
+  const _GoalSection({
+    required this.goals,
+    required this.onRetry,
+    required this.onEdit,
+    required this.onUpdateProgress,
+  });
+
+  final AsyncValue<List<Goal>> goals;
+  final VoidCallback onRetry;
+  final ValueChanged<Goal> onEdit;
+  final ValueChanged<Goal> onUpdateProgress;
+
+  @override
+  Widget build(BuildContext context) {
+    return goals.when(
+      loading: () => const _InlineLoading(),
+      error: (_, _) => _InlineError(onRetry: onRetry),
+      data: (items) => items.isEmpty
+          ? const _InlineEmpty(message: 'Chưa có mục tiêu.')
+          : Column(
+              children: [
+                for (final goal in items) ...[
+                  _GoalCard(
+                    goal: goal,
+                    onEdit: () => onEdit(goal),
+                    onUpdateProgress: () => onUpdateProgress(goal),
+                  ),
+                  const SizedBox(height: 10),
+                ],
+              ],
+            ),
+    );
+  }
+}
+
+class _BudgetChartCard extends StatelessWidget {
+  const _BudgetChartCard({required this.budgets});
+
+  final List<Budget> budgets;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    final total = budgets.fold<BigInt>(
+      BigInt.zero,
+      (sum, budget) => sum + _minorUnits(budget.amount),
+    );
+
+    return FlowFiCard(
+      color: colors.surfaceContainerLowest,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Phân bổ tháng này',
+            style: Theme.of(context).textTheme.titleMedium,
+          ),
+          const SizedBox(height: 6),
+          Text(
+            '${budgets.length} hạn mức đang theo dõi',
+            style: Theme.of(
+              context,
+            ).textTheme.bodyMedium?.copyWith(color: colors.onSurfaceVariant),
+          ),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              SizedBox(
+                width: 112,
+                height: 112,
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    PieChart(
+                      PieChartData(
+                        centerSpaceRadius: 34,
+                        sectionsSpace: 2,
+                        startDegreeOffset: -90,
+                        sections: [
+                          for (var index = 0; index < budgets.length; index++)
+                            PieChartSectionData(
+                              value: _chartValue(budgets[index], total),
+                              title: '',
+                              radius: 18,
+                              color: _chartColor(index),
+                            ),
+                        ],
+                      ),
+                      duration: const Duration(milliseconds: 240),
+                      curve: Curves.easeOutCubic,
+                    ),
+                    Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          '${budgets.length}',
+                          style: Theme.of(context).textTheme.titleMedium,
+                        ),
+                        Text(
+                          'mục',
+                          style: Theme.of(context).textTheme.labelMedium
+                              ?.copyWith(color: colors.onSurfaceVariant),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  children: [
+                    for (var index = 0; index < budgets.length; index++) ...[
+                      FlowFiLegendRow(
+                        color: _chartColor(index),
+                        label: budgets[index].tagName ?? 'Ngân sách',
+                        value: budgets[index].amount,
+                      ),
+                      if (index != budgets.length - 1)
+                        const SizedBox(height: 8),
+                    ],
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 }
@@ -151,52 +296,56 @@ class _BudgetCard extends ConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  budget.tagName ?? 'Monthly budget',
+                  budget.tagName ?? 'Ngân sách tháng',
                   style: Theme.of(context).textTheme.titleMedium,
                 ),
                 const SizedBox(height: 3),
                 Text(
-                  '${budget.month}/${budget.year} - Warn at ${budget.warningThresholdPercent}%',
+                  'Tháng ${budget.month}/${budget.year} · Cảnh báo ${budget.warningThresholdPercent}%',
                   style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                    color: const Color(0xFF757872),
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
                 ),
               ],
             ),
           ),
-          Text(budget.amount, style: Theme.of(context).textTheme.titleMedium),
-          PopupMenuButton<_CardAction>(
-            onSelected: (action) async {
-              switch (action) {
-                case _CardAction.edit:
-                  onEdit();
-                case _CardAction.delete:
-                  final confirmed = await confirmDestructiveAction(
-                    context,
-                    title: 'Delete budget?',
-                    message: 'This removes the budget from FlowFi.',
-                  );
-                  if (confirmed) {
-                    try {
-                      await ref
-                          .read(budgetsProvider.notifier)
-                          .deleteBudget(budget.id);
-                    } catch (_) {
-                      if (context.mounted) {
-                        showGenericMutationError(context);
-                      }
-                    }
-                  }
-              }
-            },
-            itemBuilder: (context) => const [
-              PopupMenuItem(value: _CardAction.edit, child: Text('Edit')),
-              PopupMenuItem(value: _CardAction.delete, child: Text('Delete')),
+          FlowFiAmountText(amount: budget.amount, align: TextAlign.end),
+          FlowFiActionMenu(
+            tooltip: 'Tùy chọn ngân sách',
+            actions: [
+              FlowFiMenuAction(
+                label: 'Sửa',
+                icon: Icons.edit_rounded,
+                onSelected: onEdit,
+              ),
+              FlowFiMenuAction(
+                label: 'Xóa',
+                icon: Icons.delete_outline_rounded,
+                destructive: true,
+                onSelected: () => _deleteBudget(context, ref),
+              ),
             ],
           ),
         ],
       ),
     );
+  }
+
+  Future<void> _deleteBudget(BuildContext context, WidgetRef ref) async {
+    final confirmed = await confirmDestructiveAction(
+      context,
+      title: 'Xóa ngân sách?',
+      message: 'Hạn mức này sẽ bị xóa khỏi FlowFi.',
+    );
+    if (confirmed) {
+      try {
+        await ref.read(budgetsProvider.notifier).deleteBudget(budget.id);
+      } catch (_) {
+        if (context.mounted) {
+          showGenericMutationError(context);
+        }
+      }
+    }
   }
 }
 
@@ -214,7 +363,7 @@ class _GoalCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return FlowFiCard(
-      color: const Color(0xFFFFF6EB),
+      color: FlowFiColors.warmSurface,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -228,73 +377,61 @@ class _GoalCard extends ConsumerWidget {
                   style: Theme.of(context).textTheme.titleMedium,
                 ),
               ),
-              Text(_goalStatusLabel(goal.status)),
-              PopupMenuButton<_GoalAction>(
-                onSelected: (action) async {
-                  switch (action) {
-                    case _GoalAction.edit:
-                      onEdit();
-                    case _GoalAction.progress:
-                      onUpdateProgress();
-                    case _GoalAction.delete:
-                      final confirmed = await confirmDestructiveAction(
-                        context,
-                        title: 'Delete goal?',
-                        message: 'This removes the goal from FlowFi.',
-                      );
-                      if (confirmed) {
-                        try {
-                          await ref
-                              .read(goalsProvider.notifier)
-                              .deleteGoal(goal.id);
-                        } catch (_) {
-                          if (context.mounted) {
-                            showGenericMutationError(context);
-                          }
-                        }
-                      }
-                  }
-                },
-                itemBuilder: (context) => const [
-                  PopupMenuItem(value: _GoalAction.edit, child: Text('Edit')),
-                  PopupMenuItem(
-                    value: _GoalAction.progress,
-                    child: Text('Update progress'),
+              FlowFiStatusBadge(label: _goalStatusLabel(goal.status)),
+              FlowFiActionMenu(
+                tooltip: 'Tùy chọn mục tiêu',
+                actions: [
+                  FlowFiMenuAction(
+                    label: 'Sửa',
+                    icon: Icons.edit_rounded,
+                    onSelected: onEdit,
                   ),
-                  PopupMenuItem(
-                    value: _GoalAction.delete,
-                    child: Text('Delete'),
+                  FlowFiMenuAction(
+                    label: 'Cập nhật tiến độ',
+                    icon: Icons.trending_up_rounded,
+                    onSelected: onUpdateProgress,
+                  ),
+                  FlowFiMenuAction(
+                    label: 'Xóa',
+                    icon: Icons.delete_outline_rounded,
+                    destructive: true,
+                    onSelected: () => _deleteGoal(context, ref),
                   ),
                 ],
               ),
             ],
           ),
           const SizedBox(height: 12),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(999),
-            child: LinearProgressIndicator(
-              minHeight: 8,
-              value: _goalProgress(goal),
-              backgroundColor: const Color(0xFFE4DED4),
-              valueColor: const AlwaysStoppedAnimation(Color(0xFF49672A)),
-            ),
-          ),
+          FlowFiProgressBar(value: _goalProgress(goal)),
           const SizedBox(height: 8),
           Text(
-            '${goal.currentAmount} saved of ${goal.targetAmount}',
-            style: Theme.of(
-              context,
-            ).textTheme.labelMedium?.copyWith(color: const Color(0xFF757872)),
+            '${goal.currentAmount} / ${goal.targetAmount}',
+            style: Theme.of(context).textTheme.labelMedium?.copyWith(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
           ),
         ],
       ),
     );
   }
+
+  Future<void> _deleteGoal(BuildContext context, WidgetRef ref) async {
+    final confirmed = await confirmDestructiveAction(
+      context,
+      title: 'Xóa mục tiêu?',
+      message: 'Mục tiêu này sẽ bị xóa khỏi FlowFi.',
+    );
+    if (confirmed) {
+      try {
+        await ref.read(goalsProvider.notifier).deleteGoal(goal.id);
+      } catch (_) {
+        if (context.mounted) {
+          showGenericMutationError(context);
+        }
+      }
+    }
+  }
 }
-
-enum _CardAction { edit, delete }
-
-enum _GoalAction { edit, progress, delete }
 
 class _BudgetForm extends ConsumerStatefulWidget {
   const _BudgetForm({this.budget});
@@ -347,7 +484,7 @@ class _BudgetFormState extends ConsumerState<_BudgetForm> {
     final tags = ref.watch(tagsProvider);
     return tags.when(
       loading: () => const _InlineLoading(),
-      error: (_, _) => const Text('Could not load tags.'),
+      error: (_, _) => const Text('Không tải được danh mục.'),
       data: (items) {
         final currentTagId = items.any((tag) => tag.id == _tagId)
             ? _tagId
@@ -357,63 +494,59 @@ class _BudgetFormState extends ConsumerState<_BudgetForm> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              DropdownButtonFormField<String?>(
-                initialValue: currentTagId,
-                decoration: const InputDecoration(labelText: 'Tag optional'),
+              FlowFiSelectField<String>(
+                label: 'Danh mục',
+                value: currentTagId ?? '',
                 items: [
-                  const DropdownMenuItem<String?>(
-                    value: null,
-                    child: Text('No tag'),
+                  const FlowFiSelectItem<String>(
+                    value: '',
+                    label: 'Không chọn',
                   ),
                   for (final tag in items)
-                    DropdownMenuItem<String?>(
-                      value: tag.id,
-                      child: Text(tag.name),
-                    ),
+                    FlowFiSelectItem<String>(value: tag.id, label: tag.name),
                 ],
-                onChanged: (value) => setState(() => _tagId = value),
+                onChanged: (value) => setState(() {
+                  _tagId = value == null || value.isEmpty ? null : value;
+                }),
               ),
               const SizedBox(height: 12),
-              TextFormField(
+              FlowFiTextField(
+                label: 'Hạn mức',
                 controller: _amountController,
-                decoration: const InputDecoration(labelText: 'Amount'),
                 validator: requiredAmount,
               ),
               const SizedBox(height: 12),
               Row(
                 children: [
                   Expanded(
-                    child: TextFormField(
+                    child: FlowFiTextField(
+                      label: 'Tháng',
                       controller: _monthController,
-                      decoration: const InputDecoration(labelText: 'Month'),
                       validator: (value) => _intRange(value, 1, 12),
                     ),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
-                    child: TextFormField(
+                    child: FlowFiTextField(
+                      label: 'Năm',
                       controller: _yearController,
-                      decoration: const InputDecoration(labelText: 'Year'),
                       validator: (value) => _intRange(value, 2000, 9999),
                     ),
                   ),
                 ],
               ),
               const SizedBox(height: 12),
-              TextFormField(
+              FlowFiTextField(
+                label: 'Cảnh báo khi đạt (%)',
                 controller: _thresholdController,
-                decoration: const InputDecoration(
-                  labelText: 'Warning threshold',
-                ),
                 validator: (value) => _intRange(value, 1, 100),
               ),
               const SizedBox(height: 18),
-              SizedBox(
-                width: double.infinity,
-                child: FilledButton(
-                  onPressed: _isSubmitting ? null : _submit,
-                  child: Text(widget.budget == null ? 'Create budget' : 'Save'),
-                ),
+              FlowFiForuiButton(
+                label: widget.budget == null ? 'Tạo ngân sách' : 'Lưu thay đổi',
+                icon: Icons.check_rounded,
+                isLoading: _isSubmitting,
+                onPressed: _submit,
               ),
             ],
           ),
@@ -504,7 +637,7 @@ class _GoalFormState extends ConsumerState<_GoalForm> {
     final wallets = ref.watch(walletsProvider);
     return wallets.when(
       loading: () => const _InlineLoading(),
-      error: (_, _) => const Text('Could not load wallets.'),
+      error: (_, _) => const Text('Không tải được ví.'),
       data: (items) {
         final currentWalletId = items.any((wallet) => wallet.id == _walletId)
             ? _walletId
@@ -514,78 +647,81 @@ class _GoalFormState extends ConsumerState<_GoalForm> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              DropdownButtonFormField<String?>(
-                initialValue: currentWalletId,
-                decoration: const InputDecoration(labelText: 'Wallet optional'),
+              FlowFiSelectField<String>(
+                label: 'Ví liên kết',
+                value: currentWalletId ?? '',
                 items: [
-                  const DropdownMenuItem<String?>(
-                    value: null,
-                    child: Text('No wallet'),
+                  const FlowFiSelectItem<String>(
+                    value: '',
+                    label: 'Không chọn',
                   ),
                   for (final wallet in items)
-                    DropdownMenuItem<String?>(
+                    FlowFiSelectItem<String>(
                       value: wallet.id,
-                      child: Text(wallet.name),
+                      label: wallet.name,
+                      icon: Icons.account_balance_wallet_rounded,
                     ),
                 ],
-                onChanged: (value) => setState(() => _walletId = value),
+                onChanged: (value) => setState(() {
+                  _walletId = value == null || value.isEmpty ? null : value;
+                }),
               ),
               const SizedBox(height: 12),
-              TextFormField(
+              FlowFiTextField(
+                label: 'Tên mục tiêu',
                 controller: _nameController,
-                decoration: const InputDecoration(labelText: 'Name'),
                 validator: requiredText,
               ),
               const SizedBox(height: 12),
-              TextFormField(
+              FlowFiTextField(
+                label: 'Số tiền mục tiêu',
                 controller: _targetController,
-                decoration: const InputDecoration(labelText: 'Target amount'),
                 validator: requiredAmount,
               ),
               const SizedBox(height: 12),
-              TextFormField(
+              FlowFiTextField(
+                label: 'Đã tiết kiệm',
                 controller: _currentController,
-                decoration: const InputDecoration(labelText: 'Current amount'),
                 validator: optionalAmount,
               ),
               const SizedBox(height: 12),
-              DropdownButtonFormField<GoalStatus>(
-                initialValue: _status,
-                decoration: const InputDecoration(labelText: 'Status'),
+              FlowFiSelectField<GoalStatus>(
+                label: 'Trạng thái',
+                value: _status,
                 items: const [
-                  DropdownMenuItem(
+                  FlowFiSelectItem(
                     value: GoalStatus.active,
-                    child: Text('Active'),
+                    label: 'Đang theo dõi',
+                    icon: Icons.flag_outlined,
                   ),
-                  DropdownMenuItem(
+                  FlowFiSelectItem(
                     value: GoalStatus.completed,
-                    child: Text('Completed'),
+                    label: 'Hoàn thành',
+                    icon: Icons.check_circle_outline_rounded,
                   ),
-                  DropdownMenuItem(
+                  FlowFiSelectItem(
                     value: GoalStatus.cancelled,
-                    child: Text('Cancelled'),
+                    label: 'Đã hủy',
+                    icon: Icons.cancel_outlined,
                   ),
                 ],
                 onChanged: (value) {
                   if (value != null) setState(() => _status = value);
                 },
               ),
-              ListTile(
-                contentPadding: EdgeInsets.zero,
-                title: const Text('Deadline optional'),
-                subtitle: Text(
-                  _deadline == null ? 'No deadline' : _dateLabel(_deadline!),
-                ),
-                trailing: const Icon(Icons.calendar_month_rounded),
+              FlowFiDateField(
+                label: 'Hạn hoàn thành',
+                value: _deadline == null
+                    ? 'Không chọn'
+                    : _dateLabel(_deadline!),
                 onTap: _pickDeadline,
               ),
               const SizedBox(height: 18),
-              SizedBox(
-                width: double.infinity,
-                child: FilledButton(
-                  onPressed: _isSubmitting ? null : _submit,
-                  child: Text(widget.goal == null ? 'Create goal' : 'Save'),
-                ),
+              FlowFiForuiButton(
+                label: widget.goal == null ? 'Tạo mục tiêu' : 'Lưu thay đổi',
+                icon: Icons.check_rounded,
+                isLoading: _isSubmitting,
+                onPressed: _submit,
               ),
             ],
           ),
@@ -673,18 +809,17 @@ class _GoalProgressFormState extends ConsumerState<_GoalProgressForm> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          TextFormField(
+          FlowFiTextField(
+            label: 'Đã tiết kiệm',
             controller: _currentController,
-            decoration: const InputDecoration(labelText: 'Current amount'),
             validator: requiredAmount,
           ),
           const SizedBox(height: 18),
-          SizedBox(
-            width: double.infinity,
-            child: FilledButton(
-              onPressed: _isSubmitting ? null : _submit,
-              child: const Text('Update progress'),
-            ),
+          FlowFiForuiButton(
+            label: 'Cập nhật tiến độ',
+            icon: Icons.check_rounded,
+            isLoading: _isSubmitting,
+            onPressed: _submit,
           ),
         ],
       ),
@@ -711,29 +846,6 @@ class _GoalProgressFormState extends ConsumerState<_GoalProgressForm> {
   }
 }
 
-class _SectionTitle extends StatelessWidget {
-  const _SectionTitle({required this.title, required this.onRetry});
-
-  final String title;
-  final VoidCallback onRetry;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Expanded(
-          child: Text(title, style: Theme.of(context).textTheme.titleMedium),
-        ),
-        IconButton(
-          onPressed: onRetry,
-          icon: const Icon(Icons.refresh_rounded),
-          tooltip: 'Refresh',
-        ),
-      ],
-    );
-  }
-}
-
 class _IconBadge extends StatelessWidget {
   const _IconBadge({required this.icon});
 
@@ -741,14 +853,11 @@ class _IconBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: 42,
-      height: 42,
-      decoration: BoxDecoration(
-        color: const Color(0xFFE7F1DA),
-        borderRadius: BorderRadius.circular(14),
-      ),
-      child: Icon(icon, color: const Color(0xFF49672A), size: 22),
+    return FlowFiIconBadge(
+      icon: icon,
+      tone: FlowFiTone.info,
+      size: 42,
+      radius: 14,
     );
   }
 }
@@ -758,10 +867,7 @@ class _InlineLoading extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Padding(
-      padding: EdgeInsets.symmetric(vertical: 24),
-      child: Center(child: CircularProgressIndicator()),
-    );
+    return const FlowFiInlineLoading();
   }
 }
 
@@ -772,13 +878,9 @@ class _InlineError extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return FlowFiCard(
-      child: Row(
-        children: [
-          const Expanded(child: Text('Could not load this section.')),
-          TextButton(onPressed: onRetry, child: const Text('Retry')),
-        ],
-      ),
+    return FlowFiInlineError(
+      message: 'Không tải được dữ liệu.',
+      onRetry: onRetry,
     );
   }
 }
@@ -791,12 +893,12 @@ class _InlineEmpty extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return FlowFiCard(
-      color: const Color(0xFFFFF6EB),
+      color: FlowFiColors.warmSurface,
       child: Text(
         message,
-        style: Theme.of(
-          context,
-        ).textTheme.bodyMedium?.copyWith(color: const Color(0xFF757872)),
+        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+          color: Theme.of(context).colorScheme.onSurfaceVariant,
+        ),
       ),
     );
   }
@@ -837,11 +939,26 @@ BigInt _minorUnits(String value) {
 
 String _goalStatusLabel(GoalStatus status) {
   return switch (status) {
-    GoalStatus.active => 'Active',
-    GoalStatus.completed => 'Done',
-    GoalStatus.cancelled => 'Cancelled',
-    GoalStatus.unknown => 'Unknown',
+    GoalStatus.active => 'Đang theo dõi',
+    GoalStatus.completed => 'Hoàn thành',
+    GoalStatus.cancelled => 'Đã hủy',
+    GoalStatus.unknown => 'Không rõ',
   };
+}
+
+double _chartValue(Budget budget, BigInt total) {
+  if (total <= BigInt.zero) {
+    return 1;
+  }
+  final amount = _minorUnits(budget.amount);
+  if (amount <= BigInt.zero) {
+    return 0.1;
+  }
+  return amount.toDouble();
+}
+
+Color _chartColor(int index) {
+  return FlowFiColors.chartPalette[index % FlowFiColors.chartPalette.length];
 }
 
 String _dateLabel(DateTime date) {
