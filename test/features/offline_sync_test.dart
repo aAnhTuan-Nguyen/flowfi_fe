@@ -178,6 +178,47 @@ void main() {
   });
 
   test(
+    'sync summary reports failed results and keeps pending operations',
+    () async {
+      await store.cacheWallets([
+        const Wallet(
+          id: 'wallet-1',
+          name: 'Cash',
+          type: WalletType.cash,
+          balance: '500000',
+          isDefault: true,
+        ),
+      ]);
+      await store.createPendingManualTransaction(
+        clientId: 'client-tx-1',
+        walletId: 'wallet-1',
+        tagId: 'tag-1',
+        title: 'Offline coffee',
+        amount: '50000',
+        type: MoneyFlowType.expense,
+        date: DateTime(2026, 6, 30),
+      );
+      final service = OfflineSyncService(
+        localStore: store,
+        remoteDataSource: _FakeSyncRemoteDataSource(
+          status: SyncPushStatus.failed,
+        ),
+        networkStatus: _FixedNetworkStatus(isOnline: true),
+        deviceIdProvider: () async => 'device-1',
+      );
+
+      final summary = await service.synchronize();
+
+      expect(summary.attemptedCount, 1);
+      expect(summary.syncedCount, 0);
+      expect(summary.failedCount, 1);
+      expect(summary.conflictCount, 0);
+      expect(summary.hasFailures, isTrue);
+      expect(await store.readPendingOperations(), hasLength(1));
+    },
+  );
+
+  test(
     'remote refresh after sync does not duplicate a reconciled transaction',
     () async {
       await store.cacheWallets([
@@ -411,6 +452,9 @@ final class _BackendValidationTransactionRemoteDataSource
 }
 
 final class _FakeSyncRemoteDataSource implements SyncRemoteDataSource {
+  _FakeSyncRemoteDataSource({this.status = SyncPushStatus.synced});
+
+  final SyncPushStatus status;
   String? pushedDeviceId;
   List<PendingSyncOperation> pushedItems = const [];
 
@@ -428,7 +472,7 @@ final class _FakeSyncRemoteDataSource implements SyncRemoteDataSource {
             entityName: item.entityName,
             clientId: item.clientId,
             entityId: 'server-${item.clientId}',
-            status: SyncPushStatus.synced,
+            status: status,
           ),
       ],
     );

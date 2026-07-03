@@ -20,28 +20,38 @@ final class OfflineSyncService {
   final NetworkStatusService _networkStatus;
   final Future<String> Function() _deviceIdProvider;
 
-  Future<void> synchronize() async {
+  Future<OfflineSyncSummary> synchronize() async {
     if (!await _networkStatus.hasNetwork()) {
-      return;
+      return const OfflineSyncSummary(attemptedCount: 0, wasOnline: false);
     }
     final pending = await _localStore.readPendingOperations();
     if (pending.isEmpty) {
-      return;
+      return const OfflineSyncSummary(attemptedCount: 0);
     }
     final response = await _remoteDataSource.push(
       deviceId: await _deviceIdProvider(),
       items: pending,
     );
-    final syncedResults = {
+    final resultsByClientId = {
       for (final result in response.results)
-        if (result.status == SyncPushStatus.synced && result.clientId != null)
-          result.clientId!: result,
+        if (result.clientId != null) result.clientId!: result,
     };
     final syncedCreates = <SyncedTransactionCreate>[];
     final syncedOtherOperationIds = <int>[];
+    var failedCount = 0;
+    var conflictCount = 0;
     for (final operation in pending) {
-      final result = syncedResults[operation.clientId];
+      final result = resultsByClientId[operation.clientId];
       if (result == null) {
+        failedCount += 1;
+        continue;
+      }
+      if (result.status == SyncPushStatus.conflict) {
+        conflictCount += 1;
+        continue;
+      }
+      if (result.status == SyncPushStatus.failed) {
+        failedCount += 1;
         continue;
       }
       if (operation.entityName == 'transactions' &&
@@ -60,5 +70,29 @@ final class OfflineSyncService {
     }
     await _localStore.markTransactionCreatesSynced(syncedCreates);
     await _localStore.markOperationsSynced(syncedOtherOperationIds);
+    return OfflineSyncSummary(
+      attemptedCount: pending.length,
+      syncedCount: syncedCreates.length + syncedOtherOperationIds.length,
+      failedCount: failedCount,
+      conflictCount: conflictCount,
+    );
   }
+}
+
+final class OfflineSyncSummary {
+  const OfflineSyncSummary({
+    required this.attemptedCount,
+    this.syncedCount = 0,
+    this.failedCount = 0,
+    this.conflictCount = 0,
+    this.wasOnline = true,
+  });
+
+  final int attemptedCount;
+  final int syncedCount;
+  final int failedCount;
+  final int conflictCount;
+  final bool wasOnline;
+
+  bool get hasFailures => failedCount > 0 || conflictCount > 0;
 }

@@ -12,6 +12,7 @@ import '../tags/presentation/providers/tags_provider.dart';
 import '../transactions/presentation/providers/transactions_provider.dart';
 import '../wallets/presentation/providers/wallets_provider.dart';
 import 'data/offline_sync_service.dart';
+import 'sync_failure.dart';
 
 final class SyncStatusState {
   const SyncStatusState({
@@ -19,22 +20,29 @@ final class SyncStatusState {
     required this.pendingCount,
     this.isSynchronizing = false,
     this.error,
+    this.lastSyncedCount = 0,
   });
 
   final bool isOnline;
   final int pendingCount;
   final bool isSynchronizing;
-  final Object? error;
+  final SyncFailure? error;
+  final int lastSyncedCount;
 }
 
 class SyncStatusNotifier extends AsyncNotifier<SyncStatusState> {
   StreamSubscription<bool>? _networkSubscription;
+  bool _autoSyncScheduled = false;
+  bool _disposed = false;
   bool _syncInFlight = false;
 
   @override
   Future<SyncStatusState> build() async {
+    _disposed = false;
     _listenForConnectivity();
-    return _readStatus();
+    final status = await _readStatus();
+    _scheduleAutoSync(status);
+    return status;
   }
 
   Future<void> synchronize() async {
@@ -48,11 +56,21 @@ class SyncStatusNotifier extends AsyncNotifier<SyncStatusState> {
     _syncInFlight = true;
     state = AsyncData(await _readStatus(isSynchronizing: true));
     try {
-      await serviceLocator<OfflineSyncService>().synchronize();
-      _invalidateSyncedProviders();
-      state = AsyncData(await _readStatus());
+      final summary = await serviceLocator<OfflineSyncService>().synchronize();
+      if (summary.syncedCount > 0) {
+        _invalidateSyncedProviders();
+      }
+      if (summary.hasFailures) {
+        state = AsyncData(
+          await _readStatus(error: SyncFailure.fromSummary(summary)),
+        );
+        return;
+      }
+      state = AsyncData(
+        await _readStatus(lastSyncedCount: summary.syncedCount),
+      );
     } catch (error) {
-      state = AsyncData(await _readStatus(error: error));
+      state = AsyncData(await _readStatus(error: SyncFailure.fromError(error)));
     } finally {
       _syncInFlight = false;
     }
@@ -66,6 +84,7 @@ class SyncStatusNotifier extends AsyncNotifier<SyncStatusState> {
     _networkSubscription = serviceLocator<NetworkStatusService>().onlineChanges
         .listen((isOnline) => unawaited(_handleConnectivityChange(isOnline)));
     ref.onDispose(() {
+      _disposed = true;
       unawaited(_networkSubscription?.cancel());
       _networkSubscription = null;
     });
@@ -93,7 +112,8 @@ class SyncStatusNotifier extends AsyncNotifier<SyncStatusState> {
 
   Future<SyncStatusState> _readStatus({
     bool isSynchronizing = false,
-    Object? error,
+    SyncFailure? error,
+    int lastSyncedCount = 0,
   }) async {
     if (!serviceLocator.isRegistered<NetworkStatusService>() ||
         !serviceLocator.isRegistered<FlowFiLocalStore>()) {
@@ -102,6 +122,7 @@ class SyncStatusNotifier extends AsyncNotifier<SyncStatusState> {
         pendingCount: 0,
         isSynchronizing: isSynchronizing,
         error: error,
+        lastSyncedCount: lastSyncedCount,
       );
     }
     final networkStatus = serviceLocator<NetworkStatusService>();
@@ -111,6 +132,30 @@ class SyncStatusNotifier extends AsyncNotifier<SyncStatusState> {
       pendingCount: await localStore.countPendingOperations(),
       isSynchronizing: isSynchronizing,
       error: error,
+      lastSyncedCount: lastSyncedCount,
+    );
+  }
+
+  void _scheduleAutoSync(SyncStatusState status) {
+    if (!status.isOnline ||
+        status.pendingCount == 0 ||
+        status.isSynchronizing ||
+        _syncInFlight ||
+        _autoSyncScheduled) {
+      return;
+    }
+    _autoSyncScheduled = true;
+    unawaited(
+      Future<void>(() async {
+        _autoSyncScheduled = false;
+        if (_disposed) {
+          return;
+        }
+        final latest = await _readStatus();
+        if (latest.isOnline && latest.pendingCount > 0 && !_syncInFlight) {
+          await synchronize();
+        }
+      }),
     );
   }
 

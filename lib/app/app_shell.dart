@@ -41,17 +41,23 @@ class FlowFiAppShell extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Column(
-        children: [
-          const SyncStatusBanner(),
-          Expanded(
-            child: IndexedStack(
+      body: SyncStatusHost(
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            IndexedStack(
               index: selectedIndex,
               sizing: StackFit.expand,
               children: _screens,
             ),
-          ),
-        ],
+            const Positioned(
+              left: 16,
+              right: 16,
+              bottom: 12,
+              child: SyncStatusChip(),
+            ),
+          ],
+        ),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
       floatingActionButton: FloatingActionButton(
