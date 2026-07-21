@@ -95,36 +95,6 @@ class ProfileContent extends ConsumerWidget {
           ),
         ),
         const SizedBox(height: 14),
-        FlowFiCard(
-          child: Column(
-            children: [
-              FlowFiProfileRow(
-                icon: Icons.alternate_email_rounded,
-                label: 'Email',
-                value: email,
-              ),
-              const SizedBox(height: 14),
-              FlowFiProfileRow(
-                icon: Icons.payments_rounded,
-                label: 'Tiền tệ',
-                value: currency,
-              ),
-              const SizedBox(height: 14),
-              FlowFiProfileRow(
-                icon: Icons.account_balance_wallet_rounded,
-                label: 'Hạn mức tháng',
-                value: budget,
-              ),
-              const SizedBox(height: 14),
-              const FlowFiProfileRow(
-                icon: Icons.verified_user_rounded,
-                label: 'Phiên đăng nhập',
-                value: 'Đang hoạt động',
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 14),
         ProfileEditForm(user: user),
         const SizedBox(height: 14),
         FlowFiButton(
