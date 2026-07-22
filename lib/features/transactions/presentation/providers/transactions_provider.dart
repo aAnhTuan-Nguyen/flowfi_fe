@@ -82,9 +82,27 @@ class TransactionsNotifier extends AsyncNotifier<List<Transaction>> {
   }
 
   Future<void> confirmTransaction(String id) async {
-    await ref.read(transactionRepositoryProvider).confirmTransaction(id);
-    await reload();
+    final repository = ref.read(transactionRepositoryProvider);
+    final confirmed = await repository.confirmTransaction(id);
+    final refreshed = await repository.listTransactions();
+    state = AsyncData(_upsertTransaction(refreshed, confirmed));
   }
+}
+
+List<Transaction> _upsertTransaction(
+  List<Transaction> transactions,
+  Transaction replacement,
+) {
+  final index = transactions.indexWhere(
+    (transaction) => transaction.id == replacement.id,
+  );
+  if (index == -1) {
+    return [replacement, ...transactions];
+  }
+  return [
+    for (var itemIndex = 0; itemIndex < transactions.length; itemIndex++)
+      if (itemIndex == index) replacement else transactions[itemIndex],
+  ];
 }
 
 final transactionsProvider =

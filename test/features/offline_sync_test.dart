@@ -52,6 +52,35 @@ void main() {
     expect(transactions.single.title, 'Cached coffee');
   });
 
+  test('confirmation caches the confirmed transaction', () async {
+    await store.cacheTransactions([
+      Transaction(
+        id: 'transaction-ocr',
+        walletId: 'wallet-1',
+        tagId: 'tag-1',
+        title: 'Receipt coffee',
+        amount: '50000',
+        type: MoneyFlowType.expense,
+        date: DateTime(2026, 7, 22),
+        status: TransactionStatus.draft,
+        inputMethod: TransactionInputMethod.ocr,
+      ),
+    ]);
+    final repository = TransactionRepositoryImpl(
+      _ConfirmingTransactionRemoteDataSource(),
+      localStore: store,
+      networkStatus: const _FixedNetworkStatus(isOnline: true),
+    );
+
+    final confirmed = await repository.confirmTransaction('transaction-ocr');
+    final cached = await store.readTransactions();
+
+    expect(confirmed.status, TransactionStatus.confirmed);
+    expect(cached, hasLength(1));
+    expect(cached.single.id, 'transaction-ocr');
+    expect(cached.single.status, TransactionStatus.confirmed);
+  });
+
   test(
     'creates a pending manual transaction offline and updates local balance',
     () async {
@@ -379,6 +408,68 @@ final class _FailingTransactionRemoteDataSource
   Future<TransactionModel> confirmTransaction(String id) {
     throw StateError('offline');
   }
+}
+
+final class _ConfirmingTransactionRemoteDataSource
+    implements TransactionRemoteDataSource {
+  @override
+  Future<TransactionModel> confirmTransaction(String id) async {
+    return TransactionModel(
+      id: id,
+      walletId: 'wallet-1',
+      tagId: 'tag-1',
+      title: 'Receipt coffee',
+      amount: '50000',
+      type: MoneyFlowType.expense,
+      date: DateTime(2026, 7, 22),
+      status: TransactionStatus.confirmed,
+      inputMethod: TransactionInputMethod.ocr,
+    );
+  }
+
+  @override
+  Future<List<TransactionModel>> listTransactions({
+    int page = 1,
+    int limit = 20,
+    String? walletId,
+    String? tagId,
+    MoneyFlowType? transactionType,
+    TransactionStatus? status,
+    TransactionInputMethod? inputMethod,
+    String? keyword,
+    String? from,
+    String? to,
+  }) => throw UnimplementedError();
+
+  @override
+  Future<TransactionModel> createTransaction({
+    required String walletId,
+    required String tagId,
+    required String title,
+    required String amount,
+    required MoneyFlowType type,
+    required DateTime date,
+    TransactionStatus status = TransactionStatus.draft,
+    TransactionInputMethod inputMethod = TransactionInputMethod.manual,
+    String? merchantName,
+    String? description,
+    String? clientId,
+  }) => throw UnimplementedError();
+
+  @override
+  Future<TransactionModel> updateTransaction(
+    String id, {
+    String? tagId,
+    String? title,
+    String? amount,
+    MoneyFlowType? type,
+    DateTime? date,
+    String? merchantName,
+    String? description,
+  }) => throw UnimplementedError();
+
+  @override
+  Future<void> deleteTransaction(String id) => throw UnimplementedError();
 }
 
 final class _BackendValidationTransactionRemoteDataSource

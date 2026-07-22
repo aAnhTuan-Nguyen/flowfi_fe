@@ -176,7 +176,11 @@ final class TransactionRepositoryImpl implements TransactionRepository {
 
   @override
   Future<Transaction> confirmTransaction(String id) async {
-    return (await _remoteDataSource.confirmTransaction(id)).toDomain();
+    final transaction = (await _remoteDataSource.confirmTransaction(
+      id,
+    )).toDomain();
+    await _localStore?.cacheTransactions([transaction]);
+    return transaction;
   }
 
   Future<bool> _hasNetwork() async {

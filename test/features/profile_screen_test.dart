@@ -13,7 +13,7 @@ void main() {
 
     expect(find.text('Hồ sơ cá nhân'), findsOneWidget);
     expect(find.text('alex@example.com'), findsWidgets);
-    expect(find.text('Thông tin cá nhân'), findsOneWidget);
+    expect(find.text('Thông tin cá nhân'), findsNothing);
     expect(find.text('Thiết lập'), findsOneWidget);
 
     await tester.enterText(find.byType(EditableText).at(0), 'Alex Nguyen');

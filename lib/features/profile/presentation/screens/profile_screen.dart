@@ -95,9 +95,7 @@ class _ProfileEditFormState extends ConsumerState<ProfileEditForm> {
     _monthlyBudgetLimitController = TextEditingController(
       text: widget.user?.monthlyBudgetLimit ?? '',
     );
-    _emailController = TextEditingController(
-      text: widget.user?.email ?? '',
-    );
+    _emailController = TextEditingController(text: widget.user?.email ?? '');
   }
 
   @override
@@ -111,7 +109,6 @@ class _ProfileEditFormState extends ConsumerState<ProfileEditForm> {
 
   @override
   Widget build(BuildContext context) {
-
     return FlowFiCard(
       padding: const EdgeInsets.fromLTRB(16, 18, 16, 16),
       child: Form(
@@ -119,13 +116,6 @@ class _ProfileEditFormState extends ConsumerState<ProfileEditForm> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const _ProfileSectionHeader(
-              icon: Icons.person_rounded,
-              title: 'Thông tin cá nhân',
-              subtitle: 'Quản lý thông tin nhận diện tài khoản của bạn.',
-            ),
-            const SizedBox(height: 16),
-
             _ProfileTextField(
               label: 'Họ tên',
               controller: _fullNameController,
@@ -236,7 +226,6 @@ class _ProfileSectionHeader extends StatelessWidget {
   }
 }
 
-
 class _ProfileTextField extends StatelessWidget {
   const _ProfileTextField({
     required this.label,
@@ -283,17 +272,10 @@ class _ProfileTextField extends StatelessWidget {
             ),
             suffixIconConstraints: readOnly
                 ? null
-                : const BoxConstraints(
-                    minWidth: 42,
-                    minHeight: 42,
-                  ),
+                : const BoxConstraints(minWidth: 42, minHeight: 42),
             suffixIcon: readOnly
                 ? null
-                : Icon(
-                    Icons.edit_outlined,
-                    color: colors.primary,
-                    size: 20,
-                  ),
+                : Icon(Icons.edit_outlined, color: colors.primary, size: 20),
           ),
         ),
       ],
@@ -614,9 +596,9 @@ class _ProfileLogoutButton extends StatelessWidget {
               const SizedBox(width: 9),
               Text(
                 'Đăng xuất',
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w800,
-                ),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
               ),
             ],
           ),

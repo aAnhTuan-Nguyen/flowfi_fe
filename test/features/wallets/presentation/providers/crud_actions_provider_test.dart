@@ -135,6 +135,33 @@ void main() {
     },
   );
 
+  test(
+    'confirm keeps returned transaction when reloaded list is stale',
+    () async {
+      final repository = StaleConfirmTransactionRepository();
+      final container = ProviderContainer(
+        overrides: [
+          transactionRepositoryProvider.overrideWithValue(repository),
+        ],
+      );
+      addTearDown(container.dispose);
+
+      expect(
+        (await container.read(transactionsProvider.future)).single.status,
+        TransactionStatus.draft,
+      );
+
+      await container
+          .read(transactionsProvider.notifier)
+          .confirmTransaction('transaction-ocr');
+
+      final transactions = await container.read(transactionsProvider.future);
+      expect(transactions, hasLength(1));
+      expect(transactions.single.id, 'transaction-ocr');
+      expect(transactions.single.status, TransactionStatus.confirmed);
+    },
+  );
+
   test('budget and goal mutations reload their providers', () async {
     final budgetRepository = FakeBudgetRepository();
     final goalRepository = FakeGoalRepository();
@@ -431,6 +458,79 @@ class FakeTransactionRepository implements TransactionRepository {
   Future<void> deleteTransaction(String id) async {
     events.add('delete:$id');
   }
+}
+
+class StaleConfirmTransactionRepository implements TransactionRepository {
+  static final draft = Transaction(
+    id: 'transaction-ocr',
+    walletId: 'wallet-1',
+    tagId: 'tag-1',
+    title: 'Receipt coffee',
+    amount: '50000',
+    type: MoneyFlowType.expense,
+    date: DateTime(2026, 7, 22),
+    status: TransactionStatus.draft,
+    inputMethod: TransactionInputMethod.ocr,
+  );
+
+  @override
+  Future<List<Transaction>> listTransactions({
+    int page = 1,
+    int limit = 20,
+    String? walletId,
+    String? tagId,
+    MoneyFlowType? transactionType,
+    TransactionStatus? status,
+    TransactionInputMethod? inputMethod,
+    String? keyword,
+    String? from,
+    String? to,
+  }) async => [draft];
+
+  @override
+  Future<Transaction> confirmTransaction(String id) async {
+    return Transaction(
+      id: draft.id,
+      walletId: draft.walletId,
+      tagId: draft.tagId,
+      title: draft.title,
+      amount: draft.amount,
+      type: draft.type,
+      date: draft.date,
+      status: TransactionStatus.confirmed,
+      inputMethod: draft.inputMethod,
+    );
+  }
+
+  @override
+  Future<Transaction> createTransaction({
+    required String walletId,
+    required String tagId,
+    required String title,
+    required String amount,
+    required MoneyFlowType type,
+    required DateTime date,
+    TransactionStatus status = TransactionStatus.draft,
+    TransactionInputMethod inputMethod = TransactionInputMethod.manual,
+    String? merchantName,
+    String? description,
+    String? clientId,
+  }) => throw UnimplementedError();
+
+  @override
+  Future<Transaction> updateTransaction(
+    String id, {
+    String? tagId,
+    String? title,
+    String? amount,
+    MoneyFlowType? type,
+    DateTime? date,
+    String? merchantName,
+    String? description,
+  }) => throw UnimplementedError();
+
+  @override
+  Future<void> deleteTransaction(String id) => throw UnimplementedError();
 }
 
 class FakeBudgetRepository implements BudgetRepository {

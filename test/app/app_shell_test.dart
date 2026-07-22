@@ -27,16 +27,15 @@ void main() {
       find.text('Theo dõi tiền mặt, ngân hàng và ví điện tử.'),
       findsOneWidget,
     );
-    expect(find.text('500000'), findsOneWidget);
+    expect(find.text('500.000 ₫'), findsOneWidget);
 
     await tester.tap(find.text('Ngân sách'));
     await tester.pumpAndSettle();
     expect(
-      find.text('Theo dõi hạn mức tháng và tiến độ tiết kiệm.'),
+      find.text('Theo dõi mục tiêu chi tiêu theo 12 tháng'),
       findsOneWidget,
     );
-    expect(find.text('Food'), findsWidgets);
-    expect(find.text('Emergency Fund'), findsNothing);
+    expect(find.text('T1'), findsWidgets);
 
     await tester.tap(find.text('Trang chủ'));
     await tester.pumpAndSettle();
@@ -70,7 +69,6 @@ void main() {
     expect(find.text('Chụp ảnh'), findsOneWidget);
     expect(find.text('Chọn ảnh'), findsOneWidget);
   });
-
 
   testWidgets('transaction launcher opens the quick manual form', (
     tester,
@@ -155,10 +153,7 @@ void main() {
       path: AppRoutes.wallets,
       text: 'Theo dõi tiền mặt, ngân hàng và ví điện tử.',
     ),
-    (
-      path: AppRoutes.budgets,
-      text: 'Theo dõi hạn mức tháng và tiến độ tiết kiệm.',
-    ),
+    (path: AppRoutes.budgets, text: 'Theo dõi mục tiêu chi tiêu theo 12 tháng'),
     (path: AppRoutes.insights, text: 'Thông báo và gợi ý từ hệ thống.'),
   ]) {
     testWidgets('opens ${routeCase.path} on the matching authenticated tab', (
@@ -200,7 +195,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(router.state.uri.path, AppRoutes.budgets);
     expect(
-      find.text('Theo dõi hạn mức tháng và tiến độ tiết kiệm.'),
+      find.text('Theo dõi mục tiêu chi tiêu theo 12 tháng'),
       findsOneWidget,
     );
 

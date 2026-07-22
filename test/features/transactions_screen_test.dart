@@ -55,7 +55,9 @@ void main() {
     expect(transactionRepository.updatedId, 'tx-draft');
   });
 
-  testWidgets('transactions screen filters by type and status', (tester) async {
+  testWidgets('transactions screen filters by type and renders status', (
+    tester,
+  ) async {
     await pumpFlowFiApp(
       tester,
       authenticatedAuthRepository(),
@@ -67,18 +69,18 @@ void main() {
     expect(find.text('Tất cả'), findsOneWidget);
     expect(find.text('Thu'), findsOneWidget);
     expect(find.text('Chi'), findsOneWidget);
-    expect(find.text('Nháp'), findsOneWidget);
-    expect(find.text('Đã xác nhận'), findsOneWidget);
+    expect(find.textContaining('Nháp'), findsOneWidget);
+    expect(find.textContaining('Đã xác nhận'), findsNWidgets(2));
 
     await tester.tap(find.text('Thu'));
     await tester.pumpAndSettle();
     expect(find.text('Monthly Salary'), findsOneWidget);
     expect(find.text('Groceries'), findsNothing);
 
-    await tester.tap(find.text('Nháp'));
+    await tester.tap(find.text('Chi'));
     await tester.pumpAndSettle();
     expect(find.text('Chờ kiểm tra'), findsOneWidget);
-    expect(find.text('Nháp'), findsWidgets);
+    expect(find.textContaining('Nháp'), findsOneWidget);
   });
 
   testWidgets('transactions card actions confirm and delete entries', (
@@ -93,16 +95,12 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('Nháp'));
-    await tester.pumpAndSettle();
-    await tester.tap(find.byTooltip('Thao tác giao dịch').first);
+    await tester.tap(find.byTooltip('Thao tác giao dịch').last);
     await tester.pumpAndSettle();
     await tester.tap(find.text('Xác nhận nháp'));
     await tester.pumpAndSettle();
     expect(transactionRepository.confirmedId, 'tx-draft');
 
-    await tester.tap(find.text('Tất cả'));
-    await tester.pumpAndSettle();
     await tester.tap(find.byTooltip('Thao tác giao dịch').first);
     await tester.pumpAndSettle();
     await tester.tap(find.text('Xóa'));
@@ -122,7 +120,9 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    await tester.tap(find.byTooltip('Quét hóa đơn'));
+    await tester.tap(find.byTooltip('Thêm giao dịch'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Quét hóa đơn'));
     await tester.pumpAndSettle();
     expect(find.text('Quét hóa đơn'), findsOneWidget);
     expect(find.text('Chụp ảnh'), findsOneWidget);
