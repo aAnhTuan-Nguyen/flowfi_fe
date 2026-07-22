@@ -6,6 +6,7 @@ import 'package:flowfi_fe/core/finance/money_flow_type.dart';
 import 'package:flowfi_fe/features/ai_processing/data/datasources/ai_processing_remote_data_source.dart';
 import 'package:flowfi_fe/features/ai_processing/domain/entities/ai_image_file.dart';
 import 'package:flowfi_fe/features/transactions/data/datasources/transaction_remote_data_source.dart';
+import 'package:flowfi_fe/features/transactions/domain/entities/transaction.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -102,6 +103,34 @@ void main() {
       expect(body, isNot(contains('clientId')));
     },
   );
+
+  test('posts to the transaction confirm endpoint', () async {
+    final adapter = CapturingAdapter(
+      responseBody: {
+        'success': true,
+        'data': {
+          'id': 'transaction-1',
+          'walletId': 'wallet-1',
+          'tagId': 'tag-1',
+          'title': 'Receipt',
+          'amount': '125000',
+          'transactionType': 'Expense',
+          'transactionDate': '2026-06-27T08:00:00.000Z',
+          'inputMethod': 'OCR',
+          'status': 'Confirmed',
+        },
+      },
+    );
+    final dio = Dio(BaseOptions(baseUrl: 'http://localhost/api/v1/'))
+      ..httpClientAdapter = adapter;
+    final dataSource = DioTransactionRemoteDataSource(dio);
+
+    final transaction = await dataSource.confirmTransaction('transaction-1');
+
+    expect(adapter.options.path, 'transactions/transaction-1/confirm');
+    expect(adapter.options.method, 'POST');
+    expect(transaction.status, TransactionStatus.confirmed);
+  });
 }
 
 final class CapturingAdapter implements HttpClientAdapter {

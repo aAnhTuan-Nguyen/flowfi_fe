@@ -13,18 +13,18 @@ void main() {
 
     expect(find.text('Hồ sơ cá nhân'), findsOneWidget);
     expect(find.text('alex@example.com'), findsWidgets);
-    expect(find.text('VND'), findsWidgets);
+    expect(find.text('Thông tin cá nhân'), findsOneWidget);
+    expect(find.text('Thiết lập'), findsOneWidget);
 
     await tester.enterText(find.byType(EditableText).at(0), 'Alex Nguyen');
-    await tester.enterText(find.byType(EditableText).at(2), '5000000');
-    await tester.ensureVisible(find.text('Lưu hồ sơ'));
+    await tester.ensureVisible(find.text('Lưu thông tin'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Lưu hồ sơ'));
+    await tester.tap(find.text('Lưu thông tin'));
     await tester.pumpAndSettle();
 
     expect(repository.updatedFullName, 'Alex Nguyen');
     expect(repository.updatedCurrencyCode, 'VND');
-    expect(repository.updatedMonthlyBudgetLimit, '5000000');
+    expect(repository.updatedMonthlyBudgetLimit, isNull);
   });
 
   testWidgets('profile page signs out through auth controller', (tester) async {

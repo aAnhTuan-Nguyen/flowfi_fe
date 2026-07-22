@@ -157,7 +157,7 @@ final class DioTransactionRemoteDataSource
 
   @override
   Future<TransactionModel> confirmTransaction(String id) async {
-    final response = await _dio.patch<Object?>('transactions/$id/confirm');
+    final response = await _dio.post<Object?>('transactions/$id/confirm');
     return TransactionModel.fromJson(readApiObject(response.data));
   }
 }

@@ -64,10 +64,9 @@ void main() {
     );
     await tester.pump();
 
+    expect(find.text('AI đã tạo nháp từ hóa đơn.'), findsOneWidget);
     expect(
-      find.text(
-        'AI sẽ tạo nháp từ hóa đơn. Kiểm tra lại trước khi xác nhận để số dư ví không bị đổi nhầm.',
-      ),
+      find.text('Kiểm tra trước khi xác nhận để số dư ví không bị đổi nhầm.'),
       findsOneWidget,
     );
   });
@@ -149,26 +148,28 @@ void main() {
     await tester.tap(find.text('Quét ảnh'));
     await tester.pumpAndSettle();
 
+    expect(find.text('AI đã tạo nháp từ hóa đơn'), findsOneWidget);
     expect(
-      find.text('AI đã tạo nháp từ hóa đơn. Kiểm tra trước khi xác nhận.'),
+      find.text('Hãy kiểm tra chi tiết trước khi xác nhận.'),
       findsOneWidget,
     );
     expect(find.text('Receipt Winmart'), findsOneWidget);
-    expect(find.text('Nháp · OCR'), findsOneWidget);
-    expect(find.text('Sửa'), findsOneWidget);
-    expect(find.text('Xác nhận'), findsOneWidget);
-    expect(find.text('Xóa'), findsOneWidget);
+    expect(find.text('AI OCR từ hóa đơn'), findsOneWidget);
+    expect(find.text('Sửa thông tin'), findsOneWidget);
+    expect(find.text('Xác nhận giao dịch'), findsOneWidget);
+    expect(find.byIcon(Icons.delete_outline_rounded), findsOneWidget);
     expect(walletRepository.listCalls, walletLoadsBeforeScan);
     expect(transactionRepository.listCalls, greaterThanOrEqualTo(1));
     expect(notificationRepository.listCalls, greaterThanOrEqualTo(1));
 
     final walletLoadsBeforeConfirm = walletRepository.listCalls;
-    await tester.ensureVisible(find.text('Xác nhận'));
+    await tester.ensureVisible(find.text('Xác nhận giao dịch'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Xác nhận'));
+    await tester.tap(find.text('Xác nhận giao dịch'));
     await tester.pumpAndSettle();
 
     expect(transactionRepository.confirmedId, 'transaction-ocr');
+    expect(find.text('Đã xác nhận giao dịch thành công.'), findsOneWidget);
     expect(walletRepository.listCalls, walletLoadsBeforeConfirm + 1);
     expect(budgetRepository.listCalls, greaterThanOrEqualTo(1));
     expect(goalRepository.listCalls, greaterThanOrEqualTo(1));
@@ -216,9 +217,9 @@ void main() {
     await tester.tap(find.text('Quét ảnh'));
     await tester.pumpAndSettle();
     final walletLoadsBeforeDelete = walletRepository.listCalls;
-    await tester.ensureVisible(find.text('Xóa'));
+    await tester.ensureVisible(find.byIcon(Icons.delete_outline_rounded));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Xóa'));
+    await tester.tap(find.byIcon(Icons.delete_outline_rounded));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Xóa giao dịch'));
     await tester.pumpAndSettle();
