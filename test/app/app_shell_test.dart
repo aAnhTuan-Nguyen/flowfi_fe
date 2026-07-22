@@ -54,7 +54,6 @@ void main() {
 
     expect(find.text('Thêm giao dịch'), findsOneWidget);
     expect(find.text('Quét hóa đơn'), findsOneWidget);
-    expect(find.text('Nói giao dịch'), findsOneWidget);
     expect(find.text('Nhập nhanh'), findsOneWidget);
   });
 
@@ -72,22 +71,6 @@ void main() {
     expect(find.text('Chọn ảnh'), findsOneWidget);
   });
 
-  testWidgets('transaction launcher opens the voice recording flow', (
-    tester,
-  ) async {
-    await pumpFlowFiApp(tester, authenticatedAuthRepository());
-    await tester.pumpAndSettle();
-
-    await tester.tap(find.byTooltip('Thêm giao dịch'));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Nói giao dịch'));
-    await tester.pumpAndSettle();
-
-    expect(find.text('Nói giao dịch'), findsOneWidget);
-    expect(find.text('Ví nhận giao dịch'), findsOneWidget);
-    expect(find.text('Chạm micro để bắt đầu ghi âm'), findsOneWidget);
-    expect(find.byIcon(Icons.mic_rounded), findsWidgets);
-  });
 
   testWidgets('transaction launcher opens the quick manual form', (
     tester,

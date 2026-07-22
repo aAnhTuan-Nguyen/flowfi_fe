@@ -9,7 +9,6 @@ import '../features/transactions/presentation/screens/transactions_screen.dart';
 import '../features/transactions/presentation/widgets/transaction_entry_sheet.dart';
 import '../features/wallets/presentation/screens/wallets_screen.dart';
 import '../features/ai_processing/presentation/widgets/image_transaction_import_sheet.dart';
-import '../features/ai_processing/presentation/widgets/voice_transaction_import_sheet.dart';
 import '../features/shared/presentation/widgets/feature_states.dart';
 import '../features/sync/sync_status_banner.dart';
 import '../routes/app_routes.dart';
@@ -86,11 +85,6 @@ class FlowFiAppShell extends StatelessWidget {
           context,
           title: 'Quét hóa đơn',
           child: const ImageTransactionImportSheet(),
-        ),
-        onVoice: () => _openNextSheet(
-          context,
-          title: 'Nói giao dịch',
-          child: const VoiceTransactionImportSheet(),
         ),
         onManual: () => _openNextSheet(
           context,

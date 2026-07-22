@@ -134,9 +134,9 @@ class _BudgetTargetScreenState extends ConsumerState<BudgetTargetScreen> {
             ),
             Container(
               padding: const EdgeInsets.fromLTRB(20, 12, 20, 14),
-              decoration: const BoxDecoration(
-                color: Colors.white,
-                boxShadow: [
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.surfaceContainerLowest,
+                boxShadow: const [
                   BoxShadow(
                     color: Color(0x14172015),
                     blurRadius: 18,
@@ -329,7 +329,7 @@ class _MonthPicker extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: Theme.of(context).colorScheme.surfaceContainerLowest,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(color: const Color(0xFFE7E1DB)),
         ),
@@ -374,7 +374,7 @@ class _TargetSummary extends StatelessWidget {
           Text(
             'Tự động tính từ tổng các danh mục bên dưới',
             style: Theme.of(context).textTheme.labelMedium?.copyWith(
-              color: const Color(0xFF77716B),
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
               fontWeight: FontWeight.w500,
             ),
           ),
@@ -461,8 +461,9 @@ class _CategoryList extends StatelessWidget {
   final ValueChanged<Tag> onEdit;
   @override
   Widget build(BuildContext context) {
-    if (tags.isEmpty)
+    if (tags.isEmpty) {
       return const _SurfaceCard(child: Text('Chưa có danh mục chi tiêu.'));
+    }
     return _SurfaceCard(
       padding: EdgeInsets.zero,
       child: Column(
@@ -517,10 +518,10 @@ class _SurfaceCard extends StatelessWidget {
     width: double.infinity,
     padding: padding,
     decoration: BoxDecoration(
-      color: Colors.white,
+      color: Theme.of(context).colorScheme.surfaceContainerLowest,
       borderRadius: BorderRadius.circular(16),
-      border: Border.all(color: const Color(0xFFEAE5DF)),
-      boxShadow: const [
+      border: Border.all(color: Theme.of(context).colorScheme.outlineVariant),
+      boxShadow: [
         BoxShadow(
           color: Color(0x0E172015),
           blurRadius: 18,
@@ -549,15 +550,20 @@ String _formatMinorUnits(BigInt value) {
 
 IconData _categoryIcon(String name) {
   final lower = name.toLowerCase();
-  if (lower.contains('ăn') || lower.contains('food'))
+  if (lower.contains('ăn') || lower.contains('food')) {
     return Icons.restaurant_rounded;
-  if (lower.contains('chuyển') || lower.contains('transport'))
+  }
+  if (lower.contains('chuyển') || lower.contains('transport')) {
     return Icons.directions_car_rounded;
-  if (lower.contains('hóa') || lower.contains('bill'))
+  }
+  if (lower.contains('hóa') || lower.contains('bill')) {
     return Icons.receipt_long_rounded;
-  if (lower.contains('mua') || lower.contains('shop'))
+  }
+  if (lower.contains('mua') || lower.contains('shop')) {
     return Icons.shopping_bag_outlined;
-  if (lower.contains('giải') || lower.contains('game'))
+  }
+  if (lower.contains('giải') || lower.contains('game')) {
     return Icons.sports_esports_outlined;
+  }
   return Icons.more_horiz_rounded;
 }

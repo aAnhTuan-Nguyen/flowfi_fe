@@ -19,6 +19,7 @@ import 'package:flowfi_fe/features/goals/domain/repositories/goal_repository.dar
 import 'package:flowfi_fe/features/goals/presentation/providers/goals_provider.dart';
 import 'package:flowfi_fe/features/home/presentation/current_date_provider.dart';
 import 'package:flowfi_fe/features/notifications/domain/entities/app_notification.dart';
+import 'package:flowfi_fe/features/notifications/domain/entities/notification_preference.dart';
 import 'package:flowfi_fe/features/notifications/domain/repositories/notification_repository.dart';
 import 'package:flowfi_fe/features/notifications/presentation/providers/notifications_provider.dart';
 import 'package:flowfi_fe/features/tags/domain/entities/tag.dart';
@@ -721,6 +722,18 @@ class TestNotificationRepository implements NotificationRepository {
 
   @override
   Future<void> markRead(String id) {
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<NotificationPreference> getPreferences() {
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<NotificationPreference> updatePreferences(
+    NotificationPreference preference,
+  ) {
     throw UnimplementedError();
   }
 }

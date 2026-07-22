@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../ai_processing/presentation/widgets/image_transaction_import_sheet.dart';
 import '../../../shared/presentation/widgets/feature_states.dart';
 import '../../../shared/presentation/widgets/forui_controls.dart';
 import '../../../tags/presentation/widgets/tag_manager_sheet.dart';
@@ -87,13 +86,6 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
     );
   }
 
-  void _showImageImport(BuildContext context) {
-    showFlowFiFormSheet<void>(
-      context: context,
-      title: 'Quét hóa đơn',
-      child: const ImageTransactionImportSheet(),
-    );
-  }
 }
 
 class _InlineError extends StatelessWidget {

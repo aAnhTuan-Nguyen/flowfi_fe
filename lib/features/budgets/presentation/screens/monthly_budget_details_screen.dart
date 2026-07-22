@@ -9,7 +9,6 @@ import 'budget_target_screen.dart';
 
 const _green = Color(0xFF3D752D);
 const _red = Color(0xFFE43E3E);
-const _detailCanvas = Color(0xFFFFFAF6);
 const _palette = [
   Color(0xFF4A7E35),
   Color(0xFF6750C7),
@@ -55,9 +54,9 @@ class _MonthlyBudgetDetailsScreenState
     );
 
     return Scaffold(
-      backgroundColor: _detailCanvas,
+      backgroundColor: Theme.of(context).colorScheme.surface,
       appBar: AppBar(
-        backgroundColor: _detailCanvas,
+        backgroundColor: Theme.of(context).colorScheme.surface,
         title: Text('Chi tiết tháng $_month'),
         centerTitle: true,
         actions: [
@@ -174,15 +173,13 @@ class _SummaryCard extends StatelessWidget {
                   vertical: 8,
                 ),
                 decoration: BoxDecoration(
-                  color: isSaving
-                      ? const Color(0xFFE7F0DF)
-                      : const Color(0xFFFFE6E3),
+                  color: isSaving ? Theme.of(context).colorScheme.primaryContainer : Theme.of(context).colorScheme.errorContainer,
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(
                   '+$differencePercent%  ${isSaving ? 'Tiết kiệm' : 'Vượt mức'}',
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    color: isSaving ? const Color(0xFF255B1F) : _red,
+                    color: isSaving ? Theme.of(context).colorScheme.onPrimaryContainer : Theme.of(context).colorScheme.onError,
                   ),
                 ),
               ),
@@ -223,20 +220,30 @@ class _SummaryCard extends StatelessWidget {
           Row(
             children: [
               SizedBox(
-                width: 80,
-                height: 80,
+                width: 110,
+                height: 110,
                 child: Stack(
                   alignment: Alignment.center,
                   children: [
-                    CircularProgressIndicator(
-                      value: progress,
-                      strokeWidth: 8,
-                      color: isSaving ? _green : _red,
-                      backgroundColor: const Color(0xFFE9E5E0),
+                    SizedBox.expand(
+                      child: CircularProgressIndicator(
+                        value: progress,
+                        strokeWidth: 10,
+                        color: isSaving ? _green : _red,
+                        backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
+                      ),
                     ),
-                    Text(
-                      '${details.percentUsed.round()}%',
-                      style: Theme.of(context).textTheme.titleMedium,
+                    Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: Text(
+                          '${details.percentUsed.round()}%',
+                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
                     ),
                   ],
                 ),
@@ -252,7 +259,7 @@ class _SummaryCard extends StatelessWidget {
                       value: progress,
                       minHeight: 7,
                       color: isSaving ? _green : _red,
-                      backgroundColor: const Color(0xFFE9E5E0),
+                      backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
                       borderRadius: BorderRadius.circular(99),
                     ),
                     const SizedBox(height: 7),
@@ -358,7 +365,7 @@ class _OverviewItem extends StatelessWidget {
     child: Container(
       padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
-        border: Border.all(color: const Color(0xFFE9E4DF)),
+        border: Border.all(color: Theme.of(context).colorScheme.outlineVariant),
         borderRadius: BorderRadius.circular(14),
       ),
       child: Column(
@@ -372,7 +379,7 @@ class _OverviewItem extends StatelessWidget {
             overflow: TextOverflow.ellipsis,
             style: Theme.of(context).textTheme.labelMedium?.copyWith(
               fontSize: 10,
-              color: const Color(0xFF6E6862),
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
             ),
           ),
           Text(
@@ -470,10 +477,11 @@ class _CategorySpendingCard extends StatelessWidget {
                       ),
                   ],
                 );
-                if (constraints.maxWidth < 430)
+                if (constraints.maxWidth < 430) {
                   return Column(
                     children: [chart, const SizedBox(height: 8), legend],
                   );
+                }
                 return Row(
                   children: [
                     chart,
@@ -526,7 +534,7 @@ class _TargetComparisonCard extends StatelessWidget {
                       )).clamp(0, 1),
                       minHeight: 7,
                       color: category.variancePercent > 0 ? _red : _green,
-                      backgroundColor: const Color(0xFFE9E5E0),
+                      backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
                       borderRadius: BorderRadius.circular(99),
                     ),
                   ),
@@ -577,15 +585,15 @@ class _InsightCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFFF6FAF2),
-        border: Border.all(color: const Color(0xFFD5E3CC)),
+        color: Theme.of(context).colorScheme.primaryContainer,
+        border: Border.all(color: Theme.of(context).colorScheme.outlineVariant),
         borderRadius: BorderRadius.circular(18),
       ),
       child: Row(
         children: [
-          const CircleAvatar(
+          CircleAvatar(
             radius: 28,
-            backgroundColor: Color(0xFFE6F0DE),
+            backgroundColor: Theme.of(context).colorScheme.primaryContainer,
             foregroundColor: _green,
             child: Icon(Icons.auto_awesome_outlined),
           ),
@@ -631,12 +639,12 @@ class _MonthPicker extends StatelessWidget {
     child: Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 11),
       decoration: BoxDecoration(
-        color: Colors.white,
-        border: Border.all(color: const Color(0xFFE6E1DB)),
+        color: Theme.of(context).colorScheme.surfaceContainerLowest,
+        border: Border.all(color: Theme.of(context).colorScheme.outlineVariant),
         borderRadius: BorderRadius.circular(13),
-        boxShadow: const [
+        boxShadow: [
           BoxShadow(
-            color: Color(0x10172015),
+            color: Theme.of(context).colorScheme.shadow.withValues(alpha: 0.06),
             blurRadius: 14,
             offset: Offset(0, 5),
           ),
@@ -664,12 +672,12 @@ class _Card extends StatelessWidget {
     width: double.infinity,
     padding: const EdgeInsets.all(16),
     decoration: BoxDecoration(
-      color: Colors.white,
-      border: Border.all(color: const Color(0xFFEAE5DF)),
+      color: Theme.of(context).colorScheme.surfaceContainerLowest,
+      border: Border.all(color: Theme.of(context).colorScheme.outlineVariant),
       borderRadius: BorderRadius.circular(19),
-      boxShadow: const [
+      boxShadow: [
         BoxShadow(
-          color: Color(0x0F172015),
+          color: Theme.of(context).colorScheme.shadow.withValues(alpha: 0.06),
           blurRadius: 20,
           offset: Offset(0, 8),
         ),

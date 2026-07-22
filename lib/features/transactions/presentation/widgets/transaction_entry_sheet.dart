@@ -17,12 +17,10 @@ class TransactionEntryLauncherSheet extends StatelessWidget {
   const TransactionEntryLauncherSheet({
     super.key,
     required this.onScan,
-    required this.onVoice,
     required this.onManual,
   });
 
   final VoidCallback onScan;
-  final VoidCallback onVoice;
   final VoidCallback onManual;
 
   @override
@@ -38,13 +36,7 @@ class TransactionEntryLauncherSheet extends StatelessWidget {
           onTap: onScan,
         ),
         const SizedBox(height: 10),
-        FlowFiActionTile(
-          icon: Icons.mic_rounded,
-          title: 'Nói giao dịch',
-          subtitle: 'Nói tự nhiên, app chuyển thành gợi ý để xác nhận.',
-          onTap: onVoice,
-        ),
-        const SizedBox(height: 10),
+
         FlowFiActionTile(
           icon: Icons.edit_note_rounded,
           title: 'Nhập nhanh',

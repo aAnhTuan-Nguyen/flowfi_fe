@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import 'package:forui/forui.dart';
 
 import '../../../../app/app_theme_controller.dart';
+import '../../../../routes/app_routes.dart';
 import '../../../auth/domain/entities/auth_user.dart';
 import '../../../auth/presentation/providers/auth_controller.dart';
 import '../../../shared/presentation/widgets/crud_helpers.dart';
@@ -53,6 +56,8 @@ class ProfileContent extends ConsumerWidget {
               .read(appThemeModeProvider.notifier)
               .setThemeMode(choice.themeMode),
         ),
+        const SizedBox(height: 12),
+        const _NotificationSettingsCard(),
         const SizedBox(height: 12),
         _ProfileLogoutButton(onPressed: () => _signOut(context, ref)),
         const SizedBox(height: 132),
@@ -106,11 +111,6 @@ class _ProfileEditFormState extends ConsumerState<ProfileEditForm> {
 
   @override
   Widget build(BuildContext context) {
-    final name = _fullNameController.text.trim();
-    final displayName = name.isEmpty ? 'Người dùng FlowFi' : name;
-    final email = _emailController.text.trim().isEmpty
-        ? 'Chưa có email'
-        : _emailController.text.trim();
 
     return FlowFiCard(
       padding: const EdgeInsets.fromLTRB(16, 18, 16, 16),
@@ -125,46 +125,7 @@ class _ProfileEditFormState extends ConsumerState<ProfileEditForm> {
               subtitle: 'Quản lý thông tin nhận diện tài khoản của bạn.',
             ),
             const SizedBox(height: 16),
-            Row(
-              children: [
-                _ProfileAvatar(name: displayName),
-                const SizedBox(width: 14),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        displayName,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: Theme.of(context).textTheme.titleMedium
-                            ?.copyWith(
-                              fontSize: 17,
-                              fontWeight: FontWeight.w900,
-                            ),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        email,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
-                          fontSize: 13,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 10),
-                _ProfileEditIconButton(
-                  onPressed: () => FocusScope.of(context).nextFocus(),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            Divider(color: Theme.of(context).colorScheme.outlineVariant),
-            const SizedBox(height: 12),
+
             _ProfileTextField(
               label: 'Họ tên',
               controller: _fullNameController,
@@ -275,61 +236,6 @@ class _ProfileSectionHeader extends StatelessWidget {
   }
 }
 
-class _ProfileAvatar extends StatelessWidget {
-  const _ProfileAvatar({required this.name});
-
-  final String name;
-
-  @override
-  Widget build(BuildContext context) {
-    return Semantics(
-      label: name,
-      image: true,
-      child: Container(
-        width: 72,
-        height: 72,
-        decoration: const BoxDecoration(
-          shape: BoxShape.circle,
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [Color(0xFF5C8C3C), Color(0xFF37682B)],
-          ),
-        ),
-        child: const Icon(Icons.person_rounded, color: Colors.white, size: 48),
-      ),
-    );
-  }
-}
-
-class _ProfileEditIconButton extends StatelessWidget {
-  const _ProfileEditIconButton({required this.onPressed});
-
-  final VoidCallback onPressed;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = Theme.of(context).colorScheme;
-
-    return Material(
-      color: colors.surfaceContainerLowest,
-      borderRadius: BorderRadius.circular(16),
-      child: InkWell(
-        onTap: onPressed,
-        borderRadius: BorderRadius.circular(16),
-        child: Container(
-          width: 56,
-          height: 48,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: colors.outlineVariant),
-          ),
-          child: Icon(Icons.edit_outlined, color: colors.primary, size: 22),
-        ),
-      ),
-    );
-  }
-}
 
 class _ProfileTextField extends StatelessWidget {
   const _ProfileTextField({
@@ -375,15 +281,19 @@ class _ProfileTextField extends StatelessWidget {
               horizontal: 14,
               vertical: 11,
             ),
-            suffixIconConstraints: const BoxConstraints(
-              minWidth: 42,
-              minHeight: 42,
-            ),
-            suffixIcon: Icon(
-              Icons.edit_outlined,
-              color: colors.primary,
-              size: 20,
-            ),
+            suffixIconConstraints: readOnly
+                ? null
+                : const BoxConstraints(
+                    minWidth: 42,
+                    minHeight: 42,
+                  ),
+            suffixIcon: readOnly
+                ? null
+                : Icon(
+                    Icons.edit_outlined,
+                    color: colors.primary,
+                    size: 20,
+                  ),
           ),
         ),
       ],
@@ -653,6 +563,23 @@ enum _ProfileThemeChoice {
     return _ProfileThemeChoice.values.firstWhere(
       (choice) => choice.themeMode == mode,
       orElse: () => _ProfileThemeChoice.light,
+    );
+  }
+}
+
+class _NotificationSettingsCard extends StatelessWidget {
+  const _NotificationSettingsCard();
+
+  @override
+  Widget build(BuildContext context) {
+    return FlowFiCard(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: FTile(
+        title: const Text('Cài đặt thông báo'),
+        subtitle: const Text('Tùy chỉnh thông báo và lời nhắc'),
+        prefix: const Icon(Icons.notifications_outlined),
+        onPress: () => context.push(AppRoutes.notificationPreferences),
+      ),
     );
   }
 }

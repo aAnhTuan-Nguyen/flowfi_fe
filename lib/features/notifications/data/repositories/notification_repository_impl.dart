@@ -1,6 +1,8 @@
 import '../../domain/entities/app_notification.dart';
+import '../../domain/entities/notification_preference.dart';
 import '../../domain/repositories/notification_repository.dart';
 import '../datasources/notification_remote_data_source.dart';
+import '../models/notification_preference_model.dart';
 
 final class NotificationRepositoryImpl implements NotificationRepository {
   const NotificationRepositoryImpl(this._remoteDataSource);
@@ -30,7 +32,20 @@ final class NotificationRepositoryImpl implements NotificationRepository {
   }
 
   @override
-  Future<void> deleteNotification(String id) {
-    return _remoteDataSource.deleteNotification(id);
+  Future<void> deleteNotification(String id) async {
+    await _remoteDataSource.deleteNotification(id);
+  }
+
+  @override
+  Future<NotificationPreference> getPreferences() async {
+    return _remoteDataSource.getPreferences();
+  }
+
+  @override
+  Future<NotificationPreference> updatePreferences(
+    NotificationPreference preference,
+  ) async {
+    final model = NotificationPreferenceModel.fromEntity(preference);
+    return _remoteDataSource.updatePreferences(model);
   }
 }

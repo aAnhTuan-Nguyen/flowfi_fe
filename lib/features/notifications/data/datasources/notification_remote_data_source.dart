@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 
 import '../../../../core/network/api_list_parser.dart';
 import '../models/notification_model.dart';
+import '../models/notification_preference_model.dart';
 
 abstract interface class NotificationRemoteDataSource {
   Future<List<NotificationModel>> listNotifications({
@@ -14,6 +15,12 @@ abstract interface class NotificationRemoteDataSource {
   Future<void> markRead(String id);
 
   Future<void> deleteNotification(String id);
+
+  Future<NotificationPreferenceModel> getPreferences();
+
+  Future<NotificationPreferenceModel> updatePreferences(
+    NotificationPreferenceModel preference,
+  );
 }
 
 final class DioNotificationRemoteDataSource
@@ -47,5 +54,24 @@ final class DioNotificationRemoteDataSource
   @override
   Future<void> deleteNotification(String id) async {
     await _dio.delete<void>('notifications/$id');
+  }
+
+  @override
+  Future<NotificationPreferenceModel> getPreferences() async {
+    final response = await _dio.get<Map<String, dynamic>>(
+      'notifications/preferences',
+    );
+    return NotificationPreferenceModel.fromJson(response.data!);
+  }
+
+  @override
+  Future<NotificationPreferenceModel> updatePreferences(
+    NotificationPreferenceModel preference,
+  ) async {
+    final response = await _dio.put<Map<String, dynamic>>(
+      'notifications/preferences',
+      data: preference.toJson(),
+    );
+    return NotificationPreferenceModel.fromJson(response.data!);
   }
 }

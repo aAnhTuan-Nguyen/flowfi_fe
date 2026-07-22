@@ -2,6 +2,8 @@ import 'package:go_router/go_router.dart';
 
 import '../app/app_shell.dart';
 import '../features/auth/presentation/screens/auth_gate.dart';
+import '../features/notifications/presentation/screens/notification_preferences_screen.dart';
+import '../features/notifications/presentation/screens/notifications_screen.dart';
 import 'app_routes.dart';
 
 GoRouter createAppRouter({String initialLocation = AppRoutes.root}) {
@@ -46,6 +48,18 @@ GoRouter createAppRouter({String initialLocation = AppRoutes.root}) {
         path: AppRoutes.profile,
         builder: (context, state) => const AuthGate(
           authenticatedChild: FlowFiAppShell(selectedIndex: 5),
+        ),
+      ),
+      GoRoute(
+        path: AppRoutes.notifications,
+        builder: (context, state) => const AuthGate(
+          authenticatedChild: NotificationsScreen(),
+        ),
+      ),
+      GoRoute(
+        path: AppRoutes.notificationPreferences,
+        builder: (context, state) => const AuthGate(
+          authenticatedChild: NotificationPreferencesScreen(),
         ),
       ),
     ],

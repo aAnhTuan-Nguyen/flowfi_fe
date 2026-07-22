@@ -1,4 +1,5 @@
 import '../entities/app_notification.dart';
+import '../entities/notification_preference.dart';
 
 abstract interface class NotificationRepository {
   Future<List<AppNotification>> listNotifications({
@@ -11,4 +12,10 @@ abstract interface class NotificationRepository {
   Future<void> markRead(String id);
 
   Future<void> deleteNotification(String id);
+
+  Future<NotificationPreference> getPreferences();
+
+  Future<NotificationPreference> updatePreferences(
+    NotificationPreference preference,
+  );
 }

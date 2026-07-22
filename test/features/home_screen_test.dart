@@ -54,13 +54,11 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Quét'), findsNothing);
-    expect(find.text('Giọng nói'), findsNothing);
     expect(find.text('Danh mục'), findsNothing);
 
     await tester.tap(find.byTooltip('Thêm giao dịch'));
     await tester.pumpAndSettle();
     expect(find.text('Quét hóa đơn'), findsOneWidget);
-    expect(find.text('Nói giao dịch'), findsOneWidget);
     expect(find.text('Nhập nhanh'), findsOneWidget);
   });
 

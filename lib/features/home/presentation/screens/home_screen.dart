@@ -15,6 +15,7 @@ import '../../../transactions/domain/entities/transaction.dart';
 import '../../../transactions/presentation/providers/transactions_provider.dart';
 import '../../../wallets/domain/entities/wallet.dart';
 import '../../../wallets/presentation/providers/wallets_provider.dart';
+import '../../../notifications/presentation/providers/notifications_provider.dart';
 import '../current_date_provider.dart';
 
 class HomeScreen extends ConsumerWidget {
@@ -74,15 +75,21 @@ class HomeScreen extends ConsumerWidget {
   }
 }
 
-class _HomeHeader extends StatelessWidget {
+class _HomeHeader extends ConsumerWidget {
   const _HomeHeader({required this.user});
 
   final AuthUser? user;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final colors = Theme.of(context).colorScheme;
     final name = _firstName(user?.fullName);
+    
+    final notificationsAsync = ref.watch(notificationsProvider);
+    final unreadCount = notificationsAsync.value
+            ?.where((n) => !n.isRead)
+            .length ??
+        0;
 
     return Row(
       children: [
@@ -116,14 +123,19 @@ class _HomeHeader extends StatelessWidget {
             ],
           ),
         ),
-        FlowFiIconButton(
-          onPressed: () {},
-          icon: Icons.notifications_none_rounded,
-          tooltip: 'Thông báo',
-          variant: FlowFiButtonVariant.ghost,
+        Badge(
+          isLabelVisible: unreadCount > 0,
+          label: Text(unreadCount > 99 ? '99+' : unreadCount.toString()),
+          backgroundColor: colors.error,
+          child: FlowFiIconButton(
+            onPressed: () => context.push(AppRoutes.notifications),
+            icon: Icons.notifications_none_rounded,
+            tooltip: 'Thông báo',
+            variant: FlowFiButtonVariant.ghost,
+          ),
         ),
         FlowFiIconButton(
-          onPressed: () => context.go(AppRoutes.profile),
+          onPressed: () => context.push(AppRoutes.profile),
           icon: Icons.account_circle_outlined,
           tooltip: 'Tài khoản',
           variant: FlowFiButtonVariant.ghost,

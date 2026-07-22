@@ -6,4 +6,6 @@ abstract final class AppRoutes {
   static const budgets = '/budgets';
   static const insights = '/insights';
   static const profile = '/profile';
+  static const notifications = '/notifications';
+  static const notificationPreferences = '/notification-preferences';
 }

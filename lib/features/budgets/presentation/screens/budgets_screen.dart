@@ -15,8 +15,6 @@ import 'budget_target_screen.dart';
 import 'monthly_budget_details_screen.dart';
 
 const _forest = Color(0xFF356B2B);
-const _softGreen = Color(0xFFE6F1DF);
-const _canvas = Color(0xFFFFFAF6);
 const _danger = Color(0xFFD9362B);
 
 class BudgetsScreen extends ConsumerStatefulWidget {
@@ -41,7 +39,7 @@ class _BudgetsScreenState extends ConsumerState<BudgetsScreen> {
     final annualSummary = ref.watch(annualBudgetSummaryProvider(_selectedYear));
 
     return ColoredBox(
-      color: _canvas,
+      color: Theme.of(context).colorScheme.surface,
       child: SafeArea(
         child: RefreshIndicator(
           onRefresh: () async {
@@ -73,7 +71,7 @@ class _BudgetsScreenState extends ConsumerState<BudgetsScreen> {
                         budgets: items
                             .where((budget) => budget.year == _selectedYear)
                             .toList(),
-                        summary: annualSummary.asData?.value ?? const [],
+                        summary: annualSummary.asData?.value ?? [],
                         onOpenTarget: (month) => _openTarget(
                           context,
                           month: month,
@@ -172,7 +170,7 @@ class _Header extends StatelessWidget {
               Text(
                 'Theo dõi mục tiêu chi tiêu theo 12 tháng',
                 style: textTheme.bodyMedium?.copyWith(
-                  color: const Color(0xFF6C6762),
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
                   fontSize: 14,
                 ),
               ),
@@ -184,12 +182,12 @@ class _Header extends StatelessWidget {
           height: 54,
           padding: const EdgeInsets.symmetric(horizontal: 15),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: Theme.of(context).colorScheme.surfaceContainerLowest,
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: const Color(0xFFE8E3DE)),
-            boxShadow: const [
+            border: Border.all(color: Theme.of(context).colorScheme.outlineVariant),
+            boxShadow: [
               BoxShadow(
-                color: Color(0x12172015),
+                color: Theme.of(context).colorScheme.shadow.withValues(alpha: 0.06),
                 blurRadius: 18,
                 offset: Offset(0, 6),
               ),
@@ -325,7 +323,7 @@ class _MonthCard extends StatelessWidget {
           height: isCurrent || isExceeded ? 142 : 116,
           padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: Theme.of(context).colorScheme.surfaceContainerLowest,
             borderRadius: BorderRadius.circular(18),
             border: Border.all(
               color: isExceeded
@@ -333,13 +331,13 @@ class _MonthCard extends StatelessWidget {
                   : isCurrent
                   ? _forest
                   : !hasBudget && !isPast
-                  ? const Color(0xFF9FC18E)
+                  ? Theme.of(context).colorScheme.outlineVariant
                   : const Color(0xFFEDE8E3),
               width: isCurrent || isExceeded ? 1.7 : 1,
             ),
-            boxShadow: const [
+            boxShadow: [
               BoxShadow(
-                color: Color(0x10172015),
+                color: Theme.of(context).colorScheme.shadow.withValues(alpha: 0.06),
                 blurRadius: 18,
                 offset: Offset(0, 7),
               ),
@@ -367,8 +365,8 @@ class _MonthCard extends StatelessWidget {
                       height: 27,
                       decoration: BoxDecoration(
                         color: isExceeded
-                            ? const Color(0xFFFFE5E1)
-                            : _softGreen,
+                            ? Theme.of(context).colorScheme.errorContainer
+                            : Theme.of(context).colorScheme.primaryContainer,
                         shape: BoxShape.circle,
                       ),
                       child: Icon(
@@ -405,7 +403,7 @@ class _MonthCard extends StatelessWidget {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                    color: const Color(0xFF756F69),
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
                     fontWeight: FontWeight.w500,
                   ),
                 ),
@@ -417,7 +415,7 @@ class _MonthCard extends StatelessWidget {
                       value: math.min((summary?.percentUsed ?? 100) / 100, 1),
                       minHeight: 7,
                       color: accentColor,
-                      backgroundColor: const Color(0xFFEAE6E0),
+                      backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
                     ),
                   ),
                 ],
@@ -484,12 +482,12 @@ class _AnnualChart extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.fromLTRB(16, 18, 14, 14),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).colorScheme.surfaceContainerLowest,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color(0xFFEDE8E3)),
-        boxShadow: const [
+        border: Border.all(color: Theme.of(context).colorScheme.outlineVariant),
+        boxShadow: [
           BoxShadow(
-            color: Color(0x10172015),
+            color: Theme.of(context).colorScheme.shadow.withValues(alpha: 0.06),
             blurRadius: 22,
             offset: Offset(0, 8),
           ),
@@ -530,8 +528,8 @@ class _AnnualChart extends StatelessWidget {
                       final label = rodIndex == 0 ? 'Mục tiêu' : 'Đã chi';
                       return BarTooltipItem(
                         'T$month\n$label: ${_compactAmount(rod.toY.toStringAsFixed(0))}',
-                        const TextStyle(
-                          color: Colors.white,
+                        TextStyle(
+                          color: Theme.of(context).colorScheme.surfaceContainerLowest,
                           fontSize: 11,
                           fontWeight: FontWeight.w600,
                         ),
@@ -542,7 +540,7 @@ class _AnnualChart extends StatelessWidget {
                 gridData: FlGridData(
                   drawVerticalLine: false,
                   getDrawingHorizontalLine: (_) =>
-                      const FlLine(color: Color(0xFFEDEAE6), strokeWidth: 1),
+                      FlLine(color: Theme.of(context).colorScheme.outlineVariant, strokeWidth: 1),
                 ),
                 borderData: FlBorderData(show: false),
                 titlesData: FlTitlesData(
@@ -560,7 +558,7 @@ class _AnnualChart extends StatelessWidget {
                       getTitlesWidget: (value, meta) => Text(
                         _axisAmount(value),
                         style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                          color: const Color(0xFF77716B),
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
                           fontSize: 9,
                         ),
                       ),
@@ -576,7 +574,7 @@ class _AnnualChart extends StatelessWidget {
                           'T${value.toInt() + 1}',
                           style: Theme.of(context).textTheme.labelMedium
                               ?.copyWith(
-                                color: const Color(0xFF6F6964),
+                                color: Theme.of(context).colorScheme.onSurfaceVariant,
                                 fontSize: 10,
                               ),
                         ),
@@ -599,7 +597,7 @@ class _AnnualChart extends StatelessWidget {
                             top: Radius.circular(4),
                           ),
                           borderSide: targetValues[index] <= 0
-                              ? const BorderSide(color: Color(0xFFD7D0C8))
+                              ? BorderSide(color: Theme.of(context).colorScheme.outlineVariant)
                               : BorderSide.none,
                         ),
                         BarChartRodData(
@@ -628,7 +626,7 @@ class _AnnualChart extends StatelessWidget {
             'Chạm vào từng cột để xem số tiền chi tiết.',
             style: Theme.of(
               context,
-            ).textTheme.labelSmall?.copyWith(color: const Color(0xFF77716B)),
+            ).textTheme.labelSmall?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
           ),
         ],
       ),
@@ -856,10 +854,15 @@ BigInt _budgetMinorUnits(String value) {
 
 String _compactAmount(String value) {
   final amount = _amountValue(value);
-  if (amount >= 1000000000)
+  if (amount >= 1000000000) {
     return '${(amount / 1000000000).toStringAsFixed(1)}tỷ';
-  if (amount >= 1000000) return '${(amount / 1000000).toStringAsFixed(1)}tr';
-  if (amount >= 1000) return '${(amount / 1000).toStringAsFixed(0)}k';
+  }
+  if (amount >= 1000000) {
+    return '${(amount / 1000000).toStringAsFixed(1)}tr';
+  }
+  if (amount >= 1000) {
+    return '${(amount / 1000).toStringAsFixed(0)}k';
+  }
   return value;
 }
 
