@@ -397,6 +397,7 @@ class _ImportResultCard extends StatelessWidget {
                 padding: const EdgeInsets.only(bottom: 10),
                 child: _OcrDraftTile(
                   transaction: item.transaction,
+                  receiptDetails: result.receiptDetails,
                   isBusy: busyDraftIds.contains(item.transaction.id),
                   onEdit: onEdit,
                   onConfirm: onConfirm,
@@ -413,6 +414,7 @@ class _ImportResultCard extends StatelessWidget {
 class _OcrDraftTile extends StatelessWidget {
   const _OcrDraftTile({
     required this.transaction,
+    required this.receiptDetails,
     required this.isBusy,
     required this.onEdit,
     required this.onConfirm,
@@ -420,6 +422,7 @@ class _OcrDraftTile extends StatelessWidget {
   });
 
   final Transaction transaction;
+  final List<ReceiptDetail> receiptDetails;
   final bool isBusy;
   final ValueChanged<Transaction> onEdit;
   final ValueChanged<Transaction> onConfirm;
@@ -477,11 +480,10 @@ class _OcrDraftTile extends StatelessWidget {
               ),
             ],
           ),
-          if (transaction.merchantName != null ||
-              transaction.description != null) ...[
+          if (transaction.merchantName != null) ...[
             const SizedBox(height: 8),
             Text(
-              transaction.merchantName ?? transaction.description!,
+              transaction.merchantName!,
               style: Theme.of(
                 context,
               ).textTheme.bodyMedium?.copyWith(color: colors.onSurfaceVariant),
@@ -489,7 +491,69 @@ class _OcrDraftTile extends StatelessWidget {
               overflow: TextOverflow.ellipsis,
             ),
           ],
+          if (transaction.description != null && transaction.description!.isNotEmpty) ...[
+            const SizedBox(height: 4),
+            Text(
+              transaction.description!,
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.copyWith(color: colors.onSurfaceVariant),
+            ),
+          ],
+          if (receiptDetails.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: colors.surfaceContainerHigh,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text(
+                    'Chi tiết hóa đơn:',
+                    style: Theme.of(context).textTheme.titleSmall,
+                  ),
+                  const SizedBox(height: 8),
+                  for (final detail in receiptDetails)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 4),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(
+                            child: Text(
+                              detail.name,
+                              style: Theme.of(context).textTheme.bodyMedium,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            '${detail.quantity} x ',
+                            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                              color: colors.onSurfaceVariant,
+                            ),
+                          ),
+                          Text(
+                            detail.price.toStringAsFixed(0),
+                            style: Theme.of(context).textTheme.bodyMedium,
+                          ),
+                        ],
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ] else ...[
+            const SizedBox(height: 12),
+            const Text(
+              'Ghi chú: AI không trả về chi tiết món hàng nào cho hóa đơn này.',
+              style: TextStyle(color: Colors.red, fontStyle: FontStyle.italic),
+            ),
+          ],
           const SizedBox(height: 10),
+
           Wrap(
             spacing: 8,
             runSpacing: 8,
@@ -534,6 +598,7 @@ ImageTransactionImport? _withoutTransaction(
     imageType: result.imageType,
     confidence: result.confidence,
     warnings: result.warnings,
+    receiptDetails: result.receiptDetails,
     createdTransactions: result.createdTransactions
         .where((item) => item.transaction.id != transactionId)
         .toList(growable: false),

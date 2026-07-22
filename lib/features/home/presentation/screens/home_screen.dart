@@ -414,10 +414,7 @@ class _InsightNudge extends StatelessWidget {
             child: transactions.when(
               loading: () => const Text('AI đang chờ dữ liệu giao dịch.'),
               error: (_, _) => const Text('AI sẽ gợi ý khi dữ liệu sẵn sàng.'),
-              data: (items) => Text(
-                items.any((item) => item.status == TransactionStatus.draft)
-                    ? 'Có giao dịch nháp cần bạn kiểm tra trước khi tính vào báo cáo.'
-                    : 'Dùng dấu cộng ở thanh dưới để nhập nhanh, scan hoặc tạo gợi ý bằng giọng nói.',
+              data: (items) => Text('Dùng dấu cộng ở thanh dưới để nhập nhanh, scan hoặc tạo gợi ý bằng giọng nói.',
                 style: Theme.of(context).textTheme.bodyMedium,
               ),
             ),

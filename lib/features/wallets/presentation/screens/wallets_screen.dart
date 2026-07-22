@@ -71,7 +71,11 @@ class _WalletCard extends ConsumerWidget {
               tone: FlowFiTone.positive,
             )
           : null,
-      trailing: FlowFiAmountText(amount: wallet.balance, align: TextAlign.end),
+      trailing: FlowFiAmountText(
+        amount: wallet.balance,
+        currencyCode: '₫',
+        align: TextAlign.end,
+      ),
       action: FlowFiActionMenu(
         tooltip: 'Tùy chọn ví',
         actions: [

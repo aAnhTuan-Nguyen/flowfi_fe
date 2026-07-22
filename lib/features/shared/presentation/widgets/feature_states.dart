@@ -348,9 +348,36 @@ class FlowFiAmountText extends StatelessWidget {
   final TextAlign align;
   final Color? color;
 
+  String _formatAmount(String amountStr) {
+    final isNegative = amountStr.trim().startsWith('-');
+    final doubleAmount = double.tryParse(amountStr.replaceAll(RegExp(r'[^0-9.-]'), '')) ?? 0.0;
+    final absAmount = doubleAmount.abs();
+    
+    String formatted;
+    if (absAmount >= 1000000) {
+      final inMillions = absAmount / 1000000;
+      final str = inMillions.toStringAsFixed(1).replaceAll(RegExp(r'\.0$'), '');
+      formatted = '${str.replaceAll('.', ',')}M';
+    } else {
+      final intAmount = absAmount.truncate();
+      final str = intAmount.toString();
+      final buffer = StringBuffer();
+      for (int i = 0; i < str.length; i++) {
+        if (i > 0 && (str.length - i) % 3 == 0) {
+          buffer.write('.');
+        }
+        buffer.write(str[i]);
+      }
+      formatted = buffer.toString();
+    }
+    
+    return '${isNegative ? '-' : ''}$formatted';
+  }
+
   @override
   Widget build(BuildContext context) {
-    final label = currencyCode == null ? amount : '$amount $currencyCode';
+    final formattedAmt = _formatAmount(amount);
+    final label = currencyCode == null ? formattedAmt : '$formattedAmt $currencyCode';
     return Text(
       label,
       textAlign: align,
@@ -397,11 +424,15 @@ class FlowFiStatusBadge extends StatelessWidget {
             Icon(icon, size: 14, color: textColor),
             const SizedBox(width: 5),
           ],
-          Text(
-            label,
-            style: Theme.of(context).textTheme.labelMedium?.copyWith(
-              color: textColor,
-              fontWeight: FontWeight.w800,
+          Flexible(
+            child: Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                color: textColor,
+                fontWeight: FontWeight.w800,
+              ),
             ),
           ),
         ],

@@ -9,6 +9,7 @@ final class ImageTransactionImport {
     this.imageType,
     this.confidence,
     this.warnings = const [],
+    this.receiptDetails = const [],
   });
 
   final String aiRequestId;
@@ -18,6 +19,19 @@ final class ImageTransactionImport {
   final String? confidence;
   final List<String> warnings;
   final List<CreatedImageTransaction> createdTransactions;
+  final List<ReceiptDetail> receiptDetails;
+}
+
+final class ReceiptDetail {
+  const ReceiptDetail({
+    required this.name,
+    required this.quantity,
+    required this.price,
+  });
+
+  final String name;
+  final num quantity;
+  final double price;
 }
 
 final class CreatedImageTransaction {

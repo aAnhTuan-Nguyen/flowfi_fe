@@ -4,7 +4,7 @@ import '../../../../core/finance/money_flow_type.dart';
 import '../../../shared/presentation/widgets/feature_states.dart';
 import '../../domain/entities/transaction.dart';
 
-enum TransactionFilter { all, income, expense, draft, confirmed }
+enum TransactionFilter { all, income, expense }
 
 extension TransactionFilterLabel on TransactionFilter {
   String get label {
@@ -12,8 +12,6 @@ extension TransactionFilterLabel on TransactionFilter {
       TransactionFilter.all => 'Tất cả',
       TransactionFilter.income => 'Thu',
       TransactionFilter.expense => 'Chi',
-      TransactionFilter.draft => 'Nháp',
-      TransactionFilter.confirmed => 'Đã xác nhận',
     };
   }
 
@@ -22,9 +20,6 @@ extension TransactionFilterLabel on TransactionFilter {
       TransactionFilter.all => true,
       TransactionFilter.income => transaction.type == MoneyFlowType.income,
       TransactionFilter.expense => transaction.type == MoneyFlowType.expense,
-      TransactionFilter.draft => transaction.status == TransactionStatus.draft,
-      TransactionFilter.confirmed =>
-        transaction.status == TransactionStatus.confirmed,
     };
   }
 }

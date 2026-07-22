@@ -32,7 +32,7 @@ class TransactionCard extends ConsumerWidget {
       title: transaction.title,
       subtitle: _transactionMeta(transaction),
       trailing: Text(
-        '${isIncome ? '+' : '-'}${transaction.amount}',
+        _formatAmount(transaction.amount, isIncome),
         style: Theme.of(
           context,
         ).textTheme.titleMedium?.copyWith(color: toneColor),
@@ -94,6 +94,30 @@ class TransactionCard extends ConsumerWidget {
         showGenericMutationError(context);
       }
     }
+  }
+  String _formatAmount(String amountStr, bool isIncome) {
+    final doubleAmount = double.tryParse(amountStr.replaceAll(RegExp(r'[^0-9.-]'), '')) ?? 0.0;
+    final absAmount = doubleAmount.abs();
+    
+    String formatted;
+    if (absAmount >= 1000000) {
+      final inMillions = absAmount / 1000000;
+      final str = inMillions.toStringAsFixed(1).replaceAll(RegExp(r'\.0$'), '');
+      formatted = '${str.replaceAll('.', ',')}M ₫';
+    } else {
+      final intAmount = absAmount.truncate();
+      final str = intAmount.toString();
+      final buffer = StringBuffer();
+      for (int i = 0; i < str.length; i++) {
+        if (i > 0 && (str.length - i) % 3 == 0) {
+          buffer.write('.');
+        }
+        buffer.write(str[i]);
+      }
+      formatted = '${buffer.toString()} ₫';
+    }
+    
+    return '${isIncome ? '+' : '-'}$formatted';
   }
 }
 

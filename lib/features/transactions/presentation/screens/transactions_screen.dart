@@ -31,13 +31,8 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
       subtitle: 'Duyệt giao dịch mới, nháp và đã xác nhận.',
       onRefresh: () => ref.read(transactionsProvider.notifier).reload(),
       actions: [
-        FlowFiIconButton(
-          onPressed: () => _showImageImport(context),
-          icon: Icons.document_scanner_rounded,
-          tooltip: 'Quét hóa đơn',
-        ),
         FlowFiButton(
-          label: 'Thêm',
+          label: '',
           onPressed: () => _showTransactionForm(context),
           icon: Icons.add_rounded,
           fullWidth: false,

@@ -50,51 +50,7 @@ class ProfileContent extends ConsumerWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        FlowFiCard(
-          color: colors.primary,
-          padding: const EdgeInsets.all(20),
-          child: Row(
-            children: [
-              CircleAvatar(
-                radius: 30,
-                backgroundColor: colors.onPrimary.withValues(alpha: 0.14),
-                child: Text(
-                  _initials(displayName),
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    color: colors.onPrimary,
-                    fontWeight: FontWeight.w900,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      displayName,
-                      style: Theme.of(
-                        context,
-                      ).textTheme.titleLarge?.copyWith(color: colors.onPrimary),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      email,
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: colors.onPrimary.withValues(alpha: 0.78),
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 14),
+
         ProfileEditForm(user: user),
         const SizedBox(height: 14),
         FlowFiButton(
@@ -122,6 +78,7 @@ class _ProfileEditFormState extends ConsumerState<ProfileEditForm> {
   late final TextEditingController _fullNameController;
   late final TextEditingController _currencyCodeController;
   late final TextEditingController _monthlyBudgetLimitController;
+  late final TextEditingController _emailController;
   bool _isSaving = false;
 
   @override
@@ -136,6 +93,9 @@ class _ProfileEditFormState extends ConsumerState<ProfileEditForm> {
     _monthlyBudgetLimitController = TextEditingController(
       text: widget.user?.monthlyBudgetLimit ?? '',
     );
+    _emailController = TextEditingController(
+      text: widget.user?.email ?? '',
+    );
   }
 
   @override
@@ -143,6 +103,7 @@ class _ProfileEditFormState extends ConsumerState<ProfileEditForm> {
     _fullNameController.dispose();
     _currencyCodeController.dispose();
     _monthlyBudgetLimitController.dispose();
+    _emailController.dispose();
     super.dispose();
   }
 
@@ -164,12 +125,19 @@ class _ProfileEditFormState extends ConsumerState<ProfileEditForm> {
               controller: _fullNameController,
               textInputAction: TextInputAction.next,
             ),
+            FlowFiTextField(
+              label: 'Email',
+              controller: _emailController,
+              enabled: false,
+              textInputAction: TextInputAction.next,
+            ),
             const SizedBox(height: 12),
             FlowFiTextField(
               label: 'Tiền tệ',
               controller: _currencyCodeController,
               textCapitalization: TextCapitalization.characters,
               textInputAction: TextInputAction.next,
+              enabled: false,
               validator: (value) {
                 final normalized = value?.trim();
                 if (normalized == null || normalized.isEmpty) {
