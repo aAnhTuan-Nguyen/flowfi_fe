@@ -1,10 +1,13 @@
 import 'package:flowfi_fe/core/finance/money_flow_type.dart';
 import 'package:flowfi_fe/features/ai_processing/domain/entities/image_transaction_import.dart';
+import 'package:flowfi_fe/features/ai_processing/domain/entities/voice_transaction_import.dart';
 import 'package:flowfi_fe/features/ai_processing/domain/repositories/ai_processing_repository.dart';
 import 'package:flowfi_fe/features/ai_processing/presentation/providers/image_transaction_import_provider.dart';
 import 'package:flowfi_fe/features/ai_processing/presentation/widgets/image_transaction_import_sheet.dart';
 import 'package:flowfi_fe/features/ai_processing/domain/entities/ai_image_file.dart';
 import 'package:flowfi_fe/features/budgets/domain/entities/budget.dart';
+import 'package:flowfi_fe/features/budgets/domain/entities/monthly_budget_details.dart';
+import 'package:flowfi_fe/features/budgets/domain/entities/annual_budget_summary.dart';
 import 'package:flowfi_fe/features/budgets/domain/repositories/budget_repository.dart';
 import 'package:flowfi_fe/features/budgets/presentation/providers/budgets_provider.dart';
 import 'package:flowfi_fe/features/goals/domain/entities/goal.dart';
@@ -280,6 +283,12 @@ final class FakeWalletRepository implements WalletRepository {
 
 final class FakeAiProcessingRepository implements AiProcessingRepository {
   @override
+  Future<VoiceTransactionImport> createTransactionFromVoice({
+    required String walletId,
+    required AiVoiceFile voice,
+  }) => throw UnimplementedError();
+
+  @override
   Future<ImageTransactionImport> createTransactionsFromImage({
     required String walletId,
     required AiImageFile image,
@@ -427,6 +436,24 @@ final class FakeTagRepository implements TagRepository {
 }
 
 final class FakeBudgetRepository implements BudgetRepository {
+  @override
+  Future<List<AnnualBudgetMonthSummary>> getAnnualSummary(int year) async =>
+      const [];
+
+  @override
+  Future<MonthlyBudgetDetails> getMonthlyDetails({
+    required int month,
+    required int year,
+  }) => throw UnimplementedError();
+
+  @override
+  Future<List<Budget>> saveTarget({
+    required int month,
+    required int year,
+    required int warningThresholdPercent,
+    required List<BudgetAllocation> allocations,
+  }) async => const [];
+
   int listCalls = 0;
 
   @override

@@ -1,5 +1,6 @@
 import 'package:flowfi_fe/features/ai_processing/domain/entities/ai_image_file.dart';
 import 'package:flowfi_fe/features/ai_processing/domain/entities/image_transaction_import.dart';
+import 'package:flowfi_fe/features/ai_processing/domain/entities/voice_transaction_import.dart';
 import 'package:flowfi_fe/features/ai_processing/domain/repositories/ai_processing_repository.dart';
 import 'package:flowfi_fe/features/ai_processing/presentation/providers/image_transaction_import_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -57,6 +58,12 @@ void main() {
 }
 
 final class FakeAiProcessingRepository implements AiProcessingRepository {
+  @override
+  Future<VoiceTransactionImport> createTransactionFromVoice({
+    required String walletId,
+    required AiVoiceFile voice,
+  }) => throw UnimplementedError();
+
   final events = <String>[];
 
   @override

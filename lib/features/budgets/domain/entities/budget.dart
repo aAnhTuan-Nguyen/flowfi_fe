@@ -17,3 +17,10 @@ final class Budget {
   final int warningThresholdPercent;
   final String? tagName;
 }
+
+final class BudgetAllocation {
+  const BudgetAllocation({required this.tagId, required this.amount});
+
+  final String tagId;
+  final String amount;
+}

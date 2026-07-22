@@ -1,5 +1,7 @@
 import 'package:flowfi_fe/core/finance/money_flow_type.dart';
 import 'package:flowfi_fe/features/budgets/domain/entities/budget.dart';
+import 'package:flowfi_fe/features/budgets/domain/entities/monthly_budget_details.dart';
+import 'package:flowfi_fe/features/budgets/domain/entities/annual_budget_summary.dart';
 import 'package:flowfi_fe/features/budgets/domain/repositories/budget_repository.dart';
 import 'package:flowfi_fe/features/budgets/presentation/providers/budgets_provider.dart';
 import 'package:flowfi_fe/features/goals/domain/entities/goal.dart';
@@ -431,6 +433,24 @@ class FakeTransactionRepository implements TransactionRepository {
 }
 
 class FakeBudgetRepository implements BudgetRepository {
+  @override
+  Future<List<AnnualBudgetMonthSummary>> getAnnualSummary(int year) async =>
+      const [];
+
+  @override
+  Future<MonthlyBudgetDetails> getMonthlyDetails({
+    required int month,
+    required int year,
+  }) => throw UnimplementedError();
+
+  @override
+  Future<List<Budget>> saveTarget({
+    required int month,
+    required int year,
+    required int warningThresholdPercent,
+    required List<BudgetAllocation> allocations,
+  }) async => const [];
+
   final events = <String>[];
 
   @override

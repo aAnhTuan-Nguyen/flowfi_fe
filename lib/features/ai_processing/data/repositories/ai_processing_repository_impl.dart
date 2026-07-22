@@ -1,5 +1,6 @@
 import '../../domain/entities/ai_image_file.dart';
 import '../../domain/entities/image_transaction_import.dart';
+import '../../domain/entities/voice_transaction_import.dart';
 import '../../domain/repositories/ai_processing_repository.dart';
 import '../datasources/ai_processing_remote_data_source.dart';
 
@@ -18,5 +19,16 @@ final class AiProcessingRepositoryImpl implements AiProcessingRepository {
       image: image,
     );
     return model.toDomain();
+  }
+
+  @override
+  Future<VoiceTransactionImport> createTransactionFromVoice({
+    required String walletId,
+    required AiVoiceFile voice,
+  }) async {
+    return (await _remoteDataSource.createTransactionFromVoice(
+      walletId: walletId,
+      voice: voice,
+    )).toDomain();
   }
 }

@@ -72,7 +72,7 @@ void main() {
     expect(find.text('Chọn ảnh'), findsOneWidget);
   });
 
-  testWidgets('transaction launcher opens the voice placeholder flow', (
+  testWidgets('transaction launcher opens the voice recording flow', (
     tester,
   ) async {
     await pumpFlowFiApp(tester, authenticatedAuthRepository());
@@ -84,10 +84,9 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Nói giao dịch'), findsOneWidget);
-    expect(
-      find.text('Giọng nói sẽ tạo gợi ý để bạn xác nhận.'),
-      findsOneWidget,
-    );
+    expect(find.text('Ví nhận giao dịch'), findsOneWidget);
+    expect(find.text('Chạm micro để bắt đầu ghi âm'), findsOneWidget);
+    expect(find.byIcon(Icons.mic_rounded), findsWidgets);
   });
 
   testWidgets('transaction launcher opens the quick manual form', (

@@ -10,6 +10,8 @@ import 'package:flowfi_fe/features/auth/domain/usecases/sign_up_use_case.dart';
 import 'package:flowfi_fe/features/auth/domain/usecases/update_profile_use_case.dart';
 import 'package:flowfi_fe/features/auth/presentation/providers/auth_controller.dart';
 import 'package:flowfi_fe/features/budgets/domain/entities/budget.dart';
+import 'package:flowfi_fe/features/budgets/domain/entities/monthly_budget_details.dart';
+import 'package:flowfi_fe/features/budgets/domain/entities/annual_budget_summary.dart';
 import 'package:flowfi_fe/features/budgets/domain/repositories/budget_repository.dart';
 import 'package:flowfi_fe/features/budgets/presentation/providers/budgets_provider.dart';
 import 'package:flowfi_fe/features/goals/domain/entities/goal.dart';
@@ -506,15 +508,72 @@ class TestTagRepository implements TagRepository {
 
 class TestBudgetRepository implements BudgetRepository {
   @override
+  Future<List<AnnualBudgetMonthSummary>> getAnnualSummary(int year) async => [
+    const AnnualBudgetMonthSummary(
+      month: 6,
+      targetAmount: '2700000',
+      spentAmount: '11550000',
+      percentUsed: 427.78,
+      exceededPercent: 327.78,
+    ),
+  ];
+
+  @override
+  Future<MonthlyBudgetDetails> getMonthlyDetails({
+    required int month,
+    required int year,
+  }) async => MonthlyBudgetDetails(
+    month: month,
+    year: year,
+    targetAmount: '2700000',
+    spentAmount: '11550000',
+    remainingAmount: '-8850000',
+    percentUsed: 427.78,
+    transactionCount: 12,
+    topCategoryName: 'Food',
+    topWalletName: 'Cash',
+    categories: const [],
+  );
+
+  @override
+  Future<List<Budget>> saveTarget({
+    required int month,
+    required int year,
+    required int warningThresholdPercent,
+    required List<BudgetAllocation> allocations,
+  }) async {
+    return [
+      Budget(
+        id: 'budget-target',
+        tagId: allocations.firstOrNull?.tagId,
+        amount: allocations.firstOrNull?.amount ?? '0',
+        month: month,
+        year: year,
+        warningThresholdPercent: warningThresholdPercent,
+      ),
+    ];
+  }
+
+  @override
   Future<List<Budget>> listBudgets({int page = 1, int limit = 20}) async {
     return const [
       Budget(
         id: 'budget-1',
+        tagId: 'tag-food',
         amount: '3000000',
         month: 6,
         year: 2026,
         warningThresholdPercent: 80,
         tagName: 'Food',
+      ),
+      Budget(
+        id: 'budget-2',
+        tagId: 'tag-transport',
+        amount: '2000000',
+        month: 6,
+        year: 2026,
+        warningThresholdPercent: 80,
+        tagName: 'Transport',
       ),
     ];
   }
