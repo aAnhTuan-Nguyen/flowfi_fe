@@ -123,5 +123,11 @@ final monthlyTransactionsProvider = FutureProvider.autoDispose
         to: endOfMonth.toIso8601String(),
         limit: 1000,
       );
-  return sortTransactionsByActivity(transactions);
+  
+  final filtered = transactions.where((t) {
+    if (t.date == null) return false;
+    return t.date!.year == month.year && t.date!.month == month.month;
+  }).toList();
+
+  return sortTransactionsByActivity(filtered);
 });
