@@ -66,7 +66,10 @@ class HomeScreen extends ConsumerWidget {
                 currency: currency,
               ),
               const SizedBox(height: 18),
-              _BudgetHealthCard(budgets: budgets, currency: currency),
+              _BudgetHealthCard(
+                currency: currency,
+                now: currentDate,
+              ),
             ],
           ),
         ),
@@ -618,46 +621,109 @@ class _RecentTransactions extends StatelessWidget {
   }
 }
 
-class _BudgetHealthCard extends StatelessWidget {
-  const _BudgetHealthCard({required this.budgets, required this.currency});
+class _BudgetHealthCard extends ConsumerWidget {
+  const _BudgetHealthCard({
+    required this.currency,
+    required this.now,
+  });
 
-  final AsyncValue<List<Budget>> budgets;
   final String currency;
+  final DateTime now;
 
   @override
-  Widget build(BuildContext context) {
-    return budgets.when(
-      loading: () => const FlowFiInlineLoading(label: 'Đang tải ngân sách'),
-      error: (_, _) =>
-          const FlowFiCard(child: Text('Không tải được ngân sách.')),
-      data: (items) {
-        if (items.isEmpty) {
-          return const FlowFiInlineEmptyState(
-            icon: Icons.savings_outlined,
-            title: 'Chưa có ngân sách',
-            message: 'Tạo ngân sách để biết khoản nào đang gần chạm giới hạn.',
-          );
-        }
+  Widget build(BuildContext context, WidgetRef ref) {
+    final detailsAsync = ref.watch(monthlyBudgetDetailsProvider((month: now.month, year: now.year)));
+    final budgetsAsync = ref.watch(budgetsProvider);
 
-        return FlowFiCard(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Ngân sách nổi bật',
-                style: Theme.of(context).textTheme.titleMedium,
-              ),
-              const SizedBox(height: 14),
-              for (final budget in items.take(2)) ...[
-                _BudgetProgress(budget: budget, currency: currency),
-                const SizedBox(height: 12),
-              ],
-            ],
+    if (detailsAsync.isLoading || budgetsAsync.isLoading) {
+      return const FlowFiInlineLoading(label: 'Đang tải ngân sách');
+    }
+    
+    if (detailsAsync.hasError) {
+      return const FlowFiCard(child: Text('Không tải được ngân sách.'));
+    }
+
+    final details = detailsAsync.value;
+    if (details == null) {
+      return const FlowFiCard(child: Text('Không có dữ liệu.'));
+    }
+
+    final budgets = budgetsAsync.value ?? [];
+
+    final categoriesWithBudget = details.categories.where((c) {
+      return _parseWholeAmount(c.targetAmount) > BigInt.zero;
+    }).toList();
+
+    if (categoriesWithBudget.isEmpty) {
+      return const FlowFiInlineEmptyState(
+        icon: Icons.savings_outlined,
+        title: 'Chưa có ngân sách',
+        message: 'Tạo ngân sách để biết khoản nào đang gần chạm giới hạn.',
+      );
+    }
+
+    final budgetProgressList = categoriesWithBudget.map((cat) {
+      final budgetConfig = budgets.firstWhere(
+        (b) => b.month == now.month && b.year == now.year && b.tagId == cat.tagId,
+        orElse: () => Budget(id: '', amount: '0', month: now.month, year: now.year, warningThresholdPercent: 80),
+      );
+      
+      final spent = _parseWholeAmount(cat.spentAmount);
+      final target = _parseWholeAmount(cat.targetAmount);
+      final percentUsed = target > BigInt.zero
+          ? (spent * BigInt.from(10000) ~/ target).toDouble() / 10000
+          : 0.0;
+
+      return _BudgetProgressData(
+        tagName: cat.tagName,
+        targetAmount: target,
+        spentAmount: spent,
+        percentUsed: percentUsed,
+        warningThresholdPercent: budgetConfig.warningThresholdPercent,
+      );
+    }).toList();
+
+    budgetProgressList.sort((a, b) => b.percentUsed.compareTo(a.percentUsed));
+
+    return FlowFiCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Ngân sách nổi bật',
+            style: Theme.of(context).textTheme.titleMedium,
           ),
-        );
-      },
+          const SizedBox(height: 14),
+          for (final data in budgetProgressList) ...[
+            _BudgetProgress(
+              tagName: data.tagName,
+              targetAmount: data.targetAmount,
+              spentAmount: data.spentAmount,
+              percentUsed: data.percentUsed,
+              warningThresholdPercent: data.warningThresholdPercent,
+              currency: currency,
+            ),
+            const SizedBox(height: 12),
+          ],
+        ],
+      ),
     );
   }
+}
+
+class _BudgetProgressData {
+  const _BudgetProgressData({
+    required this.tagName,
+    required this.targetAmount,
+    required this.spentAmount,
+    required this.percentUsed,
+    required this.warningThresholdPercent,
+  });
+  final String tagName;
+  final BigInt targetAmount;
+  final BigInt spentAmount;
+  final double percentUsed;
+  final int warningThresholdPercent;
 }
 
 class _MiniMetricCard extends StatelessWidget {
@@ -825,14 +891,26 @@ class _TransactionTile extends StatelessWidget {
 }
 
 class _BudgetProgress extends StatelessWidget {
-  const _BudgetProgress({required this.budget, required this.currency});
+  const _BudgetProgress({
+    required this.tagName,
+    required this.targetAmount,
+    required this.spentAmount,
+    required this.percentUsed,
+    required this.warningThresholdPercent,
+    required this.currency,
+  });
 
-  final Budget budget;
+  final String tagName;
+  final BigInt targetAmount;
+  final BigInt spentAmount;
+  final double percentUsed;
+  final int warningThresholdPercent;
   final String currency;
 
   @override
   Widget build(BuildContext context) {
-    final threshold = budget.warningThresholdPercent.clamp(0, 100);
+    final threshold = warningThresholdPercent.clamp(0, 100);
+    final percentUsedHundred = (percentUsed * 100).toInt();
 
     return Column(
       children: [
@@ -840,12 +918,12 @@ class _BudgetProgress extends StatelessWidget {
           children: [
             Expanded(
               child: Text(
-                budget.tagName ?? 'Ngân sách',
+                tagName,
                 style: Theme.of(context).textTheme.labelMedium,
               ),
             ),
             Text(
-              _formatMoney(_parseWholeAmount(budget.amount), currency),
+              '${_groupDigits(spentAmount.toString())} / ${_formatMoney(targetAmount, currency)}',
               style: Theme.of(context).textTheme.labelMedium?.copyWith(
                 color: Theme.of(context).colorScheme.onSurfaceVariant,
               ),
@@ -854,8 +932,8 @@ class _BudgetProgress extends StatelessWidget {
         ),
         const SizedBox(height: 6),
         FlowFiProgressBar(
-          value: threshold / 100,
-          tone: threshold >= 80 ? FlowFiTone.warning : FlowFiTone.positive,
+          value: percentUsed.clamp(0.0, 1.0),
+          tone: percentUsedHundred >= threshold ? FlowFiTone.warning : FlowFiTone.positive,
         ),
       ],
     );
