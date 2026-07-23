@@ -26,7 +26,7 @@ class HomeScreen extends ConsumerWidget {
     final auth = ref.watch(authControllerProvider).value;
     final wallets = ref.watch(walletsProvider);
     final transactions = ref.watch(transactionsProvider);
-    final budgets = ref.watch(budgetsProvider);
+
     final currentDate = ref.watch(currentDateProvider);
     final currency = auth?.user?.currencyCode ?? 'VND';
 
@@ -38,6 +38,8 @@ class HomeScreen extends ConsumerWidget {
             ref.read(transactionsProvider.notifier).reload(),
             ref.read(budgetsProvider.notifier).reload(),
           ]);
+          ref.invalidate(monthlyTransactionsProvider(currentDate));
+          ref.invalidate(monthlyBudgetDetailsProvider((month: currentDate.month, year: currentDate.year)));
         },
         child: SingleChildScrollView(
           padding: const EdgeInsets.fromLTRB(20, 12, 20, 96),
@@ -50,14 +52,14 @@ class HomeScreen extends ConsumerWidget {
               _BalanceOverview(wallets: wallets, currency: currency),
               const SizedBox(height: 12),
               _MonthSnapshot(
-                transactions: transactions,
+                transactions: ref.watch(monthlyTransactionsProvider(currentDate)),
                 currency: currency,
                 now: currentDate,
               ),
               const SizedBox(height: 18),
-              _SpendingChartCard(transactions: transactions),
+              _SpendingChartCard(transactions: ref.watch(monthlyTransactionsProvider(currentDate))),
               const SizedBox(height: 18),
-              _CashFlowTrendCard(transactions: transactions),
+              _CashFlowTrendCard(transactions: ref.watch(monthlyTransactionsProvider(currentDate))),
               const SizedBox(height: 18),
               _InsightNudge(transactions: transactions),
               const SizedBox(height: 18),
@@ -237,8 +239,8 @@ class _MonthSnapshot extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return transactions.when(
-      loading: () => const SizedBox.shrink(),
-      error: (_, _) => const SizedBox.shrink(),
+      loading: () => const FlowFiInlineLoading(label: 'Đang tải thống kê'),
+      error: (_, _) => const FlowFiCard(child: Text('Không tải được thống kê.')),
       data: (items) {
         final monthlyExpenses = items
             .where(

@@ -112,3 +112,16 @@ final transactionsProvider =
     AsyncNotifierProvider<TransactionsNotifier, List<Transaction>>(
       TransactionsNotifier.new,
     );
+
+final monthlyTransactionsProvider = FutureProvider.autoDispose
+    .family<List<Transaction>, DateTime>((ref, month) async {
+  final startOfMonth = DateTime(month.year, month.month, 1);
+  final endOfMonth = DateTime(month.year, month.month + 1, 1).subtract(const Duration(milliseconds: 1));
+
+  final transactions = await ref.watch(transactionRepositoryProvider).listTransactions(
+        from: startOfMonth.toIso8601String(),
+        to: endOfMonth.toIso8601String(),
+        limit: 1000,
+      );
+  return sortTransactionsByActivity(transactions);
+});
