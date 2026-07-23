@@ -79,9 +79,15 @@ final class FlowFiLocalStore {
               ..where((table) => table.deletedAt.isNull())
               ..orderBy([
                 (table) => OrderingTerm(
+                  expression: table.updatedAt,
+                  mode: OrderingMode.desc,
+                ),
+                (table) => OrderingTerm(
                   expression: table.transactionDate,
                   mode: OrderingMode.desc,
                 ),
+                (table) =>
+                    OrderingTerm(expression: table.id, mode: OrderingMode.desc),
               ]))
             .get();
     return rows.map(_transactionFromRow).toList(growable: false);
@@ -324,6 +330,7 @@ LocalTransactionRowsCompanion _transactionCompanion(
     merchantName: Value(transaction.merchantName),
     clientId: Value(transaction.clientId ?? transaction.id),
     isPendingSync: Value(isPendingSync),
+    updatedAt: Value(transaction.updatedAt),
   );
 }
 
@@ -386,6 +393,7 @@ Transaction _transactionFromRow(LocalTransactionRow row) {
     status: transactionStatusFromApi(row.status),
     inputMethod: transactionInputMethodFromApi(row.inputMethod),
     merchantName: row.merchantName,
+    updatedAt: row.updatedAt,
     isPendingSync: row.isPendingSync,
   );
 }

@@ -11,8 +11,11 @@ final transactionRepositoryProvider = Provider<TransactionRepository>(
 
 class TransactionsNotifier extends AsyncNotifier<List<Transaction>> {
   @override
-  Future<List<Transaction>> build() {
-    return ref.watch(transactionRepositoryProvider).listTransactions();
+  Future<List<Transaction>> build() async {
+    final transactions = await ref
+        .watch(transactionRepositoryProvider)
+        .listTransactions();
+    return sortTransactionsByActivity(transactions);
   }
 
   Future<void> reload() async {
@@ -97,12 +100,12 @@ List<Transaction> _upsertTransaction(
     (transaction) => transaction.id == replacement.id,
   );
   if (index == -1) {
-    return [replacement, ...transactions];
+    return sortTransactionsByActivity([replacement, ...transactions]);
   }
-  return [
+  return sortTransactionsByActivity([
     for (var itemIndex = 0; itemIndex < transactions.length; itemIndex++)
       if (itemIndex == index) replacement else transactions[itemIndex],
-  ];
+  ]);
 }
 
 final transactionsProvider =

@@ -16,6 +16,7 @@ final class TransactionModel {
     required this.status,
     required this.inputMethod,
     this.merchantName,
+    this.updatedAt,
   });
 
   final String id;
@@ -30,6 +31,7 @@ final class TransactionModel {
   final TransactionStatus status;
   final TransactionInputMethod inputMethod;
   final String? merchantName;
+  final DateTime? updatedAt;
 
   factory TransactionModel.fromJson(JsonMap json) {
     return TransactionModel(
@@ -45,6 +47,7 @@ final class TransactionModel {
       status: transactionStatusFromApi(json['status']),
       inputMethod: transactionInputMethodFromApi(json['inputMethod']),
       merchantName: json['merchantName']?.toString(),
+      updatedAt: DateTime.tryParse(json['updatedAt']?.toString() ?? ''),
     );
   }
 
@@ -62,6 +65,7 @@ final class TransactionModel {
       status: status,
       inputMethod: inputMethod,
       merchantName: merchantName,
+      updatedAt: updatedAt,
       isPendingSync: false,
     );
   }

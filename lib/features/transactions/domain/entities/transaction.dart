@@ -39,6 +39,7 @@ final class Transaction {
     required this.status,
     required this.inputMethod,
     this.merchantName,
+    this.updatedAt,
     this.isPendingSync = false,
   });
 
@@ -54,7 +55,29 @@ final class Transaction {
   final TransactionStatus status;
   final TransactionInputMethod inputMethod;
   final String? merchantName;
+  final DateTime? updatedAt;
   final bool isPendingSync;
+
+  DateTime? get activityAt => updatedAt ?? date;
+}
+
+int compareTransactionActivityDescending(Transaction left, Transaction right) {
+  final leftActivity =
+      left.activityAt ?? DateTime.fromMillisecondsSinceEpoch(0, isUtc: true);
+  final rightActivity =
+      right.activityAt ?? DateTime.fromMillisecondsSinceEpoch(0, isUtc: true);
+  final activityComparison = rightActivity.compareTo(leftActivity);
+  if (activityComparison != 0) {
+    return activityComparison;
+  }
+  return right.id.compareTo(left.id);
+}
+
+List<Transaction> sortTransactionsByActivity(
+  Iterable<Transaction> transactions,
+) {
+  return transactions.toList(growable: false)
+    ..sort(compareTransactionActivityDescending);
 }
 
 TransactionStatus transactionStatusFromApi(Object? value) {

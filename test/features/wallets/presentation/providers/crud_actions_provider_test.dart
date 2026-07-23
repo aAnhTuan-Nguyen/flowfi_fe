@@ -136,7 +136,7 @@ void main() {
   );
 
   test(
-    'confirm keeps returned transaction when reloaded list is stale',
+    'confirm moves the returned transaction to the top of a stale list',
     () async {
       final repository = StaleConfirmTransactionRepository();
       final container = ProviderContainer(
@@ -147,7 +147,9 @@ void main() {
       addTearDown(container.dispose);
 
       expect(
-        (await container.read(transactionsProvider.future)).single.status,
+        (await container.read(transactionsProvider.future))
+            .firstWhere((transaction) => transaction.id == 'transaction-ocr')
+            .status,
         TransactionStatus.draft,
       );
 
@@ -156,9 +158,9 @@ void main() {
           .confirmTransaction('transaction-ocr');
 
       final transactions = await container.read(transactionsProvider.future);
-      expect(transactions, hasLength(1));
-      expect(transactions.single.id, 'transaction-ocr');
-      expect(transactions.single.status, TransactionStatus.confirmed);
+      expect(transactions, hasLength(3));
+      expect(transactions.first.id, 'transaction-ocr');
+      expect(transactions.first.status, TransactionStatus.confirmed);
     },
   );
 
@@ -472,6 +474,26 @@ class StaleConfirmTransactionRepository implements TransactionRepository {
     status: TransactionStatus.draft,
     inputMethod: TransactionInputMethod.ocr,
   );
+  static final newerReceipt = Transaction(
+    id: 'transaction-newer-receipt',
+    title: 'Newer receipt date',
+    amount: '75000',
+    type: MoneyFlowType.expense,
+    date: DateTime(2026, 7, 23),
+    status: TransactionStatus.confirmed,
+    inputMethod: TransactionInputMethod.manual,
+    updatedAt: DateTime.utc(2026, 7, 23, 8),
+  );
+  static final olderActivity = Transaction(
+    id: 'transaction-older-activity',
+    title: 'Older activity',
+    amount: '30000',
+    type: MoneyFlowType.expense,
+    date: DateTime(2026, 7, 21),
+    status: TransactionStatus.confirmed,
+    inputMethod: TransactionInputMethod.manual,
+    updatedAt: DateTime.utc(2026, 7, 21, 8),
+  );
 
   @override
   Future<List<Transaction>> listTransactions({
@@ -485,7 +507,7 @@ class StaleConfirmTransactionRepository implements TransactionRepository {
     String? keyword,
     String? from,
     String? to,
-  }) async => [draft];
+  }) async => [newerReceipt, draft, olderActivity];
 
   @override
   Future<Transaction> confirmTransaction(String id) async {
@@ -499,6 +521,7 @@ class StaleConfirmTransactionRepository implements TransactionRepository {
       date: draft.date,
       status: TransactionStatus.confirmed,
       inputMethod: draft.inputMethod,
+      updatedAt: DateTime.utc(2026, 7, 24, 10),
     );
   }
 

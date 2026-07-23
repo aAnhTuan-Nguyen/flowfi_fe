@@ -15,6 +15,7 @@ void main() {
       'amount': '12.50',
       'transactionType': 'Expense',
       'transactionDate': '2026-01-02T00:00:00.000',
+      'updatedAt': '2026-01-03T09:30:00.000Z',
       'status': 'Draft',
       'inputMethod': 'Manual',
     });
@@ -23,6 +24,7 @@ void main() {
     expect(model.tagId, 'tag-1');
     expect(model.type, MoneyFlowType.expense);
     expect(model.status, TransactionStatus.draft);
+    expect(model.updatedAt, DateTime.parse('2026-01-03T09:30:00.000Z'));
   });
 
   test('transaction model parses relation ids from nested objects', () {

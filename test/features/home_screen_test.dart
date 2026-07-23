@@ -1,4 +1,6 @@
 import 'package:fl_chart/fl_chart.dart';
+import 'package:flowfi_fe/core/finance/money_flow_type.dart';
+import 'package:flowfi_fe/features/transactions/domain/entities/transaction.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -46,6 +48,54 @@ void main() {
     expect(find.text('Monthly Salary'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
+
+  testWidgets(
+    'recent transactions prefer confirmed activity over receipt date',
+    (tester) async {
+      final repository = TestTransactionRepository(
+        transactions: [
+          Transaction(
+            id: 'draft',
+            title: 'Draft should stay hidden',
+            amount: '10000',
+            type: MoneyFlowType.expense,
+            date: DateTime(2026, 7, 30),
+            status: TransactionStatus.draft,
+            inputMethod: TransactionInputMethod.ocr,
+            updatedAt: DateTime.utc(2026, 7, 30),
+          ),
+          for (var day = 23; day >= 21; day--)
+            Transaction(
+              id: 'confirmed-$day',
+              title: 'Confirmed $day',
+              amount: '20000',
+              type: MoneyFlowType.expense,
+              date: DateTime(2026, 7, day),
+              status: TransactionStatus.confirmed,
+              inputMethod: TransactionInputMethod.manual,
+              updatedAt: DateTime.utc(2026, 7, day),
+            ),
+          Transaction(
+            id: 'just-confirmed',
+            title: 'Just confirmed OCR',
+            amount: '50000',
+            type: MoneyFlowType.expense,
+            date: DateTime(2026, 7, 1),
+            status: TransactionStatus.confirmed,
+            inputMethod: TransactionInputMethod.ocr,
+            updatedAt: DateTime.utc(2026, 7, 31),
+          ),
+        ],
+      );
+
+      await pumpFlowFiShell(tester, transactionRepository: repository);
+      await tester.pumpAndSettle();
+
+      expect(find.text('Just confirmed OCR'), findsOneWidget);
+      expect(find.text('Draft should stay hidden'), findsNothing);
+      expect(find.text('Confirmed 21'), findsNothing);
+    },
+  );
 
   testWidgets('home keeps creation actions in the center add launcher', (
     tester,

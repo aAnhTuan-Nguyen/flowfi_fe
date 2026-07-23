@@ -234,6 +234,7 @@ class TestTransactionRepository implements TransactionRepository {
         date: DateTime(2026, 6, 24),
         status: TransactionStatus.confirmed,
         inputMethod: TransactionInputMethod.manual,
+        updatedAt: DateTime.utc(2026, 6, 27),
       ),
       Transaction(
         id: 'tx-2',
@@ -245,6 +246,7 @@ class TestTransactionRepository implements TransactionRepository {
         date: DateTime(2026, 6, 25),
         status: TransactionStatus.confirmed,
         inputMethod: TransactionInputMethod.manual,
+        updatedAt: DateTime.utc(2026, 6, 26),
       ),
       Transaction(
         id: 'tx-draft',
@@ -256,6 +258,7 @@ class TestTransactionRepository implements TransactionRepository {
         date: DateTime(2026, 6, 26),
         status: TransactionStatus.draft,
         inputMethod: TransactionInputMethod.ocr,
+        updatedAt: DateTime.utc(2026, 6, 25),
       ),
     ];
   }

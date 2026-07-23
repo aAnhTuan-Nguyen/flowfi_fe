@@ -84,12 +84,10 @@ class _HomeHeader extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final colors = Theme.of(context).colorScheme;
     final name = _firstName(user?.fullName);
-    
+
     final notificationsAsync = ref.watch(notificationsProvider);
-    final unreadCount = notificationsAsync.value
-            ?.where((n) => !n.isRead)
-            .length ??
-        0;
+    final unreadCount =
+        notificationsAsync.value?.where((n) => !n.isRead).length ?? 0;
 
     return Row(
       children: [
@@ -426,7 +424,8 @@ class _InsightNudge extends StatelessWidget {
             child: transactions.when(
               loading: () => const Text('AI đang chờ dữ liệu giao dịch.'),
               error: (_, _) => const Text('AI sẽ gợi ý khi dữ liệu sẵn sàng.'),
-              data: (items) => Text('Dùng dấu cộng ở thanh dưới để nhập nhanh, scan hoặc tạo gợi ý bằng giọng nói.',
+              data: (items) => Text(
+                'Dùng dấu cộng ở thanh dưới để nhập nhanh, scan hoặc tạo gợi ý bằng giọng nói.',
                 style: Theme.of(context).textTheme.bodyMedium,
               ),
             ),
@@ -586,20 +585,18 @@ class _RecentTransactions extends StatelessWidget {
       error: (_, _) =>
           const FlowFiCard(child: Text('Không tải được giao dịch.')),
       data: (items) {
-        if (items.isEmpty) {
+        final recent = sortTransactionsByActivity(
+          items.where(
+            (transaction) => transaction.status == TransactionStatus.confirmed,
+          ),
+        ).take(3);
+        if (recent.isEmpty) {
           return const FlowFiInlineEmptyState(
             icon: Icons.receipt_long_rounded,
             title: 'Chưa có giao dịch',
             message: 'Nhấn dấu cộng ở thanh dưới để tạo giao dịch đầu tiên.',
           );
         }
-
-        final sorted = [...items]
-          ..sort((a, b) {
-            final left = a.date ?? DateTime.fromMillisecondsSinceEpoch(0);
-            final right = b.date ?? DateTime.fromMillisecondsSinceEpoch(0);
-            return right.compareTo(left);
-          });
 
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -610,7 +607,7 @@ class _RecentTransactions extends StatelessWidget {
               onActionPressed: () => context.go(AppRoutes.transactions),
             ),
             const SizedBox(height: 10),
-            for (final transaction in sorted.take(3)) ...[
+            for (final transaction in recent) ...[
               _TransactionTile(transaction: transaction, currency: currency),
               const SizedBox(height: 10),
             ],

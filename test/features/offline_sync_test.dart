@@ -81,6 +81,40 @@ void main() {
     expect(cached.single.status, TransactionStatus.confirmed);
   });
 
+  test('cached transactions preserve and sort by latest activity', () async {
+    final latestActivity = DateTime.utc(2026, 7, 24, 10);
+    await store.cacheTransactions([
+      Transaction(
+        id: 'newer-receipt',
+        title: 'Newer receipt',
+        amount: '75000',
+        type: MoneyFlowType.expense,
+        date: DateTime(2026, 7, 23),
+        status: TransactionStatus.confirmed,
+        inputMethod: TransactionInputMethod.manual,
+        updatedAt: DateTime.utc(2026, 7, 23, 8),
+      ),
+      Transaction(
+        id: 'latest-confirmation',
+        title: 'Latest confirmation',
+        amount: '50000',
+        type: MoneyFlowType.expense,
+        date: DateTime(2026, 7, 20),
+        status: TransactionStatus.confirmed,
+        inputMethod: TransactionInputMethod.ocr,
+        updatedAt: latestActivity,
+      ),
+    ]);
+
+    final cached = await store.readTransactions();
+
+    expect(cached.first.id, 'latest-confirmation');
+    expect(
+      cached.first.updatedAt?.millisecondsSinceEpoch,
+      latestActivity.millisecondsSinceEpoch,
+    );
+  });
+
   test(
     'creates a pending manual transaction offline and updates local balance',
     () async {
