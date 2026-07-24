@@ -23,8 +23,16 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
   @override
   Widget build(BuildContext context) {
     final transactions = ref.watch(transactionsProvider);
+    final month = ref.watch(transactionsMonthProvider);
 
-    return FlowFiFeatureScaffold(
+    return NotificationListener<ScrollNotification>(
+      onNotification: (ScrollNotification scrollInfo) {
+        if (scrollInfo.metrics.pixels >= scrollInfo.metrics.maxScrollExtent - 200) {
+          ref.read(transactionsProvider.notifier).loadMore();
+        }
+        return false;
+      },
+      child: FlowFiFeatureScaffold(
       icon: Icons.receipt_long_rounded,
       title: 'Giao dịch',
       subtitle: 'Duyệt giao dịch mới, nháp và đã xác nhận.',
@@ -46,6 +54,33 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.chevron_left_rounded),
+                  onPressed: () {
+                    ref.read(transactionsMonthProvider.notifier).setMonth(
+                        DateTime(month.year, month.month - 1));
+                  },
+                ),
+                Text(
+                  'Tháng ${month.month}/${month.year}',
+                  style: Theme.of(context)
+                      .textTheme
+                      .titleMedium
+                      ?.copyWith(fontWeight: FontWeight.bold),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.chevron_right_rounded),
+                  onPressed: () {
+                    ref.read(transactionsMonthProvider.notifier).setMonth(
+                        DateTime(month.year, month.month + 1));
+                  },
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
             TransactionFilterBar(
               selected: _filter,
               onSelected: (filter) => setState(() => _filter = filter),
@@ -67,7 +102,7 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
           ],
         ),
       ),
-    );
+    ));
   }
 
   void _showTransactionForm(BuildContext context, {Transaction? transaction}) {

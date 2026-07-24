@@ -10,6 +10,7 @@ import '../../../sync/sync_status_provider.dart';
 import '../../../tags/presentation/providers/tags_provider.dart';
 import '../../../wallets/domain/entities/wallet.dart';
 import '../../../wallets/presentation/providers/wallets_provider.dart';
+import '../../../budgets/presentation/providers/budgets_provider.dart';
 import '../../domain/entities/transaction.dart';
 import '../providers/transactions_provider.dart';
 
@@ -83,16 +84,110 @@ class _TransactionFormSheetState extends ConsumerState<TransactionFormSheet> {
             widget.transaction?.walletId,
             walletItems.map((wallet) => wallet.id),
           );
-          _tagId ??= _initialId(
-            widget.transaction?.tagId,
-            tagItems.map((tag) => tag.id),
-          );
+          
+          final filteredTagItems = tagItems.where((tag) => tag.type == _type).toList();
+          if (filteredTagItems.isNotEmpty) {
+            _tagId ??= _initialId(
+              widget.transaction?.tagId,
+              filteredTagItems.map((tag) => tag.id),
+            );
+            if (!filteredTagItems.any((tag) => tag.id == _tagId)) {
+              _tagId = filteredTagItems.first.id;
+            }
+          } else {
+            _tagId = null;
+          }
 
           return Form(
             key: _formKey,
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Loại giao dịch',
+                      style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                            color: Theme.of(context).colorScheme.onSurfaceVariant,
+                          ),
+                    ),
+                    const SizedBox(height: 8),
+                    Container(
+                      padding: const EdgeInsets.all(4),
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).colorScheme.surfaceContainerLowest,
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(color: Theme.of(context).colorScheme.outlineVariant),
+                      ),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: InkWell(
+                              onTap: () {
+                                setState(() {
+                                  _type = MoneyFlowType.income;
+                                  _tagId = null;
+                                });
+                              },
+                              borderRadius: BorderRadius.circular(10),
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(vertical: 12),
+                                decoration: BoxDecoration(
+                                  color: _type == MoneyFlowType.income
+                                      ? Theme.of(context).colorScheme.onSurface
+                                      : Colors.transparent,
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                alignment: Alignment.center,
+                                child: Text(
+                                  'Thu',
+                                  style: TextStyle(
+                                    color: _type == MoneyFlowType.income
+                                        ? Theme.of(context).colorScheme.surface
+                                        : Theme.of(context).colorScheme.onSurfaceVariant,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                          Expanded(
+                            child: InkWell(
+                              onTap: () {
+                                setState(() {
+                                  _type = MoneyFlowType.expense;
+                                  _tagId = null;
+                                });
+                              },
+                              borderRadius: BorderRadius.circular(10),
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(vertical: 12),
+                                decoration: BoxDecoration(
+                                  color: _type == MoneyFlowType.expense
+                                      ? Theme.of(context).colorScheme.onSurface
+                                      : Colors.transparent,
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                alignment: Alignment.center,
+                                child: Text(
+                                  'Chi',
+                                  style: TextStyle(
+                                    color: _type == MoneyFlowType.expense
+                                        ? Theme.of(context).colorScheme.surface
+                                        : Theme.of(context).colorScheme.onSurfaceVariant,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
                 if (widget.transaction == null)
                   FlowFiSelectField<String>(
                     label: 'Ví',
@@ -117,7 +212,7 @@ class _TransactionFormSheetState extends ConsumerState<TransactionFormSheet> {
                   label: 'Danh mục',
                   value: _tagId,
                   items: [
-                    for (final tag in tagItems)
+                    for (final tag in filteredTagItems)
                       FlowFiSelectItem(value: tag.id, label: tag.name),
                   ],
                   onChanged: (value) => setState(() => _tagId = value),
@@ -138,26 +233,7 @@ class _TransactionFormSheetState extends ConsumerState<TransactionFormSheet> {
                   validator: requiredAmount,
                 ),
                 const SizedBox(height: 12),
-                FlowFiSelectField<MoneyFlowType>(
-                  label: 'Loại',
-                  value: _type,
-                  items: const [
-                    FlowFiSelectItem(
-                      value: MoneyFlowType.expense,
-                      label: 'Chi',
-                      icon: Icons.trending_down_rounded,
-                    ),
-                    FlowFiSelectItem(
-                      value: MoneyFlowType.income,
-                      label: 'Thu',
-                      icon: Icons.trending_up_rounded,
-                    ),
-                  ],
-                  onChanged: (value) {
-                    if (value != null) setState(() => _type = value);
-                  },
-                ),
-                const SizedBox(height: 12),
+
                 FlowFiDateField(
                   label: 'Ngày',
                   value: _formatDate(_date),
@@ -226,8 +302,6 @@ class _TransactionFormSheetState extends ConsumerState<TransactionFormSheet> {
           merchantName: emptyToNull(_merchantController.text.trim()),
           description: emptyToNull(_descriptionController.text.trim()),
         );
-        ref.invalidate(syncStatusProvider);
-        ref.invalidate(notificationsProvider);
       } else {
         await notifier.updateTransaction(
           widget.transaction!.id,
@@ -240,6 +314,14 @@ class _TransactionFormSheetState extends ConsumerState<TransactionFormSheet> {
           description: emptyToNull(_descriptionController.text.trim()),
         );
       }
+
+      ref.invalidate(syncStatusProvider);
+      ref.invalidate(notificationsProvider);
+      ref.invalidate(walletsProvider);
+      ref.invalidate(budgetsProvider);
+      ref.invalidate(monthlyBudgetDetailsProvider);
+      ref.invalidate(annualBudgetSummaryProvider);
+      ref.invalidate(monthlyTransactionsProvider);
       final isNew = widget.transaction == null;
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

@@ -7,8 +7,6 @@ import '../../../../core/finance/money_flow_type.dart';
 import '../../../../routes/app_routes.dart';
 import '../../../auth/domain/entities/auth_user.dart';
 import '../../../auth/presentation/providers/auth_controller.dart';
-import '../../../budgets/domain/entities/budget.dart';
-import '../../../budgets/presentation/providers/budgets_provider.dart';
 import '../../../shared/presentation/widgets/feature_states.dart';
 import '../../../shared/presentation/widgets/forui_controls.dart';
 import '../../../transactions/domain/entities/transaction.dart';
@@ -36,10 +34,9 @@ class HomeScreen extends ConsumerWidget {
           await Future.wait([
             ref.read(walletsProvider.notifier).reload(),
             ref.read(transactionsProvider.notifier).reload(),
-            ref.read(budgetsProvider.notifier).reload(),
           ]);
           ref.invalidate(monthlyTransactionsProvider(currentDate));
-          ref.invalidate(monthlyBudgetDetailsProvider((month: currentDate.month, year: currentDate.year)));
+          ref.invalidate(annualTransactionsProvider(currentDate.year));
         },
         child: SingleChildScrollView(
           padding: const EdgeInsets.fromLTRB(20, 12, 20, 96),
@@ -68,7 +65,7 @@ class HomeScreen extends ConsumerWidget {
                 currency: currency,
               ),
               const SizedBox(height: 18),
-              _BudgetHealthCard(
+              _YearlyStatsCard(
                 currency: currency,
                 now: currentDate,
               ),
@@ -614,8 +611,8 @@ class _RecentTransactions extends StatelessWidget {
   }
 }
 
-class _BudgetHealthCard extends ConsumerWidget {
-  const _BudgetHealthCard({
+class _YearlyStatsCard extends ConsumerWidget {
+  const _YearlyStatsCard({
     required this.currency,
     required this.now,
   });
@@ -625,98 +622,59 @@ class _BudgetHealthCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final detailsAsync = ref.watch(monthlyBudgetDetailsProvider((month: now.month, year: now.year)));
-    final budgetsAsync = ref.watch(budgetsProvider);
+    final transactionsAsync = ref.watch(annualTransactionsProvider(now.year));
 
-    if (detailsAsync.isLoading || budgetsAsync.isLoading) {
-      return const FlowFiInlineLoading(label: 'Đang tải ngân sách');
+    if (transactionsAsync.isLoading) {
+      return const FlowFiInlineLoading(label: 'Đang tải thống kê');
     }
     
-    if (detailsAsync.hasError) {
-      return const FlowFiCard(child: Text('Không tải được ngân sách.'));
+    if (transactionsAsync.hasError) {
+      return const FlowFiCard(child: Text('Không tải được thống kê.'));
     }
 
-    final details = detailsAsync.value;
-    if (details == null) {
-      return const FlowFiCard(child: Text('Không có dữ liệu.'));
-    }
+    final transactions = transactionsAsync.value ?? [];
+    
+    final confirmed = transactions
+        .where((t) => t.status == TransactionStatus.confirmed)
+        .toList();
 
-    final budgets = budgetsAsync.value ?? [];
-
-    final categoriesWithBudget = details.categories.where((c) {
-      return _parseWholeAmount(c.targetAmount) > BigInt.zero;
-    }).toList();
-
-    if (categoriesWithBudget.isEmpty) {
-      return const FlowFiInlineEmptyState(
-        icon: Icons.savings_outlined,
-        title: 'Chưa có ngân sách',
-        message: 'Tạo ngân sách để biết khoản nào đang gần chạm giới hạn.',
-      );
-    }
-
-    final budgetProgressList = categoriesWithBudget.map((cat) {
-      final budgetConfig = budgets.firstWhere(
-        (b) => b.month == now.month && b.year == now.year && b.tagId == cat.tagId,
-        orElse: () => Budget(id: '', amount: '0', month: now.month, year: now.year, warningThresholdPercent: 80),
-      );
-      
-      final spent = _parseWholeAmount(cat.spentAmount);
-      final target = _parseWholeAmount(cat.targetAmount);
-      final percentUsed = target > BigInt.zero
-          ? (spent * BigInt.from(10000) ~/ target).toDouble() / 10000
-          : 0.0;
-
-      return _BudgetProgressData(
-        tagName: cat.tagName,
-        targetAmount: target,
-        spentAmount: spent,
-        percentUsed: percentUsed,
-        warningThresholdPercent: budgetConfig.warningThresholdPercent,
-      );
-    }).toList();
-
-    budgetProgressList.sort((a, b) => b.percentUsed.compareTo(a.percentUsed));
+    final expenses = _sumByType(confirmed, MoneyFlowType.expense);
+    final income = _sumByType(confirmed, MoneyFlowType.income);
 
     return FlowFiCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Ngân sách nổi bật',
+            'Thống kê theo năm',
             style: Theme.of(context).textTheme.titleMedium,
           ),
           const SizedBox(height: 14),
-          for (final data in budgetProgressList) ...[
-            _BudgetProgress(
-              tagName: data.tagName,
-              targetAmount: data.targetAmount,
-              spentAmount: data.spentAmount,
-              percentUsed: data.percentUsed,
-              warningThresholdPercent: data.warningThresholdPercent,
-              currency: currency,
-            ),
-            const SizedBox(height: 12),
-          ],
+          _BudgetProgress(
+            tagName: 'Tổng Thu',
+            targetAmount: income,
+            spentAmount: income,
+            percentUsed: 1.0,
+            warningThresholdPercent: 100,
+            currency: currency,
+            tone: FlowFiTone.positive,
+            hideTarget: true,
+          ),
+          const SizedBox(height: 12),
+          _BudgetProgress(
+            tagName: 'Tổng Chi',
+            targetAmount: expenses,
+            spentAmount: expenses,
+            percentUsed: 1.0,
+            warningThresholdPercent: 100,
+            currency: currency,
+            tone: FlowFiTone.warning,
+            hideTarget: true,
+          ),
         ],
       ),
     );
   }
-}
-
-class _BudgetProgressData {
-  const _BudgetProgressData({
-    required this.tagName,
-    required this.targetAmount,
-    required this.spentAmount,
-    required this.percentUsed,
-    required this.warningThresholdPercent,
-  });
-  final String tagName;
-  final BigInt targetAmount;
-  final BigInt spentAmount;
-  final double percentUsed;
-  final int warningThresholdPercent;
 }
 
 class _MiniMetricCard extends StatelessWidget {
@@ -891,6 +849,8 @@ class _BudgetProgress extends StatelessWidget {
     required this.percentUsed,
     required this.warningThresholdPercent,
     required this.currency,
+    this.tone,
+    this.hideTarget = false,
   });
 
   final String tagName;
@@ -899,6 +859,8 @@ class _BudgetProgress extends StatelessWidget {
   final double percentUsed;
   final int warningThresholdPercent;
   final String currency;
+  final FlowFiTone? tone;
+  final bool hideTarget;
 
   @override
   Widget build(BuildContext context) {
@@ -908,17 +870,27 @@ class _BudgetProgress extends StatelessWidget {
     return Column(
       children: [
         Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Expanded(
               child: Text(
                 tagName,
-                style: Theme.of(context).textTheme.labelMedium,
+                style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                  fontWeight: FontWeight.w600,
+                  color: Theme.of(context).colorScheme.onSurface,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
               ),
             ),
+            const SizedBox(width: 12),
             Text(
-              '${_groupDigits(spentAmount.toString())} / ${_formatMoney(targetAmount, currency)}',
+              hideTarget
+                  ? _formatMoney(spentAmount, currency)
+                  : '${_formatMoney(spentAmount, currency)} / ${_formatMoney(targetAmount, currency)}',
               style: Theme.of(context).textTheme.labelMedium?.copyWith(
                 color: Theme.of(context).colorScheme.onSurfaceVariant,
+                fontWeight: FontWeight.w500,
               ),
             ),
           ],
@@ -926,7 +898,7 @@ class _BudgetProgress extends StatelessWidget {
         const SizedBox(height: 6),
         FlowFiProgressBar(
           value: percentUsed.clamp(0.0, 1.0),
-          tone: percentUsedHundred >= threshold ? FlowFiTone.warning : FlowFiTone.positive,
+          tone: tone ?? (percentUsedHundred >= threshold ? FlowFiTone.warning : FlowFiTone.positive),
         ),
       ],
     );

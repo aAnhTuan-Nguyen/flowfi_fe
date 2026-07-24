@@ -9,13 +9,85 @@ final transactionRepositoryProvider = Provider<TransactionRepository>(
   (ref) => serviceLocator<TransactionRepository>(),
 );
 
+class TransactionsMonthNotifier extends Notifier<DateTime> {
+  @override
+  DateTime build() => DateTime.now();
+  
+  void setMonth(DateTime month) => state = month;
+}
+
+final transactionsMonthProvider = NotifierProvider<TransactionsMonthNotifier, DateTime>(TransactionsMonthNotifier.new);
+
 class TransactionsNotifier extends AsyncNotifier<List<Transaction>> {
+  int _page = 1;
+  bool _hasMore = true;
+  bool _isLoadingMore = false;
+  bool get hasMore => _hasMore;
+
   @override
   Future<List<Transaction>> build() async {
+    _page = 1;
+    _hasMore = true;
+    final month = ref.watch(transactionsMonthProvider);
+    final startOfMonth = DateTime(month.year, month.month, 1);
+    final endOfMonth = DateTime(month.year, month.month + 1, 1).subtract(const Duration(milliseconds: 1));
+
     final transactions = await ref
         .watch(transactionRepositoryProvider)
-        .listTransactions();
-    return sortTransactionsByActivity(transactions);
+        .listTransactions(
+          page: _page,
+          limit: 20,
+          from: startOfMonth.toIso8601String(),
+          to: endOfMonth.toIso8601String(),
+        );
+        
+    final filtered = transactions.where((t) {
+      if (t.date == null) return false;
+      return t.date!.year == month.year && t.date!.month == month.month;
+    }).toList();
+
+    if (transactions.length < 20) {
+      _hasMore = false;
+    }
+    return sortTransactionsByActivity(filtered);
+  }
+
+  Future<void> loadMore() async {
+    if (!_hasMore || state.isLoading || state.isRefreshing || _isLoadingMore) return;
+    
+    _isLoadingMore = true;
+    _page++;
+    try {
+      final month = ref.read(transactionsMonthProvider);
+      final startOfMonth = DateTime(month.year, month.month, 1);
+      final endOfMonth = DateTime(month.year, month.month + 1, 1).subtract(const Duration(milliseconds: 1));
+
+      final newTransactions = await ref
+          .read(transactionRepositoryProvider)
+          .listTransactions(
+            page: _page,
+            limit: 20,
+            from: startOfMonth.toIso8601String(),
+            to: endOfMonth.toIso8601String(),
+          );
+      
+      final filtered = newTransactions.where((t) {
+        if (t.date == null) return false;
+        return t.date!.year == month.year && t.date!.month == month.month;
+      }).toList();
+      
+      if (newTransactions.length < 20) {
+        _hasMore = false;
+      }
+      
+      final currentList = state.value ?? [];
+      state = AsyncData(sortTransactionsByActivity([...currentList, ...filtered]));
+    } catch (e, st) {
+      _page--;
+      state = AsyncError(e, st);
+    } finally {
+      _isLoadingMore = false;
+    }
   }
 
   Future<void> reload() async {
@@ -86,27 +158,11 @@ class TransactionsNotifier extends AsyncNotifier<List<Transaction>> {
 
   Future<void> confirmTransaction(String id) async {
     final repository = ref.read(transactionRepositoryProvider);
-    final confirmed = await repository.confirmTransaction(id);
-    final refreshed = await repository.listTransactions();
-    state = AsyncData(_upsertTransaction(refreshed, confirmed));
+    await repository.confirmTransaction(id);
+    await reload();
   }
 }
 
-List<Transaction> _upsertTransaction(
-  List<Transaction> transactions,
-  Transaction replacement,
-) {
-  final index = transactions.indexWhere(
-    (transaction) => transaction.id == replacement.id,
-  );
-  if (index == -1) {
-    return sortTransactionsByActivity([replacement, ...transactions]);
-  }
-  return sortTransactionsByActivity([
-    for (var itemIndex = 0; itemIndex < transactions.length; itemIndex++)
-      if (itemIndex == index) replacement else transactions[itemIndex],
-  ]);
-}
 
 final transactionsProvider =
     AsyncNotifierProvider<TransactionsNotifier, List<Transaction>>(
@@ -127,6 +183,25 @@ final monthlyTransactionsProvider = FutureProvider.autoDispose
   final filtered = transactions.where((t) {
     if (t.date == null) return false;
     return t.date!.year == month.year && t.date!.month == month.month;
+  }).toList();
+
+  return sortTransactionsByActivity(filtered);
+});
+
+final annualTransactionsProvider = FutureProvider.autoDispose
+    .family<List<Transaction>, int>((ref, year) async {
+  final startOfYear = DateTime(year, 1, 1);
+  final endOfYear = DateTime(year + 1, 1, 1).subtract(const Duration(milliseconds: 1));
+
+  final transactions = await ref.watch(transactionRepositoryProvider).listTransactions(
+        from: startOfYear.toIso8601String(),
+        to: endOfYear.toIso8601String(),
+        limit: 10000,
+      );
+  
+  final filtered = transactions.where((t) {
+    if (t.date == null) return false;
+    return t.date!.year == year;
   }).toList();
 
   return sortTransactionsByActivity(filtered);

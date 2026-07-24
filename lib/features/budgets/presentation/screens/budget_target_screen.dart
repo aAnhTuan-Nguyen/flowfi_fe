@@ -242,6 +242,12 @@ class _BudgetTargetScreenState extends ConsumerState<BudgetTargetScreen> {
                 BudgetAllocation(tagId: entry.key, amount: entry.value),
             ],
           );
+      
+      ref.invalidate(monthlyBudgetDetailsProvider(
+        (month: _month, year: _year),
+      ));
+      ref.invalidate(annualBudgetSummaryProvider(_year));
+      
       if (mounted) Navigator.of(context).pop();
     } catch (_) {
       if (mounted) {
