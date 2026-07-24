@@ -179,7 +179,12 @@ class _BudgetTargetScreenState extends ConsumerState<BudgetTargetScreen> {
     setState(() {
       _month = value.month;
       _year = value.year;
-      _allocations = {};
+      final allBudgets = ref.read(budgetsProvider).asData?.value ?? widget.budgets;
+      final targetBudgets = allBudgets.where((b) => b.month == _month && b.year == _year);
+      _allocations = {
+        for (final budget in targetBudgets)
+          if (budget.tagId != null) budget.tagId!: budget.amount,
+      };
     });
   }
 
@@ -248,7 +253,9 @@ class _BudgetTargetScreenState extends ConsumerState<BudgetTargetScreen> {
       ));
       ref.invalidate(annualBudgetSummaryProvider(_year));
       
-      if (mounted) Navigator.of(context).pop();
+      if (mounted) {
+        Navigator.of(context).pop((month: _month, year: _year));
+      }
     } catch (_) {
       if (mounted) {
         setState(() => _saving = false);

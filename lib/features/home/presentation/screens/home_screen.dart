@@ -5,10 +5,9 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/finance/money_flow_type.dart';
 import '../../../../routes/app_routes.dart';
+import '../../../budgets/presentation/providers/budgets_provider.dart';
 import '../../../auth/domain/entities/auth_user.dart';
 import '../../../auth/presentation/providers/auth_controller.dart';
-import '../../../budgets/domain/entities/budget.dart';
-import '../../../budgets/presentation/providers/budgets_provider.dart';
 import '../../../notifications/presentation/providers/notifications_provider.dart';
 import '../../../shared/presentation/widgets/feature_states.dart';
 import '../../../shared/presentation/widgets/forui_controls.dart';

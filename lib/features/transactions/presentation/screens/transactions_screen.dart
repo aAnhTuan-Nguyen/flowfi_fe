@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../shared/presentation/widgets/feature_states.dart';
 import '../../../shared/presentation/widgets/forui_controls.dart';
-import '../../../tags/presentation/widgets/tag_manager_sheet.dart';
+
 import '../../domain/entities/transaction.dart';
 import '../providers/transactions_provider.dart';
 import '../widgets/transaction_filter_bar.dart';
@@ -43,11 +43,6 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
           onPressed: () => _showTransactionForm(context),
           icon: Icons.add_rounded,
           fullWidth: false,
-        ),
-        FlowFiIconButton(
-          onPressed: () => _showTagManager(context),
-          icon: Icons.sell_outlined,
-          tooltip: 'Quản lý danh mục',
         ),
       ],
       child: SliverToBoxAdapter(
@@ -112,15 +107,6 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
       child: TransactionFormSheet(transaction: transaction),
     );
   }
-
-  void _showTagManager(BuildContext context) {
-    showFlowFiFormSheet<void>(
-      context: context,
-      title: 'Quản lý danh mục',
-      child: const TagManagerSheet(),
-    );
-  }
-
 }
 
 class _InlineError extends StatelessWidget {

@@ -103,15 +103,22 @@ class _MonthlyBudgetDetailsScreenState
   void _selectMonth(int month) => setState(() => _month = month);
 
   Future<void> _editTarget() async {
-    final budgets = widget.budgets
+    final allBudgets = ref.read(budgetsProvider).asData?.value ?? widget.budgets;
+    final budgets = allBudgets
         .where((budget) => budget.month == _month && budget.year == _year)
         .toList();
-    await Navigator.of(context).push<void>(
+    final result = await Navigator.of(context).push<({int month, int year})>(
       MaterialPageRoute(
         builder: (_) =>
             BudgetTargetScreen(month: _month, year: _year, budgets: budgets),
       ),
     );
+    if (result != null && (result.month != _month || result.year != _year)) {
+      setState(() {
+        _month = result.month;
+        _year = result.year;
+      });
+    }
     ref.invalidate(monthlyBudgetDetailsProvider((month: _month, year: _year)));
   }
 }

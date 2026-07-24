@@ -96,6 +96,7 @@ class _QuickTransactionSheetState extends ConsumerState<QuickTransactionSheet> {
   String? _tagId;
   MoneyFlowType _type = MoneyFlowType.expense;
   bool _isSubmitting = false;
+  bool _showNote = false;
 
   @override
   void dispose() {
@@ -151,42 +152,77 @@ class _QuickTransactionSheetState extends ConsumerState<QuickTransactionSheet> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Row(
-            children: [
-              Expanded(
-                child: _TypeToggleButton(
-                  label: 'Thu',
-                  icon: Icons.arrow_downward_rounded,
-                  iconColor: Colors.white,
-                  iconBackgroundColor: FlowFiColors.income,
-                  backgroundColor: _type == MoneyFlowType.income ? FlowFiColors.positiveSurface : Colors.transparent,
-                  borderColor: _type == MoneyFlowType.income ? FlowFiColors.income : Theme.of(context).colorScheme.outlineVariant,
-                  onTap: () {
-                    setState(() {
-                      _type = MoneyFlowType.income;
-                      _tagId = null;
-                    });
-                  },
+          Container(
+            padding: const EdgeInsets.all(4),
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.surfaceContainerLowest,
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: Theme.of(context).colorScheme.outlineVariant),
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: InkWell(
+                    onTap: () {
+                      setState(() {
+                        _type = MoneyFlowType.income;
+                        _tagId = null;
+                      });
+                    },
+                    borderRadius: BorderRadius.circular(10),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      decoration: BoxDecoration(
+                        color: _type == MoneyFlowType.income
+                            ? Theme.of(context).colorScheme.onSurface
+                            : Colors.transparent,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      alignment: Alignment.center,
+                      child: Text(
+                        'Thu',
+                        style: TextStyle(
+                          color: _type == MoneyFlowType.income
+                              ? Theme.of(context).colorScheme.surface
+                              : Theme.of(context).colorScheme.onSurfaceVariant,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                  ),
                 ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _TypeToggleButton(
-                  label: 'Chi',
-                  icon: Icons.arrow_upward_rounded,
-                  iconColor: Colors.white,
-                  iconBackgroundColor: FlowFiColors.expense,
-                  backgroundColor: _type == MoneyFlowType.expense ? Theme.of(context).colorScheme.errorContainer : Colors.transparent,
-                  borderColor: _type == MoneyFlowType.expense ? FlowFiColors.expense : Theme.of(context).colorScheme.outlineVariant,
-                  onTap: () {
-                    setState(() {
-                      _type = MoneyFlowType.expense;
-                      _tagId = null;
-                    });
-                  },
+                Expanded(
+                  child: InkWell(
+                    onTap: () {
+                      setState(() {
+                        _type = MoneyFlowType.expense;
+                        _tagId = null;
+                      });
+                    },
+                    borderRadius: BorderRadius.circular(10),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      decoration: BoxDecoration(
+                        color: _type == MoneyFlowType.expense
+                            ? Theme.of(context).colorScheme.onSurface
+                            : Colors.transparent,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      alignment: Alignment.center,
+                      child: Text(
+                        'Chi',
+                        style: TextStyle(
+                          color: _type == MoneyFlowType.expense
+                              ? Theme.of(context).colorScheme.surface
+                              : Theme.of(context).colorScheme.onSurfaceVariant,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
           const SizedBox(height: 16),
           FlowFiTextField(
@@ -210,12 +246,89 @@ class _QuickTransactionSheetState extends ConsumerState<QuickTransactionSheet> {
                 : (value) => setState(() => _tagId = value),
           ),
           const SizedBox(height: 12),
-          FlowFiTextField(
-            label: 'Ghi chú',
-            hint: 'VD: Cà phê sáng',
-            controller: _noteController,
-            textInputAction: TextInputAction.done,
-          ),
+          if (_showNote)
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                FlowFiTextField(
+                  label: 'Ghi chú (không bắt buộc)',
+                  hint: 'Nhập ghi chú...',
+                  controller: _noteController,
+                  textInputAction: TextInputAction.done,
+                  minLines: 4,
+                  maxLines: 6,
+                ),
+                const SizedBox(height: 12),
+                InkWell(
+                  onTap: () {
+                    setState(() {
+                      _showNote = false;
+                      _noteController.clear();
+                    });
+                  },
+                  borderRadius: BorderRadius.circular(12),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: Theme.of(context).colorScheme.outlineVariant,
+                      ),
+                    ),
+                    alignment: Alignment.center,
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.remove_circle_outline_rounded,
+                          size: 18,
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Ẩn ghi chú',
+                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                              ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            )
+          else
+            InkWell(
+              onTap: () => setState(() => _showNote = true),
+              borderRadius: BorderRadius.circular(12),
+              child: Container(
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: Theme.of(context).colorScheme.outlineVariant,
+                  ),
+                ),
+                alignment: Alignment.center,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.add_circle_outline_rounded,
+                      size: 18,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Thêm ghi chú (không bắt buộc)',
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            color: Theme.of(context).colorScheme.onSurfaceVariant,
+                          ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
           const SizedBox(height: 14),
           Align(
             alignment: Alignment.centerLeft,
@@ -319,56 +432,3 @@ Tag _defaultTag(List<Tag> tags) {
   );
 }
 
-class _TypeToggleButton extends StatelessWidget {
-  const _TypeToggleButton({
-    required this.label,
-    required this.icon,
-    required this.iconColor,
-    required this.iconBackgroundColor,
-    required this.backgroundColor,
-    required this.borderColor,
-    required this.onTap,
-  });
-
-  final String label;
-  final IconData icon;
-  final Color iconColor;
-  final Color iconBackgroundColor;
-  final Color backgroundColor;
-  final Color borderColor;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 10),
-        decoration: BoxDecoration(
-          color: backgroundColor,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: borderColor),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(4),
-              decoration: BoxDecoration(
-                color: iconBackgroundColor,
-                shape: BoxShape.circle,
-              ),
-              child: Icon(icon, color: iconColor, size: 14),
-            ),
-            const SizedBox(width: 8),
-            Text(
-              label,
-              style: const TextStyle(fontWeight: FontWeight.w600),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
