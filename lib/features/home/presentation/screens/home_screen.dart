@@ -96,15 +96,6 @@ class _HomeHeader extends ConsumerWidget {
 
     return Row(
       children: [
-        Container(
-          width: 40,
-          height: 40,
-          decoration: BoxDecoration(
-            color: colors.primaryContainer,
-            borderRadius: BorderRadius.circular(14),
-          ),
-          child: Icon(Icons.person_rounded, color: colors.primary),
-        ),
         const SizedBox(width: 12),
         Expanded(
           child: Column(
