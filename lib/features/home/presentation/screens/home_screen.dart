@@ -9,20 +9,50 @@ import '../../../auth/domain/entities/auth_user.dart';
 import '../../../auth/presentation/providers/auth_controller.dart';
 import '../../../budgets/domain/entities/budget.dart';
 import '../../../budgets/presentation/providers/budgets_provider.dart';
+import '../../../notifications/presentation/providers/notifications_provider.dart';
 import '../../../shared/presentation/widgets/feature_states.dart';
 import '../../../shared/presentation/widgets/forui_controls.dart';
 import '../../../transactions/domain/entities/transaction.dart';
 import '../../../transactions/presentation/providers/transactions_provider.dart';
 import '../../../wallets/domain/entities/wallet.dart';
 import '../../../wallets/presentation/providers/wallets_provider.dart';
-import '../../../notifications/presentation/providers/notifications_provider.dart';
 import '../current_date_provider.dart';
 
-class HomeScreen extends ConsumerWidget {
+class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends ConsumerState<HomeScreen>
+    with WidgetsBindingObserver {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(notificationsProvider.notifier).reload();
+    });
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      ref.read(notificationsProvider.notifier).reload();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    ref.listen<Object?>(notificationsProvider, (_, _) {});
+
     final auth = ref.watch(authControllerProvider).value;
     final wallets = ref.watch(walletsProvider);
     final transactions = ref.watch(transactionsProvider);
@@ -37,6 +67,7 @@ class HomeScreen extends ConsumerWidget {
             ref.read(walletsProvider.notifier).reload(),
             ref.read(transactionsProvider.notifier).reload(),
             ref.read(budgetsProvider.notifier).reload(),
+            ref.read(notificationsProvider.notifier).reload(),
           ]);
           ref.invalidate(monthlyTransactionsProvider(currentDate));
           ref.invalidate(monthlyBudgetDetailsProvider((month: currentDate.month, year: currentDate.year)));

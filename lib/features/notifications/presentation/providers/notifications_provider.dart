@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../di/injection.dart';
@@ -9,9 +11,35 @@ final notificationRepositoryProvider = Provider<NotificationRepository>(
 );
 
 class NotificationsNotifier extends AsyncNotifier<List<AppNotification>> {
+  Timer? _pollingTimer;
+
   @override
   Future<List<AppNotification>> build() {
+    ref.onDispose(() {
+      _pollingTimer?.cancel();
+      _pollingTimer = null;
+    });
+    _startPolling();
     return ref.watch(notificationRepositoryProvider).listNotifications();
+  }
+
+  void _startPolling() {
+    _pollingTimer?.cancel();
+    _pollingTimer = Timer.periodic(
+      const Duration(seconds: 20),
+      (_) => _silentRefresh(),
+    );
+  }
+
+  Future<void> _silentRefresh() async {
+    try {
+      final fresh = await ref
+          .read(notificationRepositoryProvider)
+          .listNotifications();
+      state = AsyncData(fresh);
+    } catch (_) {
+      // Ignore polling errors; keep last known state.
+    }
   }
 
   Future<void> reload() async {
