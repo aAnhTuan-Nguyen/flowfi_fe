@@ -57,10 +57,7 @@ class ProfileContent extends ConsumerWidget {
               .setThemeMode(choice.themeMode),
         ),
         const SizedBox(height: 12),
-        const _NotificationSettingsCard(),
-        const SizedBox(height: 12),
         _ProfileLogoutButton(onPressed: () => _signOut(context, ref)),
-        const SizedBox(height: 132),
       ],
     );
   }
@@ -443,6 +440,21 @@ class _ProfileSettingsCard extends StatelessWidget {
               ],
             ),
           ),
+          const SizedBox(height: 12),
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: colors.surfaceContainerLowest,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: colors.outlineVariant),
+            ),
+            child: FTile(
+              title: const Text('Cài đặt thông báo'),
+              subtitle: const Text('Tùy chỉnh thông báo và lời nhắc'),
+              prefix: const Icon(Icons.notifications_outlined),
+              onPress: () => context.push(AppRoutes.notificationPreferences),
+            ),
+          ),
         ],
       ),
     );
@@ -545,23 +557,6 @@ enum _ProfileThemeChoice {
     return _ProfileThemeChoice.values.firstWhere(
       (choice) => choice.themeMode == mode,
       orElse: () => _ProfileThemeChoice.light,
-    );
-  }
-}
-
-class _NotificationSettingsCard extends StatelessWidget {
-  const _NotificationSettingsCard();
-
-  @override
-  Widget build(BuildContext context) {
-    return FlowFiCard(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: FTile(
-        title: const Text('Cài đặt thông báo'),
-        subtitle: const Text('Tùy chỉnh thông báo và lời nhắc'),
-        prefix: const Icon(Icons.notifications_outlined),
-        onPress: () => context.push(AppRoutes.notificationPreferences),
-      ),
     );
   }
 }

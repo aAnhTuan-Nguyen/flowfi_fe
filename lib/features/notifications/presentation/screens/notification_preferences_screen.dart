@@ -35,20 +35,6 @@ class NotificationPreferencesScreen extends ConsumerWidget {
                 _buildPreferenceSwitch(
                   context,
                   ref,
-                  title: 'Thông báo giao dịch',
-                  subtitle: 'Nhận thông báo khi có giao dịch mới',
-                  value: preferences.transactionNotifications,
-                  onChanged: (val) {
-                    _updatePreference(
-                      context,
-                      ref,
-                      preferences.copyWith(transactionNotifications: val),
-                    );
-                  },
-                ),
-                _buildPreferenceSwitch(
-                  context,
-                  ref,
                   title: 'Cảnh báo ngân sách',
                   subtitle: 'Nhận cảnh báo khi sắp vượt ngân sách',
                   value: preferences.budgetWarning,
@@ -114,20 +100,6 @@ class NotificationPreferencesScreen extends ConsumerWidget {
                       context,
                       ref,
                       preferences.copyWith(monthlySummary: val),
-                    );
-                  },
-                ),
-                _buildPreferenceSwitch(
-                  context,
-                  ref,
-                  title: 'Mẹo tiết kiệm',
-                  subtitle: 'Nhận các mẹo tối ưu chi tiêu',
-                  value: preferences.savingsTip,
-                  onChanged: (val) {
-                    _updatePreference(
-                      context,
-                      ref,
-                      preferences.copyWith(savingsTip: val),
                     );
                   },
                 ),
