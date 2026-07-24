@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/finance/money_flow_type.dart';
+import '../../../notifications/presentation/providers/notifications_provider.dart';
 import '../../../shared/presentation/widgets/crud_helpers.dart';
 import '../../../shared/presentation/widgets/feature_states.dart';
 import '../../../shared/presentation/widgets/forui_controls.dart';
@@ -209,6 +210,7 @@ class _TransactionFormSheetState extends ConsumerState<TransactionFormSheet> {
       return;
     }
     setState(() => _isSubmitting = true);
+    final typeLabel = _type == MoneyFlowType.income ? 'thu' : 'chi';
     try {
       final notifier = ref.read(transactionsProvider.notifier);
       if (widget.transaction == null) {
@@ -225,6 +227,7 @@ class _TransactionFormSheetState extends ConsumerState<TransactionFormSheet> {
           description: emptyToNull(_descriptionController.text.trim()),
         );
         ref.invalidate(syncStatusProvider);
+        ref.invalidate(notificationsProvider);
       } else {
         await notifier.updateTransaction(
           widget.transaction!.id,
@@ -237,7 +240,39 @@ class _TransactionFormSheetState extends ConsumerState<TransactionFormSheet> {
           description: emptyToNull(_descriptionController.text.trim()),
         );
       }
-      if (mounted) Navigator.of(context).pop();
+      final isNew = widget.transaction == null;
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                Icon(
+                  isNew
+                      ? Icons.check_circle_rounded
+                      : Icons.edit_rounded,
+                  color: Colors.white,
+                  size: 20,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    isNew
+                        ? 'Giao dịch $typeLabel đã được tạo'
+                        : 'Giao dịch đã được cập nhật',
+                  ),
+                ),
+              ],
+            ),
+            behavior: SnackBarBehavior.floating,
+            duration: const Duration(seconds: 2),
+            backgroundColor: const Color(0xFF4CAF50),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
+          ),
+        );
+        Navigator.of(context).pop();
+      }
     } catch (_) {
       if (mounted) {
         showGenericMutationError(context);
