@@ -107,7 +107,7 @@ class _BudgetsScreenState extends ConsumerState<BudgetsScreen> {
     required int month,
     required List<Budget> budgets,
   }) async {
-    await Navigator.of(context).push<void>(
+    final result = await Navigator.of(context).push<({int month, int year})>(
       MaterialPageRoute(
         builder: (_) => BudgetTargetScreen(
           month: month,
@@ -117,6 +117,14 @@ class _BudgetsScreenState extends ConsumerState<BudgetsScreen> {
       ),
     );
     ref.invalidate(annualBudgetSummaryProvider(_selectedYear));
+    
+    if (result != null && context.mounted) {
+      _openDetails(
+        context,
+        month: result.month,
+        budgets: ref.read(budgetsProvider).asData?.value ?? [],
+      );
+    }
   }
 
   Future<void> _openDetails(

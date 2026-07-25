@@ -205,11 +205,15 @@ class _ImageTransactionImportSheetState
       final result = await ref
           .read(imageTransactionImportProvider.notifier)
           .createTransactionsFromImage(walletId: walletId, image: image);
-      await Future.wait([
-        ref.read(transactionsProvider.notifier).reload(),
-        ref.read(tagsProvider.notifier).reload(),
-        ref.read(notificationsProvider.notifier).reload(),
-      ]);
+      ref.invalidate(transactionsProvider);
+      ref.invalidate(tagsProvider);
+      ref.invalidate(notificationsProvider);
+      ref.invalidate(walletsProvider);
+      ref.invalidate(budgetsProvider);
+      ref.invalidate(monthlyTransactionsProvider);
+      ref.invalidate(annualTransactionsProvider);
+      ref.invalidate(monthlyBudgetDetailsProvider);
+      ref.invalidate(annualBudgetSummaryProvider);
       if (!mounted) {
         return;
       }
@@ -243,11 +247,15 @@ class _ImageTransactionImportSheetState
     if (!mounted) {
       return;
     }
-    await Future.wait([
-      ref.read(transactionsProvider.notifier).reload(),
-      ref.read(tagsProvider.notifier).reload(),
-      ref.read(notificationsProvider.notifier).reload(),
-    ]);
+    ref.invalidate(transactionsProvider);
+    ref.invalidate(tagsProvider);
+    ref.invalidate(notificationsProvider);
+    ref.invalidate(walletsProvider);
+    ref.invalidate(budgetsProvider);
+    ref.invalidate(monthlyTransactionsProvider);
+    ref.invalidate(annualTransactionsProvider);
+    ref.invalidate(monthlyBudgetDetailsProvider);
+    ref.invalidate(annualBudgetSummaryProvider);
   }
 
   Future<void> _confirmDraft(Transaction transaction) async {
@@ -258,12 +266,14 @@ class _ImageTransactionImportSheetState
       await ref
           .read(transactionsProvider.notifier)
           .confirmTransaction(transaction.id);
-      await Future.wait([
-        ref.read(walletsProvider.notifier).reload(),
-        ref.read(budgetsProvider.notifier).reload(),
-        ref.read(goalsProvider.notifier).reload(),
-        ref.read(notificationsProvider.notifier).reload(),
-      ]);
+      ref.invalidate(walletsProvider);
+      ref.invalidate(budgetsProvider);
+      ref.invalidate(goalsProvider);
+      ref.invalidate(notificationsProvider);
+      ref.invalidate(monthlyTransactionsProvider);
+      ref.invalidate(annualTransactionsProvider);
+      ref.invalidate(monthlyBudgetDetailsProvider);
+      ref.invalidate(annualBudgetSummaryProvider);
       if (mounted) {
         setState(() {
           _result = _withoutTransaction(_result, transaction.id);
@@ -606,10 +616,6 @@ class _ImportResultCard extends StatelessWidget {
                   ],
                 ),
               ),
-              if (result.confidence != null) ...[
-                const SizedBox(width: 8),
-                _ConfidenceBadge(confidence: result.confidence!),
-              ],
             ],
           ),
           if (result.imageType != null) ...[
@@ -766,9 +772,7 @@ class _OcrDraftTile extends StatelessWidget {
           _ReceiptDetailRow(
             icon: Icons.receipt_long_outlined,
             label: 'Nguồn dữ liệu',
-            value: confidence == null
-                ? 'AI OCR từ hóa đơn'
-                : 'AI OCR từ hóa đơn · $confidence',
+            value: 'AI OCR từ hóa đơn',
             showDivider: receiptDetails.isNotEmpty,
           ),
           if (receiptDetails.isNotEmpty) ...[
@@ -780,23 +784,6 @@ class _OcrDraftTile extends StatelessWidget {
                     '${_formatQuantity(detail.quantity)} x ${_formatPlainAmount(detail.price)}',
               ),
           ],
-          const SizedBox(height: 8),
-          Center(
-            child: TextButton.icon(
-              onPressed: () {},
-              icon: Icon(
-                Icons.keyboard_arrow_up_rounded,
-                color: colors.primary,
-              ),
-              label: Text(
-                'Ẩn bớt chi tiết',
-                style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                  color: colors.primary,
-                  fontWeight: FontWeight.w800,
-                ),
-              ),
-            ),
-          ),
           const SizedBox(height: 10),
           _OcrActionBar(
             isBusy: isBusy,
@@ -834,33 +821,6 @@ class _MiniStatusIcon extends StatelessWidget {
         border: Border.all(color: color.withValues(alpha: 0.34)),
       ),
       child: Icon(icon, color: color, size: size * 0.56),
-    );
-  }
-}
-
-class _ConfidenceBadge extends StatelessWidget {
-  const _ConfidenceBadge({required this.confidence});
-
-  final String confidence;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = Theme.of(context).colorScheme;
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
-      decoration: BoxDecoration(
-        color: colors.surfaceContainerLowest.withValues(alpha: 0.72),
-        borderRadius: BorderRadius.circular(999),
-      ),
-      child: Text(
-        'Độ tin cậy: $confidence',
-        style: Theme.of(context).textTheme.labelMedium?.copyWith(
-          color: colors.primary,
-          fontSize: 10,
-          fontWeight: FontWeight.w800,
-        ),
-      ),
     );
   }
 }

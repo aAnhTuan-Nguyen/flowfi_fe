@@ -9,6 +9,8 @@ import '../../../auth/domain/entities/auth_user.dart';
 import '../../../auth/presentation/providers/auth_controller.dart';
 import '../../../shared/presentation/widgets/crud_helpers.dart';
 import '../../../shared/presentation/widgets/feature_states.dart';
+import '../../../shared/presentation/widgets/forui_controls.dart';
+import '../../../tags/presentation/widgets/tag_manager_sheet.dart';
 
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
@@ -57,10 +59,7 @@ class ProfileContent extends ConsumerWidget {
               .setThemeMode(choice.themeMode),
         ),
         const SizedBox(height: 12),
-        const _NotificationSettingsCard(),
-        const SizedBox(height: 12),
         _ProfileLogoutButton(onPressed: () => _signOut(context, ref)),
-        const SizedBox(height: 132),
       ],
     );
   }
@@ -443,6 +442,36 @@ class _ProfileSettingsCard extends StatelessWidget {
               ],
             ),
           ),
+          const SizedBox(height: 12),
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: colors.surfaceContainerLowest,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: colors.outlineVariant),
+            ),
+            child: Column(
+              children: [
+                FTile(
+                  title: const Text('Cài đặt thông báo'),
+                  subtitle: const Text('Tùy chỉnh thông báo và lời nhắc'),
+                  prefix: const Icon(Icons.notifications_outlined),
+                  onPress: () => context.push(AppRoutes.notificationPreferences),
+                ),
+                const Divider(),
+                FTile(
+                  title: const Text('Quản lý danh mục'),
+                  subtitle: const Text('Thêm, sửa, xóa danh mục thu chi'),
+                  prefix: const Icon(Icons.sell_outlined),
+                  onPress: () => showFlowFiFormSheet<void>(
+                    context: context,
+                    title: 'Quản lý danh mục',
+                    child: const TagManagerSheet(),
+                  ),
+                ),
+              ],
+            ),
+          ),
         ],
       ),
     );
@@ -545,23 +574,6 @@ enum _ProfileThemeChoice {
     return _ProfileThemeChoice.values.firstWhere(
       (choice) => choice.themeMode == mode,
       orElse: () => _ProfileThemeChoice.light,
-    );
-  }
-}
-
-class _NotificationSettingsCard extends StatelessWidget {
-  const _NotificationSettingsCard();
-
-  @override
-  Widget build(BuildContext context) {
-    return FlowFiCard(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: FTile(
-        title: const Text('Cài đặt thông báo'),
-        subtitle: const Text('Tùy chỉnh thông báo và lời nhắc'),
-        prefix: const Icon(Icons.notifications_outlined),
-        onPress: () => context.push(AppRoutes.notificationPreferences),
-      ),
     );
   }
 }

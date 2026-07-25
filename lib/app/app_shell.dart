@@ -59,7 +59,7 @@ class FlowFiAppShell extends StatelessWidget {
           ],
         ),
       ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
+      floatingActionButtonLocation: const _CustomFabLocation(),
       floatingActionButton: FloatingActionButton(
         tooltip: 'Thêm giao dịch',
         onPressed: () => _showTransactionLauncher(context),
@@ -217,5 +217,15 @@ class _BottomBarItem extends StatelessWidget {
         ),
       ),
     );
+  }
+}
+
+class _CustomFabLocation extends FloatingActionButtonLocation {
+  const _CustomFabLocation();
+
+  @override
+  Offset getOffset(ScaffoldPrelayoutGeometry scaffoldGeometry) {
+    final Offset offset = FloatingActionButtonLocation.centerDocked.getOffset(scaffoldGeometry);
+    return Offset(offset.dx, offset.dy + 38);
   }
 }

@@ -161,8 +161,12 @@ class SyncStatusNotifier extends AsyncNotifier<SyncStatusState> {
 
   void _invalidateSyncedProviders() {
     ref.invalidate(transactionsProvider);
+    ref.invalidate(monthlyTransactionsProvider);
+    ref.invalidate(annualTransactionsProvider);
     ref.invalidate(walletsProvider);
     ref.invalidate(budgetsProvider);
+    ref.invalidate(monthlyBudgetDetailsProvider);
+    ref.invalidate(annualBudgetSummaryProvider);
     ref.invalidate(goalsProvider);
     ref.invalidate(tagsProvider);
     ref.invalidate(notificationsProvider);

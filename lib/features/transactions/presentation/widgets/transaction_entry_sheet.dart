@@ -10,6 +10,7 @@ import '../../../tags/domain/entities/tag.dart';
 import '../../../tags/presentation/providers/tags_provider.dart';
 import '../../../wallets/domain/entities/wallet.dart';
 import '../../../wallets/presentation/providers/wallets_provider.dart';
+import '../../../budgets/presentation/providers/budgets_provider.dart';
 import '../../domain/entities/transaction.dart';
 import '../providers/transactions_provider.dart';
 
@@ -93,7 +94,9 @@ class _QuickTransactionSheetState extends ConsumerState<QuickTransactionSheet> {
   final _noteController = TextEditingController();
   String? _walletId;
   String? _tagId;
+  MoneyFlowType _type = MoneyFlowType.expense;
   bool _isSubmitting = false;
+  bool _showNote = false;
 
   @override
   void dispose() {
@@ -133,7 +136,15 @@ class _QuickTransactionSheetState extends ConsumerState<QuickTransactionSheet> {
     }
 
     _walletId ??= _defaultWallet(wallets).id;
-    _tagId ??= _defaultTag(tags).id;
+    
+    final filteredTagItems = tags.where((tag) => tag.type == _type).toList();
+    if (filteredTagItems.isNotEmpty) {
+      if (_tagId == null || !filteredTagItems.any((tag) => tag.id == _tagId)) {
+        _tagId = filteredTagItems.first.id;
+      }
+    } else {
+      _tagId = null;
+    }
 
     return Form(
       key: _formKey,
@@ -141,6 +152,79 @@ class _QuickTransactionSheetState extends ConsumerState<QuickTransactionSheet> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          Container(
+            padding: const EdgeInsets.all(4),
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.surfaceContainerLowest,
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: Theme.of(context).colorScheme.outlineVariant),
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: InkWell(
+                    onTap: () {
+                      setState(() {
+                        _type = MoneyFlowType.income;
+                        _tagId = null;
+                      });
+                    },
+                    borderRadius: BorderRadius.circular(10),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      decoration: BoxDecoration(
+                        color: _type == MoneyFlowType.income
+                            ? Theme.of(context).colorScheme.onSurface
+                            : Colors.transparent,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      alignment: Alignment.center,
+                      child: Text(
+                        'Thu',
+                        style: TextStyle(
+                          color: _type == MoneyFlowType.income
+                              ? Theme.of(context).colorScheme.surface
+                              : Theme.of(context).colorScheme.onSurfaceVariant,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                Expanded(
+                  child: InkWell(
+                    onTap: () {
+                      setState(() {
+                        _type = MoneyFlowType.expense;
+                        _tagId = null;
+                      });
+                    },
+                    borderRadius: BorderRadius.circular(10),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      decoration: BoxDecoration(
+                        color: _type == MoneyFlowType.expense
+                            ? Theme.of(context).colorScheme.onSurface
+                            : Colors.transparent,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      alignment: Alignment.center,
+                      child: Text(
+                        'Chi',
+                        style: TextStyle(
+                          color: _type == MoneyFlowType.expense
+                              ? Theme.of(context).colorScheme.surface
+                              : Theme.of(context).colorScheme.onSurfaceVariant,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
           FlowFiTextField(
             label: 'Số tiền',
             hint: 'VD: 50000',
@@ -154,7 +238,7 @@ class _QuickTransactionSheetState extends ConsumerState<QuickTransactionSheet> {
             label: 'Danh mục',
             value: _tagId,
             items: [
-              for (final tag in tags)
+              for (final tag in filteredTagItems)
                 FlowFiSelectItem(value: tag.id, label: tag.name),
             ],
             onChanged: _isSubmitting
@@ -162,12 +246,89 @@ class _QuickTransactionSheetState extends ConsumerState<QuickTransactionSheet> {
                 : (value) => setState(() => _tagId = value),
           ),
           const SizedBox(height: 12),
-          FlowFiTextField(
-            label: 'Ghi chú',
-            hint: 'VD: Cà phê sáng',
-            controller: _noteController,
-            textInputAction: TextInputAction.done,
-          ),
+          if (_showNote)
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                FlowFiTextField(
+                  label: 'Ghi chú (không bắt buộc)',
+                  hint: 'Nhập ghi chú...',
+                  controller: _noteController,
+                  textInputAction: TextInputAction.done,
+                  minLines: 4,
+                  maxLines: 6,
+                ),
+                const SizedBox(height: 12),
+                InkWell(
+                  onTap: () {
+                    setState(() {
+                      _showNote = false;
+                      _noteController.clear();
+                    });
+                  },
+                  borderRadius: BorderRadius.circular(12),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: Theme.of(context).colorScheme.outlineVariant,
+                      ),
+                    ),
+                    alignment: Alignment.center,
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.remove_circle_outline_rounded,
+                          size: 18,
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Ẩn ghi chú',
+                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                              ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            )
+          else
+            InkWell(
+              onTap: () => setState(() => _showNote = true),
+              borderRadius: BorderRadius.circular(12),
+              child: Container(
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: Theme.of(context).colorScheme.outlineVariant,
+                  ),
+                ),
+                alignment: Alignment.center,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.add_circle_outline_rounded,
+                      size: 18,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Thêm ghi chú (không bắt buộc)',
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            color: Theme.of(context).colorScheme.onSurfaceVariant,
+                          ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
           const SizedBox(height: 14),
           Align(
             alignment: Alignment.centerLeft,
@@ -201,9 +362,7 @@ class _QuickTransactionSheetState extends ConsumerState<QuickTransactionSheet> {
     );
     final note = _noteController.text.trim();
     final title = note.isEmpty ? tag.name : note;
-    final type = tag.type == MoneyFlowType.unknown
-        ? MoneyFlowType.expense
-        : tag.type;
+    final type = _type;
 
     setState(() => _isSubmitting = true);
     try {
@@ -220,7 +379,12 @@ class _QuickTransactionSheetState extends ConsumerState<QuickTransactionSheet> {
             description: emptyToNull(note),
           );
       ref.invalidate(syncStatusProvider);
-      await ref.read(walletsProvider.notifier).reload();
+      ref.invalidate(walletsProvider);
+      ref.invalidate(budgetsProvider);
+      ref.invalidate(monthlyBudgetDetailsProvider);
+      ref.invalidate(annualBudgetSummaryProvider);
+      ref.invalidate(monthlyTransactionsProvider);
+      ref.invalidate(annualTransactionsProvider);
       if (mounted) {
         Navigator.of(context).pop();
       }
@@ -267,3 +431,4 @@ Tag _defaultTag(List<Tag> tags) {
     orElse: () => tags.first,
   );
 }
+

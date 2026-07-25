@@ -5,28 +5,57 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/finance/money_flow_type.dart';
 import '../../../../routes/app_routes.dart';
+import '../../../budgets/presentation/providers/budgets_provider.dart';
 import '../../../auth/domain/entities/auth_user.dart';
 import '../../../auth/presentation/providers/auth_controller.dart';
-import '../../../budgets/domain/entities/budget.dart';
-import '../../../budgets/presentation/providers/budgets_provider.dart';
+import '../../../notifications/presentation/providers/notifications_provider.dart';
 import '../../../shared/presentation/widgets/feature_states.dart';
 import '../../../shared/presentation/widgets/forui_controls.dart';
 import '../../../transactions/domain/entities/transaction.dart';
 import '../../../transactions/presentation/providers/transactions_provider.dart';
 import '../../../wallets/domain/entities/wallet.dart';
 import '../../../wallets/presentation/providers/wallets_provider.dart';
-import '../../../notifications/presentation/providers/notifications_provider.dart';
 import '../current_date_provider.dart';
 
-class HomeScreen extends ConsumerWidget {
+class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends ConsumerState<HomeScreen>
+    with WidgetsBindingObserver {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(notificationsProvider.notifier).reload();
+    });
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      ref.read(notificationsProvider.notifier).reload();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    ref.listen<Object?>(notificationsProvider, (_, _) {});
+
     final auth = ref.watch(authControllerProvider).value;
     final wallets = ref.watch(walletsProvider);
     final transactions = ref.watch(transactionsProvider);
-    final budgets = ref.watch(budgetsProvider);
+
     final currentDate = ref.watch(currentDateProvider);
     final currency = auth?.user?.currencyCode ?? 'VND';
 
@@ -37,7 +66,10 @@ class HomeScreen extends ConsumerWidget {
             ref.read(walletsProvider.notifier).reload(),
             ref.read(transactionsProvider.notifier).reload(),
             ref.read(budgetsProvider.notifier).reload(),
+            ref.read(notificationsProvider.notifier).reload(),
           ]);
+          ref.invalidate(monthlyTransactionsProvider(currentDate));
+          ref.invalidate(annualTransactionsProvider(currentDate.year));
         },
         child: SingleChildScrollView(
           padding: const EdgeInsets.fromLTRB(20, 12, 20, 96),
@@ -50,14 +82,14 @@ class HomeScreen extends ConsumerWidget {
               _BalanceOverview(wallets: wallets, currency: currency),
               const SizedBox(height: 12),
               _MonthSnapshot(
-                transactions: transactions,
+                transactions: ref.watch(monthlyTransactionsProvider(currentDate)),
                 currency: currency,
                 now: currentDate,
               ),
               const SizedBox(height: 18),
-              _SpendingChartCard(transactions: transactions),
+              _SpendingChartCard(transactions: ref.watch(monthlyTransactionsProvider(currentDate))),
               const SizedBox(height: 18),
-              _CashFlowTrendCard(transactions: transactions),
+              _CashFlowTrendCard(transactions: ref.watch(monthlyTransactionsProvider(currentDate))),
               const SizedBox(height: 18),
               _InsightNudge(transactions: transactions),
               const SizedBox(height: 18),
@@ -66,7 +98,10 @@ class HomeScreen extends ConsumerWidget {
                 currency: currency,
               ),
               const SizedBox(height: 18),
-              _BudgetHealthCard(budgets: budgets, currency: currency),
+              _YearlyStatsCard(
+                currency: currency,
+                now: currentDate,
+              ),
             ],
           ),
         ),
@@ -91,15 +126,6 @@ class _HomeHeader extends ConsumerWidget {
 
     return Row(
       children: [
-        Container(
-          width: 40,
-          height: 40,
-          decoration: BoxDecoration(
-            color: colors.primaryContainer,
-            borderRadius: BorderRadius.circular(14),
-          ),
-          child: Icon(Icons.person_rounded, color: colors.primary),
-        ),
         const SizedBox(width: 12),
         Expanded(
           child: Column(
@@ -234,8 +260,8 @@ class _MonthSnapshot extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return transactions.when(
-      loading: () => const SizedBox.shrink(),
-      error: (_, _) => const SizedBox.shrink(),
+      loading: () => const FlowFiInlineLoading(label: 'Đang tải thống kê'),
+      error: (_, _) => const FlowFiCard(child: Text('Không tải được thống kê.')),
       data: (items) {
         final monthlyExpenses = items
             .where(
@@ -618,44 +644,68 @@ class _RecentTransactions extends StatelessWidget {
   }
 }
 
-class _BudgetHealthCard extends StatelessWidget {
-  const _BudgetHealthCard({required this.budgets, required this.currency});
+class _YearlyStatsCard extends ConsumerWidget {
+  const _YearlyStatsCard({
+    required this.currency,
+    required this.now,
+  });
 
-  final AsyncValue<List<Budget>> budgets;
   final String currency;
+  final DateTime now;
 
   @override
-  Widget build(BuildContext context) {
-    return budgets.when(
-      loading: () => const FlowFiInlineLoading(label: 'Đang tải ngân sách'),
-      error: (_, _) =>
-          const FlowFiCard(child: Text('Không tải được ngân sách.')),
-      data: (items) {
-        if (items.isEmpty) {
-          return const FlowFiInlineEmptyState(
-            icon: Icons.savings_outlined,
-            title: 'Chưa có ngân sách',
-            message: 'Tạo ngân sách để biết khoản nào đang gần chạm giới hạn.',
-          );
-        }
+  Widget build(BuildContext context, WidgetRef ref) {
+    final transactionsAsync = ref.watch(annualTransactionsProvider(now.year));
 
-        return FlowFiCard(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Ngân sách nổi bật',
-                style: Theme.of(context).textTheme.titleMedium,
-              ),
-              const SizedBox(height: 14),
-              for (final budget in items.take(2)) ...[
-                _BudgetProgress(budget: budget, currency: currency),
-                const SizedBox(height: 12),
-              ],
-            ],
+    if (transactionsAsync.isLoading) {
+      return const FlowFiInlineLoading(label: 'Đang tải thống kê');
+    }
+    
+    if (transactionsAsync.hasError) {
+      return const FlowFiCard(child: Text('Không tải được thống kê.'));
+    }
+
+    final transactions = transactionsAsync.value ?? [];
+    
+    final confirmed = transactions
+        .where((t) => t.status == TransactionStatus.confirmed)
+        .toList();
+
+    final expenses = _sumByType(confirmed, MoneyFlowType.expense);
+    final income = _sumByType(confirmed, MoneyFlowType.income);
+
+    return FlowFiCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Thống kê theo năm',
+            style: Theme.of(context).textTheme.titleMedium,
           ),
-        );
-      },
+          const SizedBox(height: 14),
+          _BudgetProgress(
+            tagName: 'Tổng Thu',
+            targetAmount: income,
+            spentAmount: income,
+            percentUsed: 1.0,
+            warningThresholdPercent: 100,
+            currency: currency,
+            tone: FlowFiTone.positive,
+            hideTarget: true,
+          ),
+          const SizedBox(height: 12),
+          _BudgetProgress(
+            tagName: 'Tổng Chi',
+            targetAmount: expenses,
+            spentAmount: expenses,
+            percentUsed: 1.0,
+            warningThresholdPercent: 100,
+            currency: currency,
+            tone: FlowFiTone.warning,
+            hideTarget: true,
+          ),
+        ],
+      ),
     );
   }
 }
@@ -825,37 +875,63 @@ class _TransactionTile extends StatelessWidget {
 }
 
 class _BudgetProgress extends StatelessWidget {
-  const _BudgetProgress({required this.budget, required this.currency});
+  const _BudgetProgress({
+    required this.tagName,
+    required this.targetAmount,
+    required this.spentAmount,
+    required this.percentUsed,
+    required this.warningThresholdPercent,
+    required this.currency,
+    this.tone,
+    this.hideTarget = false,
+  });
 
-  final Budget budget;
+  final String tagName;
+  final BigInt targetAmount;
+  final BigInt spentAmount;
+  final double percentUsed;
+  final int warningThresholdPercent;
   final String currency;
+  final FlowFiTone? tone;
+  final bool hideTarget;
 
   @override
   Widget build(BuildContext context) {
-    final threshold = budget.warningThresholdPercent.clamp(0, 100);
+    final threshold = warningThresholdPercent.clamp(0, 100);
+    final percentUsedHundred = (percentUsed * 100).toInt();
 
     return Column(
       children: [
         Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Expanded(
               child: Text(
-                budget.tagName ?? 'Ngân sách',
-                style: Theme.of(context).textTheme.labelMedium,
+                tagName,
+                style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                  fontWeight: FontWeight.w600,
+                  color: Theme.of(context).colorScheme.onSurface,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
               ),
             ),
+            const SizedBox(width: 12),
             Text(
-              _formatMoney(_parseWholeAmount(budget.amount), currency),
+              hideTarget
+                  ? _formatMoney(spentAmount, currency)
+                  : '${_formatMoney(spentAmount, currency)} / ${_formatMoney(targetAmount, currency)}',
               style: Theme.of(context).textTheme.labelMedium?.copyWith(
                 color: Theme.of(context).colorScheme.onSurfaceVariant,
+                fontWeight: FontWeight.w500,
               ),
             ),
           ],
         ),
         const SizedBox(height: 6),
         FlowFiProgressBar(
-          value: threshold / 100,
-          tone: threshold >= 80 ? FlowFiTone.warning : FlowFiTone.positive,
+          value: percentUsed.clamp(0.0, 1.0),
+          tone: tone ?? (percentUsedHundred >= threshold ? FlowFiTone.warning : FlowFiTone.positive),
         ),
       ],
     );
