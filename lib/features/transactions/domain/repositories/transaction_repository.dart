@@ -2,6 +2,11 @@ import '../../../../core/finance/money_flow_type.dart';
 import '../entities/transaction.dart';
 
 abstract interface class TransactionRepository {
+  Future<TransactionSummary> getSummary({
+    required String from,
+    required String to,
+  });
+
   Future<List<Transaction>> listTransactions({
     int page = 1,
     int limit = 20,

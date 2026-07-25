@@ -1,3 +1,4 @@
+import 'package:flowfi_fe/app/app_theme.dart';
 import 'package:flowfi_fe/core/finance/money_flow_type.dart';
 import 'package:flowfi_fe/features/tags/domain/entities/tag.dart';
 import 'package:flowfi_fe/features/tags/domain/repositories/tag_repository.dart';
@@ -8,27 +9,72 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  testWidgets('tag manager create form calls the tags provider', (
+  testWidgets('tag manager creates a category through the tags provider', (
     tester,
   ) async {
     final repository = _RecordingTagRepository();
-    await tester.pumpWidget(
-      ProviderScope(
-        overrides: [tagRepositoryProvider.overrideWithValue(repository)],
-        child: const MaterialApp(home: Scaffold(body: TagManagerSheet())),
-      ),
-    );
-    await tester.pump();
+    await _pumpTagManager(tester, repository);
 
     await tester.tap(find.text('Thêm danh mục'));
     await tester.pumpAndSettle();
-    await tester.enterText(find.byType(EditableText).first, 'Utilities');
+    await tester.enterText(
+      find.descendant(
+        of: find.byKey(const Key('tag-name-field')),
+        matching: find.byType(EditableText),
+      ),
+      'Utilities',
+    );
     await tester.tap(find.text('Tạo danh mục'));
     await tester.pumpAndSettle();
 
     expect(repository.createdName, 'Utilities');
     expect(repository.createdType, MoneyFlowType.expense);
   });
+
+  testWidgets('tag manager filters and searches loaded categories', (
+    tester,
+  ) async {
+    final repository = _RecordingTagRepository();
+    await _pumpTagManager(tester, repository);
+
+    expect(find.text('Food'), findsOneWidget);
+    expect(find.text('Salary'), findsOneWidget);
+
+    await tester.tap(find.byKey(const Key('tag-filter-income')));
+    await tester.pump();
+
+    expect(find.text('Food'), findsNothing);
+    expect(find.text('Salary'), findsOneWidget);
+    expect(find.text('1 danh mục'), findsOneWidget);
+
+    await tester.tap(find.byKey(const Key('tag-filter-all')));
+    await tester.enterText(find.byKey(const Key('tag-search-field')), 'food');
+    await tester.pump();
+
+    expect(find.text('Food'), findsOneWidget);
+    expect(find.text('Salary'), findsNothing);
+  });
+}
+
+Future<void> _pumpTagManager(
+  WidgetTester tester,
+  TagRepository repository,
+) async {
+  await tester.pumpWidget(
+    ProviderScope(
+      overrides: [tagRepositoryProvider.overrideWithValue(repository)],
+      child: MaterialApp(
+        theme: buildAppTheme(Brightness.dark),
+        home: const Scaffold(
+          body: SingleChildScrollView(
+            padding: EdgeInsets.all(20),
+            child: TagManagerSheet(),
+          ),
+        ),
+      ),
+    ),
+  );
+  await tester.pumpAndSettle();
 }
 
 final class _RecordingTagRepository implements TagRepository {
@@ -42,6 +88,12 @@ final class _RecordingTagRepository implements TagRepository {
         id: 'tag-1',
         name: 'Food',
         type: MoneyFlowType.expense,
+        isDefault: true,
+      ),
+      Tag(
+        id: 'tag-2',
+        name: 'Salary',
+        type: MoneyFlowType.income,
         isDefault: false,
       ),
     ];

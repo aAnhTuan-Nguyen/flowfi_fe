@@ -8,6 +8,7 @@ import '../../domain/usecases/sign_in_use_case.dart';
 import '../../domain/usecases/sign_out_use_case.dart';
 import '../../domain/usecases/sign_up_use_case.dart';
 import '../../domain/usecases/update_profile_use_case.dart';
+import 'account_data_reset.dart';
 
 final authRepositoryProvider = Provider<AuthRepository>(
   (ref) => serviceLocator<AuthRepository>(),
@@ -33,6 +34,19 @@ final signOutUseCaseProvider = Provider<SignOutUseCase>(
 final updateProfileUseCaseProvider = Provider<UpdateProfileUseCase>(
   (ref) => UpdateProfileUseCase(ref.watch(authRepositoryProvider)),
 );
+
+final signInEmailProvider = NotifierProvider<SignInEmailController, String>(
+  SignInEmailController.new,
+);
+
+class SignInEmailController extends Notifier<String> {
+  @override
+  String build() => '';
+
+  void remember(String email) {
+    state = email.trim();
+  }
+}
 
 enum AuthStatus { authenticated, unauthenticated }
 
@@ -66,31 +80,41 @@ class AuthController extends AsyncNotifier<AuthState> {
         email: email,
         password: password,
       );
+      invalidateAccountData(ref);
       return AuthState.authenticated(user);
     });
   }
 
-  Future<void> signUp({
+  Future<bool> signUp({
     required String email,
     required String password,
     String? fullName,
   }) async {
     state = const AsyncLoading();
-    state = await AsyncValue.guard(() async {
-      final user = await ref.read(signUpUseCaseProvider)(
+    try {
+      await ref.read(signUpUseCaseProvider)(
         email: email,
         password: password,
         fullName: fullName,
       );
-      return AuthState.authenticated(user);
-    });
+      invalidateAccountData(ref);
+      state = const AsyncData(AuthState.unauthenticated());
+      return true;
+    } catch (error, stackTrace) {
+      state = AsyncError(error, stackTrace);
+      return false;
+    }
   }
 
   Future<void> signOut() async {
     state = const AsyncLoading();
     state = await AsyncValue.guard(() async {
-      await ref.read(signOutUseCaseProvider)();
-      return const AuthState.unauthenticated();
+      try {
+        await ref.read(signOutUseCaseProvider)();
+        return const AuthState.unauthenticated();
+      } finally {
+        invalidateAccountData(ref);
+      }
     });
   }
 

@@ -32,6 +32,7 @@ final class MonthlyBudgetCategoryDetail {
     required this.spentAmount,
     required this.percentOfSpend,
     required this.variancePercent,
+    this.unbudgetedCategories = const [],
   });
 
   final String tagId;
@@ -40,4 +41,17 @@ final class MonthlyBudgetCategoryDetail {
   final String spentAmount;
   final double percentOfSpend;
   final double variancePercent;
+  final List<MonthlyBudgetUnbudgetedCategoryDetail> unbudgetedCategories;
+}
+
+final class MonthlyBudgetUnbudgetedCategoryDetail {
+  const MonthlyBudgetUnbudgetedCategoryDetail({
+    required this.tagId,
+    required this.tagName,
+    required this.spentAmount,
+  });
+
+  final String tagId;
+  final String tagName;
+  final String spentAmount;
 }

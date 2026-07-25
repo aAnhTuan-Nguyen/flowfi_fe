@@ -52,6 +52,26 @@ void main() {
     expect(repository.signOutCalled, isTrue);
   });
 
+  test('signs up successfully and remains unauthenticated', () async {
+    final repository = FakeAuthRepository();
+    final container = _container(repository);
+    await container.read(authControllerProvider.future);
+
+    final succeeded = await container
+        .read(authControllerProvider.notifier)
+        .signUp(
+          email: 'new@example.com',
+          password: 'password123',
+          fullName: 'New User',
+        );
+
+    expect(succeeded, isTrue);
+    expect(
+      container.read(authControllerProvider).requireValue.status,
+      AuthStatus.unauthenticated,
+    );
+  });
+
   test('updates the authenticated profile in state', () async {
     final repository = FakeAuthRepository(
       bootstrappedUser: const AuthUser(
@@ -100,9 +120,15 @@ ProviderContainer _container(FakeAuthRepository repository) {
 }
 
 class FakeAuthRepository implements AuthRepository {
-  FakeAuthRepository({this.bootstrappedUser});
+  FakeAuthRepository({
+    this.bootstrappedUser,
+    this.signInError,
+    this.signInResult,
+  });
 
   final AuthUser? bootstrappedUser;
+  final Object? signInError;
+  final Future<AuthUser>? signInResult;
   bool signInCalled = false;
   bool signOutCalled = false;
   String? updatedFullName;
@@ -116,6 +142,12 @@ class FakeAuthRepository implements AuthRepository {
     required String password,
   }) async {
     signInCalled = true;
+    if (signInResult case final result?) {
+      return result;
+    }
+    if (signInError case final error?) {
+      throw error;
+    }
     return AuthUser(
       id: 'user-1',
       email: email,

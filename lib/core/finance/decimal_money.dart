@@ -29,6 +29,13 @@ String formatMoneyMinorUnits(BigInt value) {
   return '$sign$whole.${fraction.toString().padLeft(2, '0')}';
 }
 
+String normalizeEditableMoneyAmount(String value) {
+  if (value.trim().isEmpty) {
+    return '';
+  }
+  return formatMoneyMinorUnits(parseMoneyMinorUnits(value));
+}
+
 String applyTransactionEffect({
   required String balance,
   required String amount,

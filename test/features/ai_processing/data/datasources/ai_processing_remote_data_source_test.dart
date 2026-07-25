@@ -128,7 +128,7 @@ void main() {
     final transaction = await dataSource.confirmTransaction('transaction-1');
 
     expect(adapter.options.path, 'transactions/transaction-1/confirm');
-    expect(adapter.options.method, 'POST');
+    expect(adapter.options.method, 'PATCH');
     expect(transaction.status, TransactionStatus.confirmed);
   });
 }

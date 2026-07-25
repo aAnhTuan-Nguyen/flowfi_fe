@@ -11,6 +11,7 @@ import '../../../auth/presentation/providers/auth_controller.dart';
 import '../../../notifications/presentation/providers/notifications_provider.dart';
 import '../../../shared/presentation/widgets/feature_states.dart';
 import '../../../shared/presentation/widgets/forui_controls.dart';
+import '../../../transactions/domain/entities/expense_trend.dart';
 import '../../../transactions/domain/entities/transaction.dart';
 import '../../../transactions/presentation/providers/transactions_provider.dart';
 import '../../../wallets/domain/entities/wallet.dart';
@@ -69,6 +70,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
             ref.read(notificationsProvider.notifier).reload(),
           ]);
           ref.invalidate(monthlyTransactionsProvider(currentDate));
+          ref.invalidate(monthlyTransactionSummaryProvider(currentDate));
+          ref.invalidate(expenseTrendTransactionsProvider(currentDate));
           ref.invalidate(annualTransactionsProvider(currentDate.year));
         },
         child: SingleChildScrollView(
@@ -82,14 +85,19 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
               _BalanceOverview(wallets: wallets, currency: currency),
               const SizedBox(height: 12),
               _MonthSnapshot(
-                transactions: ref.watch(monthlyTransactionsProvider(currentDate)),
+                summary: ref.watch(
+                  monthlyTransactionSummaryProvider(currentDate),
+                ),
                 currency: currency,
-                now: currentDate,
               ),
               const SizedBox(height: 18),
-              _SpendingChartCard(transactions: ref.watch(monthlyTransactionsProvider(currentDate))),
-              const SizedBox(height: 18),
-              _CashFlowTrendCard(transactions: ref.watch(monthlyTransactionsProvider(currentDate))),
+              _ExpenseTrendCard(
+                transactions: ref.watch(
+                  expenseTrendTransactionsProvider(currentDate),
+                ),
+                now: currentDate,
+                currency: currency,
+              ),
               const SizedBox(height: 18),
               _InsightNudge(transactions: transactions),
               const SizedBox(height: 18),
@@ -98,10 +106,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                 currency: currency,
               ),
               const SizedBox(height: 18),
-              _YearlyStatsCard(
-                currency: currency,
-                now: currentDate,
-              ),
+              _YearlyStatsCard(currency: currency, now: currentDate),
             ],
           ),
         ),
@@ -247,51 +252,27 @@ class _BalanceOverview extends StatelessWidget {
 }
 
 class _MonthSnapshot extends StatelessWidget {
-  const _MonthSnapshot({
-    required this.transactions,
-    required this.currency,
-    required this.now,
-  });
+  const _MonthSnapshot({required this.summary, required this.currency});
 
-  final AsyncValue<List<Transaction>> transactions;
+  final AsyncValue<TransactionSummary> summary;
   final String currency;
-  final DateTime now;
 
   @override
   Widget build(BuildContext context) {
-    return transactions.when(
+    return summary.when(
       loading: () => const FlowFiInlineLoading(label: 'Đang tải thống kê'),
-      error: (_, _) => const FlowFiCard(child: Text('Không tải được thống kê.')),
-      data: (items) {
-        final monthlyExpenses = items
-            .where(
-              (transaction) =>
-                  transaction.type == MoneyFlowType.expense &&
-                  transaction.status == TransactionStatus.confirmed &&
-                  _isSameMonth(transaction.date, now),
-            )
-            .fold<BigInt>(
-              BigInt.zero,
-              (sum, transaction) => sum + _parseWholeAmount(transaction.amount),
-            );
-        final monthlyIncome = items
-            .where(
-              (transaction) =>
-                  transaction.type == MoneyFlowType.income &&
-                  transaction.status == TransactionStatus.confirmed &&
-                  _isSameMonth(transaction.date, now),
-            )
-            .fold<BigInt>(
-              BigInt.zero,
-              (sum, transaction) => sum + _parseWholeAmount(transaction.amount),
-            );
-
+      error: (_, _) =>
+          const FlowFiCard(child: Text('Không tải được thống kê.')),
+      data: (summary) {
         return Row(
           children: [
             Expanded(
               child: _MiniMetricCard(
                 label: 'Chi tiêu tháng này',
-                value: _formatMoney(monthlyExpenses, currency),
+                value: _formatMoney(
+                  _parseWholeAmount(summary.totalExpense),
+                  currency,
+                ),
                 icon: Icons.trending_down_rounded,
                 tone: _MetricTone.expense,
               ),
@@ -300,7 +281,10 @@ class _MonthSnapshot extends StatelessWidget {
             Expanded(
               child: _MiniMetricCard(
                 label: 'Thu nhập tháng này',
-                value: _formatMoney(monthlyIncome, currency),
+                value: _formatMoney(
+                  _parseWholeAmount(summary.totalIncome),
+                  currency,
+                ),
                 icon: Icons.trending_up_rounded,
                 tone: _MetricTone.income,
               ),
@@ -312,34 +296,38 @@ class _MonthSnapshot extends StatelessWidget {
   }
 }
 
-class _SpendingChartCard extends StatelessWidget {
-  const _SpendingChartCard({required this.transactions});
+class _ExpenseTrendCard extends StatefulWidget {
+  const _ExpenseTrendCard({
+    required this.transactions,
+    required this.now,
+    required this.currency,
+  });
 
   final AsyncValue<List<Transaction>> transactions;
+  final DateTime now;
+  final String currency;
+
+  @override
+  State<_ExpenseTrendCard> createState() => _ExpenseTrendCardState();
+}
+
+class _ExpenseTrendCardState extends State<_ExpenseTrendCard> {
+  ExpenseTrendPeriod _period = ExpenseTrendPeriod.sevenDays;
 
   @override
   Widget build(BuildContext context) {
-    return transactions.when(
-      loading: () => const FlowFiInlineLoading(label: 'Đang tải biểu đồ'),
-      error: (_, _) => const FlowFiCard(child: Text('Không tải được biểu đồ.')),
+    return widget.transactions.when(
+      loading: () => const FlowFiInlineLoading(label: 'Đang tải chi tiêu'),
+      error: (_, _) =>
+          const FlowFiCard(child: Text('Không tải được xu hướng chi tiêu.')),
       data: (items) {
-        final confirmed = items
-            .where(
-              (transaction) =>
-                  transaction.status == TransactionStatus.confirmed,
-            )
-            .toList(growable: false);
-        final income = _sumByType(confirmed, MoneyFlowType.income);
-        final expense = _sumByType(confirmed, MoneyFlowType.expense);
-        final hasData = income > BigInt.zero || expense > BigInt.zero;
-
-        if (!hasData) {
-          return const FlowFiInlineEmptyState(
-            icon: Icons.pie_chart_outline_rounded,
-            title: 'Chưa có dữ liệu biểu đồ',
-            message: 'Thêm giao dịch đầu tiên để xem tỷ lệ thu chi.',
-          );
-        }
+        final trend = buildExpenseTrend(
+          items,
+          now: widget.now,
+          period: _period,
+        );
+        final maxY = _trendAxisMax(trend.points);
+        final interval = maxY / 3;
 
         return FlowFiCard(
           child: Column(
@@ -349,76 +337,245 @@ class _SpendingChartCard extends StatelessWidget {
                 children: [
                   Expanded(
                     child: Text(
-                      'Dòng tiền',
+                      _period == ExpenseTrendPeriod.sevenDays
+                          ? 'Chi tiêu 7 ngày gần đây'
+                          : 'Xu hướng chi tiêu theo tuần',
                       style: Theme.of(context).textTheme.titleMedium,
                     ),
                   ),
-                  Icon(
-                    Icons.insights_rounded,
-                    color: Theme.of(context).colorScheme.tertiary,
-                    size: 20,
+                  const SizedBox(width: 10),
+                  _TrendPeriodSelector(
+                    period: _period,
+                    onChanged: (period) => setState(() => _period = period),
                   ),
                 ],
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 7),
+              _TrendComparison(
+                changePercent: trend.changePercent,
+                period: _period,
+              ),
+              const SizedBox(height: 18),
               SizedBox(
-                height: 150,
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: PieChart(
-                        PieChartData(
-                          sectionsSpace: 3,
-                          centerSpaceRadius: 36,
-                          borderData: FlBorderData(show: false),
-                          sections: [
-                            if (expense > BigInt.zero)
-                              _chartSection(
+                height: 210,
+                child: BarChart(
+                  BarChartData(
+                    minY: 0,
+                    maxY: maxY,
+                    alignment: BarChartAlignment.spaceAround,
+                    borderData: FlBorderData(show: false),
+                    gridData: FlGridData(
+                      show: true,
+                      drawVerticalLine: false,
+                      horizontalInterval: interval,
+                      getDrawingHorizontalLine: (_) => FlLine(
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.outlineVariant.withValues(alpha: 0.55),
+                        strokeWidth: 1,
+                        dashArray: [3, 3],
+                      ),
+                    ),
+                    barTouchData: BarTouchData(
+                      enabled: true,
+                      touchTooltipData: BarTouchTooltipData(
+                        getTooltipColor: (_) =>
+                            Theme.of(context).colorScheme.inverseSurface,
+                        getTooltipItem: (group, _, rod, _) {
+                          final point = trend.points[group.x];
+                          final label = _period == ExpenseTrendPeriod.sevenDays
+                              ? _fullWeekday(point.start.weekday)
+                              : 'Tuần ${_shortDate(point.start)}';
+                          return BarTooltipItem(
+                            '$label\n${_formatMoney(point.amountMinorUnits ~/ BigInt.from(100), widget.currency)}',
+                            Theme.of(context).textTheme.labelMedium!.copyWith(
+                              color: Theme.of(
                                 context,
-                                value: expense,
-                                title: 'Chi',
-                                color: FlowFiColors.expense,
+                              ).colorScheme.onInverseSurface,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                    titlesData: FlTitlesData(
+                      topTitles: const AxisTitles(
+                        sideTitles: SideTitles(showTitles: false),
+                      ),
+                      rightTitles: const AxisTitles(
+                        sideTitles: SideTitles(showTitles: false),
+                      ),
+                      leftTitles: AxisTitles(
+                        sideTitles: SideTitles(
+                          showTitles: true,
+                          reservedSize: 52,
+                          interval: interval,
+                          getTitlesWidget: (value, meta) => SideTitleWidget(
+                            meta: meta,
+                            space: 4,
+                            child: SizedBox(
+                              width: 42,
+                              child: FittedBox(
+                                fit: BoxFit.scaleDown,
+                                alignment: Alignment.centerRight,
+                                child: Text(
+                                  _millionAxisLabel(value),
+                                  maxLines: 1,
+                                  softWrap: false,
+                                  style: Theme.of(context).textTheme.labelSmall,
+                                ),
                               ),
-                            if (income > BigInt.zero)
-                              _chartSection(
-                                context,
-                                value: income,
-                                title: 'Thu',
-                                color: FlowFiColors.income,
+                            ),
+                          ),
+                        ),
+                      ),
+                      bottomTitles: AxisTitles(
+                        sideTitles: SideTitles(
+                          showTitles: true,
+                          reservedSize: 30,
+                          getTitlesWidget: (value, meta) {
+                            final index = value.toInt();
+                            if (index < 0 || index >= trend.points.length) {
+                              return const SizedBox.shrink();
+                            }
+                            final point = trend.points[index];
+                            return SideTitleWidget(
+                              meta: meta,
+                              space: 8,
+                              child: Text(
+                                _period == ExpenseTrendPeriod.sevenDays
+                                    ? _shortWeekday(point.start.weekday)
+                                    : _shortDate(point.start),
+                                style: Theme.of(context).textTheme.labelSmall,
                               ),
+                            );
+                          },
+                        ),
+                      ),
+                    ),
+                    barGroups: [
+                      for (var index = 0; index < trend.points.length; index++)
+                        BarChartGroupData(
+                          x: index,
+                          barRods: [
+                            BarChartRodData(
+                              toY:
+                                  trend.points[index].amountMinorUnits
+                                      .toDouble() /
+                                  100,
+                              width: 17,
+                              borderRadius: const BorderRadius.vertical(
+                                top: Radius.circular(6),
+                              ),
+                              color: FlowFiColors.expense,
+                            ),
                           ],
                         ),
-                        duration: const Duration(milliseconds: 220),
-                        curve: Curves.easeOutCubic,
-                      ),
-                    ),
-                    const SizedBox(width: 18),
-                    Expanded(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          _LegendRow(
-                            color: FlowFiColors.expense,
-                            label: 'Chi tiêu',
-                            value: _compactAmount(expense),
-                          ),
-                          const SizedBox(height: 10),
-                          _LegendRow(
-                            color: FlowFiColors.income,
-                            label: 'Thu nhập',
-                            value: _compactAmount(income),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
+                    ],
+                  ),
+                  duration: const Duration(milliseconds: 260),
+                  curve: Curves.easeOutCubic,
                 ),
               ),
             ],
           ),
         );
       },
+    );
+  }
+}
+
+class _TrendPeriodSelector extends StatelessWidget {
+  const _TrendPeriodSelector({required this.period, required this.onChanged});
+
+  final ExpenseTrendPeriod period;
+  final ValueChanged<ExpenseTrendPeriod> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(3),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surfaceContainer,
+        borderRadius: BorderRadius.circular(99),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _TrendPeriodOption(
+            label: '7 ngày',
+            selected: period == ExpenseTrendPeriod.sevenDays,
+            onTap: () => onChanged(ExpenseTrendPeriod.sevenDays),
+          ),
+          _TrendPeriodOption(
+            label: 'Tuần',
+            selected: period == ExpenseTrendPeriod.weekly,
+            onTap: () => onChanged(ExpenseTrendPeriod.weekly),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _TrendPeriodOption extends StatelessWidget {
+  const _TrendPeriodOption({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: selected
+          ? Theme.of(context).colorScheme.surfaceContainerLowest
+          : Colors.transparent,
+      borderRadius: BorderRadius.circular(99),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(99),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 6),
+          child: Text(
+            label,
+            style: Theme.of(context).textTheme.labelSmall?.copyWith(
+              color: selected
+                  ? Theme.of(context).colorScheme.primary
+                  : Theme.of(context).colorScheme.onSurfaceVariant,
+              fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _TrendComparison extends StatelessWidget {
+  const _TrendComparison({required this.changePercent, required this.period});
+
+  final double changePercent;
+  final ExpenseTrendPeriod period;
+
+  @override
+  Widget build(BuildContext context) {
+    final rounded = changePercent.abs().round();
+    final arrow = changePercent > 0
+        ? '↑'
+        : changePercent < 0
+        ? '↓'
+        : '→';
+    return Text(
+      '$arrow $rounded% so với ${period == ExpenseTrendPeriod.sevenDays ? '7 ngày' : '7 tuần'} trước',
+      style: Theme.of(context).textTheme.labelSmall?.copyWith(
+        color: Theme.of(context).colorScheme.primary,
+        fontWeight: FontWeight.w600,
+      ),
     );
   }
 }
@@ -458,139 +615,6 @@ class _InsightNudge extends StatelessWidget {
           ),
         ],
       ),
-    );
-  }
-}
-
-class _CashFlowTrendCard extends StatelessWidget {
-  const _CashFlowTrendCard({required this.transactions});
-
-  final AsyncValue<List<Transaction>> transactions;
-
-  @override
-  Widget build(BuildContext context) {
-    return transactions.when(
-      loading: () => const FlowFiInlineLoading(label: 'Đang tải dòng tiền'),
-      error: (_, _) =>
-          const FlowFiCard(child: Text('Không tải được dòng tiền.')),
-      data: (items) {
-        final daily = <DateTime, BigInt>{};
-        for (final transaction in items) {
-          if (transaction.status != TransactionStatus.confirmed ||
-              transaction.date == null) {
-            continue;
-          }
-          final date = transaction.date!;
-          final day = DateTime(date.year, date.month, date.day);
-          daily.update(
-            day,
-            (value) => value + _signedAmount(transaction),
-            ifAbsent: () => _signedAmount(transaction),
-          );
-        }
-
-        final entries = daily.entries.toList()
-          ..sort((left, right) => left.key.compareTo(right.key));
-        final visible = entries.length > 5
-            ? entries.sublist(entries.length - 5)
-            : entries;
-
-        if (visible.isEmpty) {
-          return const FlowFiInlineEmptyState(
-            icon: Icons.bar_chart_rounded,
-            title: 'Chưa có dòng tiền',
-            message: 'Giao dịch đã xác nhận sẽ tạo biểu đồ theo ngày.',
-          );
-        }
-
-        final maxValue = visible
-            .map((entry) => _absBigInt(entry.value))
-            .fold<BigInt>(BigInt.one, (max, value) => value > max ? value : max)
-            .toDouble();
-
-        return FlowFiCard(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      'Dòng tiền gần đây',
-                      style: Theme.of(context).textTheme.titleMedium,
-                    ),
-                  ),
-                  const FlowFiStatusBadge(
-                    label: 'Theo ngày',
-                    icon: Icons.calendar_today_rounded,
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              SizedBox(
-                height: 150,
-                child: BarChart(
-                  BarChartData(
-                    minY: 0,
-                    maxY: maxValue * 1.2,
-                    borderData: FlBorderData(show: false),
-                    gridData: const FlGridData(show: false),
-                    barTouchData: BarTouchData(enabled: false),
-                    titlesData: FlTitlesData(
-                      topTitles: const AxisTitles(
-                        sideTitles: SideTitles(showTitles: false),
-                      ),
-                      rightTitles: const AxisTitles(
-                        sideTitles: SideTitles(showTitles: false),
-                      ),
-                      leftTitles: const AxisTitles(
-                        sideTitles: SideTitles(showTitles: false),
-                      ),
-                      bottomTitles: AxisTitles(
-                        sideTitles: SideTitles(
-                          showTitles: true,
-                          reservedSize: 28,
-                          getTitlesWidget: (value, meta) {
-                            final index = value.toInt();
-                            if (index < 0 || index >= visible.length) {
-                              return const SizedBox.shrink();
-                            }
-                            return Padding(
-                              padding: const EdgeInsets.only(top: 8),
-                              child: Text(
-                                _shortDate(visible[index].key),
-                                style: Theme.of(context).textTheme.labelMedium,
-                              ),
-                            );
-                          },
-                        ),
-                      ),
-                    ),
-                    barGroups: [
-                      for (var index = 0; index < visible.length; index++)
-                        BarChartGroupData(
-                          x: index,
-                          barRods: [
-                            BarChartRodData(
-                              toY: _absBigInt(visible[index].value).toDouble(),
-                              width: 18,
-                              borderRadius: BorderRadius.circular(9),
-                              color: visible[index].value >= BigInt.zero
-                                  ? FlowFiColors.income
-                                  : FlowFiColors.expense,
-                            ),
-                          ],
-                        ),
-                    ],
-                  ),
-                  duration: const Duration(milliseconds: 260),
-                  curve: Curves.easeOutCubic,
-                ),
-              ),
-            ],
-          ),
-        );
-      },
     );
   }
 }
@@ -645,10 +669,7 @@ class _RecentTransactions extends StatelessWidget {
 }
 
 class _YearlyStatsCard extends ConsumerWidget {
-  const _YearlyStatsCard({
-    required this.currency,
-    required this.now,
-  });
+  const _YearlyStatsCard({required this.currency, required this.now});
 
   final String currency;
   final DateTime now;
@@ -660,13 +681,13 @@ class _YearlyStatsCard extends ConsumerWidget {
     if (transactionsAsync.isLoading) {
       return const FlowFiInlineLoading(label: 'Đang tải thống kê');
     }
-    
+
     if (transactionsAsync.hasError) {
       return const FlowFiCard(child: Text('Không tải được thống kê.'));
     }
 
     final transactions = transactionsAsync.value ?? [];
-    
+
     final confirmed = transactions
         .where((t) => t.status == TransactionStatus.confirmed)
         .toList();
@@ -739,41 +760,6 @@ class _MiniMetricCard extends StatelessWidget {
 }
 
 enum _MetricTone { income, expense }
-
-class _LegendRow extends StatelessWidget {
-  const _LegendRow({
-    required this.color,
-    required this.label,
-    required this.value,
-  });
-
-  final Color color;
-  final String label;
-  final String value;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Container(
-          width: 10,
-          height: 10,
-          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
-        ),
-        const SizedBox(width: 8),
-        Expanded(
-          child: Text(label, style: Theme.of(context).textTheme.labelMedium),
-        ),
-        Text(
-          value,
-          style: Theme.of(context).textTheme.labelMedium?.copyWith(
-            color: Theme.of(context).colorScheme.onSurfaceVariant,
-          ),
-        ),
-      ],
-    );
-  }
-}
 
 class _SectionHeader extends StatelessWidget {
   const _SectionHeader({
@@ -931,29 +917,15 @@ class _BudgetProgress extends StatelessWidget {
         const SizedBox(height: 6),
         FlowFiProgressBar(
           value: percentUsed.clamp(0.0, 1.0),
-          tone: tone ?? (percentUsedHundred >= threshold ? FlowFiTone.warning : FlowFiTone.positive),
+          tone:
+              tone ??
+              (percentUsedHundred >= threshold
+                  ? FlowFiTone.warning
+                  : FlowFiTone.positive),
         ),
       ],
     );
   }
-}
-
-PieChartSectionData _chartSection(
-  BuildContext context, {
-  required BigInt value,
-  required String title,
-  required Color color,
-}) {
-  return PieChartSectionData(
-    value: value.toDouble(),
-    title: title,
-    radius: 44,
-    color: color,
-    titleStyle: Theme.of(context).textTheme.labelMedium?.copyWith(
-      color: FlowFiColors.onStrong,
-      fontWeight: FontWeight.w800,
-    ),
-  );
 }
 
 BigInt _sumByType(List<Transaction> transactions, MoneyFlowType type) {
@@ -963,15 +935,6 @@ BigInt _sumByType(List<Transaction> transactions, MoneyFlowType type) {
         BigInt.zero,
         (sum, transaction) => sum + _parseWholeAmount(transaction.amount),
       );
-}
-
-BigInt _signedAmount(Transaction transaction) {
-  final amount = _parseWholeAmount(transaction.amount);
-  return transaction.type == MoneyFlowType.income ? amount : -amount;
-}
-
-BigInt _absBigInt(BigInt value) {
-  return value < BigInt.zero ? -value : value;
 }
 
 BigInt _parseWholeAmount(String value) {
@@ -990,21 +953,57 @@ String _formatMoney(BigInt value, String currency) {
   return '${negative ? '-' : ''}$grouped $currency';
 }
 
-String _compactAmount(BigInt value) {
-  if (value >= BigInt.from(1000000)) {
-    final millions = value ~/ BigInt.from(1000000);
-    return '${millions}m';
-  }
-  if (value >= BigInt.from(1000)) {
-    final thousands = value ~/ BigInt.from(1000);
-    return '${thousands}k';
-  }
-  return value.toString();
-}
-
 String _shortDate(DateTime date) {
   return '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}';
 }
+
+double _trendAxisMax(List<ExpenseTrendPoint> points) {
+  final maxMinorUnits = points.fold<BigInt>(
+    BigInt.zero,
+    (max, point) => point.amountMinorUnits > max ? point.amountMinorUnits : max,
+  );
+  final maxWholeUnits = maxMinorUnits ~/ BigInt.from(100);
+  const oneMillion = 1000000;
+  if (maxWholeUnits <= BigInt.from(oneMillion * 3)) {
+    return (oneMillion * 3).toDouble();
+  }
+  final millions =
+      (maxWholeUnits + BigInt.from(oneMillion - 1)) ~/ BigInt.from(oneMillion);
+  final rawStep = ((millions + BigInt.from(2)) ~/ BigInt.from(3)).toInt();
+  var roundingUnit = 1;
+  while (rawStep > roundingUnit * 10) {
+    roundingUnit *= 10;
+  }
+  final roundedStep =
+      ((rawStep + roundingUnit - 1) ~/ roundingUnit) * roundingUnit;
+  return (roundedStep * oneMillion * 3).toDouble();
+}
+
+String _millionAxisLabel(double value) {
+  if (value == 0) return '0';
+  final millions = value / 1000000;
+  return '${millions.round()}M';
+}
+
+String _shortWeekday(int weekday) => switch (weekday) {
+  DateTime.monday => 'T2',
+  DateTime.tuesday => 'T3',
+  DateTime.wednesday => 'T4',
+  DateTime.thursday => 'T5',
+  DateTime.friday => 'T6',
+  DateTime.saturday => 'T7',
+  _ => 'CN',
+};
+
+String _fullWeekday(int weekday) => switch (weekday) {
+  DateTime.monday => 'Thứ 2',
+  DateTime.tuesday => 'Thứ 3',
+  DateTime.wednesday => 'Thứ 4',
+  DateTime.thursday => 'Thứ 5',
+  DateTime.friday => 'Thứ 6',
+  DateTime.saturday => 'Thứ 7',
+  _ => 'Chủ nhật',
+};
 
 String _groupDigits(String digits) {
   final buffer = StringBuffer();
@@ -1023,10 +1022,6 @@ String _firstName(String? name) {
     return 'bạn';
   }
   return trimmed.split(RegExp(r'\s+')).first;
-}
-
-bool _isSameMonth(DateTime? date, DateTime now) {
-  return date != null && date.month == now.month && date.year == now.year;
 }
 
 String _transactionMeta(Transaction transaction) {

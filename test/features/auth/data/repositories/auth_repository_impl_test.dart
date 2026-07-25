@@ -1,6 +1,9 @@
 import 'package:flowfi_fe/core/auth/auth_session_manager.dart';
+import 'package:flowfi_fe/core/local/flowfi_database.dart';
+import 'package:flowfi_fe/core/local/flowfi_local_store.dart';
 import 'package:flowfi_fe/features/auth/data/datasources/auth_remote_data_source.dart';
 import 'package:flowfi_fe/features/auth/data/repositories/auth_repository_impl.dart';
+import 'package:flowfi_fe/features/wallets/domain/entities/wallet.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import '../../../../core/auth/auth_session_manager_test.dart';
@@ -22,6 +25,33 @@ void main() {
     expect(remote.loginEmail, 'alex@example.com');
   });
 
+  test('clears cached data from the previous account after sign in', () async {
+    final database = FlowFiDatabase.inMemory();
+    addTearDown(database.close);
+    final localStore = FlowFiLocalStore(database);
+    await localStore.cacheWallets(const [
+      Wallet(
+        id: 'old-wallet',
+        name: 'Previous account wallet',
+        type: WalletType.bank,
+        balance: '1000000',
+        isDefault: true,
+      ),
+    ]);
+    final repository = AuthRepositoryImpl(
+      FakeAuthRemoteDataSource(),
+      AuthSessionManager(FakeTokenStorage()),
+      localStore,
+    );
+
+    await repository.signIn(
+      email: 'new@example.com',
+      password: 'password123',
+    );
+
+    expect(await localStore.readWallets(), isEmpty);
+  });
+
   test('signs out remotely and clears local session', () async {
     final sessionManager = AuthSessionManager(FakeTokenStorage());
     await sessionManager.saveSession(
@@ -34,6 +64,22 @@ void main() {
     await repository.signOut();
 
     expect(remote.logoutRefreshToken, 'refresh-token');
+    expect(sessionManager.accessToken, isNull);
+    expect(await sessionManager.readRefreshToken(), isNull);
+  });
+
+  test('registers without persisting an authenticated session', () async {
+    final sessionManager = AuthSessionManager(FakeTokenStorage());
+    final remote = FakeAuthRemoteDataSource();
+    final repository = AuthRepositoryImpl(remote, sessionManager);
+
+    final user = await repository.signUp(
+      email: 'new@example.com',
+      password: 'password123',
+      fullName: 'New User',
+    );
+
+    expect(user.email, 'alex@example.com');
     expect(sessionManager.accessToken, isNull);
     expect(await sessionManager.readRefreshToken(), isNull);
   });

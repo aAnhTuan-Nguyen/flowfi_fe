@@ -211,6 +211,7 @@ class _ImageTransactionImportSheetState
       ref.invalidate(walletsProvider);
       ref.invalidate(budgetsProvider);
       ref.invalidate(monthlyTransactionsProvider);
+      ref.invalidate(monthlyTransactionSummaryProvider);
       ref.invalidate(annualTransactionsProvider);
       ref.invalidate(monthlyBudgetDetailsProvider);
       ref.invalidate(annualBudgetSummaryProvider);
@@ -253,6 +254,7 @@ class _ImageTransactionImportSheetState
     ref.invalidate(walletsProvider);
     ref.invalidate(budgetsProvider);
     ref.invalidate(monthlyTransactionsProvider);
+    ref.invalidate(monthlyTransactionSummaryProvider);
     ref.invalidate(annualTransactionsProvider);
     ref.invalidate(monthlyBudgetDetailsProvider);
     ref.invalidate(annualBudgetSummaryProvider);
@@ -271,6 +273,7 @@ class _ImageTransactionImportSheetState
       ref.invalidate(goalsProvider);
       ref.invalidate(notificationsProvider);
       ref.invalidate(monthlyTransactionsProvider);
+      ref.invalidate(monthlyTransactionSummaryProvider);
       ref.invalidate(annualTransactionsProvider);
       ref.invalidate(monthlyBudgetDetailsProvider);
       ref.invalidate(annualBudgetSummaryProvider);
@@ -465,9 +468,9 @@ class _SelectedImageCard extends StatelessWidget {
               image.name,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                fontWeight: FontWeight.w800,
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.labelMedium?.copyWith(fontWeight: FontWeight.w800),
             ),
           ),
           const SizedBox(width: 10),
@@ -876,9 +879,9 @@ class _ReceiptDetailRow extends StatelessWidget {
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 textAlign: TextAlign.end,
-                style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                  fontWeight: FontWeight.w700,
-                ),
+                style: Theme.of(
+                  context,
+                ).textTheme.labelMedium?.copyWith(fontWeight: FontWeight.w700),
               ),
             ),
         ],
@@ -1017,11 +1020,7 @@ class _SheetActionButton extends StatelessWidget {
                 : Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(
-                        icon,
-                        size: 17,
-                        color: foregroundColor,
-                      ),
+                      Icon(icon, size: 17, color: foregroundColor),
                       const SizedBox(width: 7),
                       Flexible(
                         child: Text(

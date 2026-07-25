@@ -1,10 +1,15 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter/services.dart';
 
+import '../../../../core/finance/decimal_money.dart';
 import '../../../../core/finance/money_flow_type.dart';
 import '../../../shared/presentation/widgets/crud_helpers.dart';
 import '../../../tags/domain/entities/tag.dart';
 import '../../../tags/presentation/providers/tags_provider.dart';
+import '../../../tags/presentation/widgets/tag_manager_sheet.dart';
 import '../../domain/entities/budget.dart';
 import '../providers/budgets_provider.dart';
 
@@ -32,7 +37,10 @@ class _BudgetTargetScreenState extends ConsumerState<BudgetTargetScreen> {
   late int _year;
   late int _warningThreshold;
   late Map<String, String> _allocations;
+  late Map<String, String> _savedAllocations;
   bool _saving = false;
+  bool _allowPop = false;
+  bool _discardDialogVisible = false;
 
   @override
   void initState() {
@@ -45,7 +53,11 @@ class _BudgetTargetScreenState extends ConsumerState<BudgetTargetScreen> {
       for (final budget in widget.budgets)
         if (budget.tagId != null) budget.tagId!: budget.amount,
     };
+    _savedAllocations = Map<String, String>.of(_allocations);
   }
+
+  bool get _hasUnsavedChanges =>
+      !_sameAllocations(_allocations, _savedAllocations);
 
   @override
   Widget build(BuildContext context) {
@@ -58,133 +70,233 @@ class _BudgetTargetScreenState extends ConsumerState<BudgetTargetScreen> {
         .where((value) => _minorUnits(value) > BigInt.zero)
         .length;
 
-    return Scaffold(
-      backgroundColor: _targetCanvas,
-      appBar: AppBar(
+    return PopScope<Object?>(
+      canPop: _allowPop || (!_hasUnsavedChanges && !_saving),
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop && !_saving) unawaited(_requestExit());
+      },
+      child: Scaffold(
         backgroundColor: _targetCanvas,
-        leading: IconButton(
-          onPressed: () => Navigator.of(context).pop(),
-          icon: const Icon(Icons.arrow_back_rounded),
-        ),
-        title: const Text('Thiết lập Target'),
-        centerTitle: true,
-        actions: [
-          IconButton(
-            tooltip:
-                'Target là tổng hạn mức chi tiêu của tháng và được phân bổ theo danh mục.',
-            onPressed: _showHelp,
-            icon: const Icon(Icons.help_outline_rounded),
+        appBar: AppBar(
+          backgroundColor: _targetCanvas,
+          leading: IconButton(
+            key: const Key('target-back-button'),
+            onPressed: _saving ? null : _requestExit,
+            icon: const Icon(Icons.arrow_back_rounded),
           ),
-        ],
-      ),
-      body: SafeArea(
-        top: false,
-        child: Column(
-          children: [
-            Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.fromLTRB(20, 2, 20, 24),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Center(
-                      child: Text(
-                        'Đặt mục tiêu chi tiêu cho tháng $_month / $_year',
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: const Color(0xFF716C66),
+          title: const Text('Thiết lập Target'),
+          centerTitle: true,
+          actions: [
+            IconButton(
+              tooltip:
+                  'Target là tổng hạn mức chi tiêu của tháng và được phân bổ theo danh mục.',
+              onPressed: _showHelp,
+              icon: const Icon(Icons.help_outline_rounded),
+            ),
+          ],
+        ),
+        body: SafeArea(
+          top: false,
+          child: Column(
+            children: [
+              Expanded(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.fromLTRB(20, 2, 20, 24),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Center(
+                        child: Text(
+                          'Đặt mục tiêu chi tiêu cho tháng $_month / $_year',
+                          style: Theme.of(context).textTheme.bodyMedium
+                              ?.copyWith(color: const Color(0xFF716C66)),
                         ),
                       ),
+                      const SizedBox(height: 14),
+                      Center(
+                        child: _MonthPicker(
+                          month: _month,
+                          year: _year,
+                          onChanged: _changeMonth,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      _TargetSummary(
+                        allocated: allocated,
+                        allocationCount: allocationCount,
+                      ),
+                      const SizedBox(height: 12),
+                      const _TargetExplanation(),
+                      const SizedBox(height: 14),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              'Phân bổ theo danh mục',
+                              style: Theme.of(context).textTheme.titleMedium,
+                            ),
+                          ),
+                          TextButton.icon(
+                            key: const Key('add-target-category'),
+                            onPressed: () => showCreateTagForm(context),
+                            icon: const Icon(Icons.add_rounded, size: 18),
+                            label: const Text('Thêm danh mục'),
+                            style: TextButton.styleFrom(
+                              foregroundColor: _targetGreen,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 6,
+                              ),
+                              visualDensity: VisualDensity.compact,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      tags.when(
+                        loading: () =>
+                            const Center(child: CircularProgressIndicator()),
+                        error: (_, _) => const Text('Không tải được danh mục.'),
+                        data: (items) => _CategoryList(
+                          tags: items
+                              .where((tag) => tag.type == MoneyFlowType.expense)
+                              .toList(),
+                          allocations: _allocations,
+                          onEdit: _editAllocation,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.fromLTRB(20, 12, 20, 14),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.surfaceContainerLowest,
+                  boxShadow: const [
+                    BoxShadow(
+                      color: Color(0x14172015),
+                      blurRadius: 18,
+                      offset: Offset(0, -5),
                     ),
-                    const SizedBox(height: 14),
-                    Center(
-                      child: _MonthPicker(
-                        month: _month,
-                        year: _year,
-                        onChanged: _changeMonth,
+                  ],
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        key: const Key('target-cancel-button'),
+                        onPressed: _saving ? null : _requestExit,
+                        child: const Text('Hủy'),
                       ),
                     ),
-                    const SizedBox(height: 16),
-                    _TargetSummary(
-                      allocated: allocated,
-                      allocationCount: allocationCount,
-                    ),
-                    const SizedBox(height: 12),
-                    const _TargetExplanation(),
-                    const SizedBox(height: 14),
-                    Text(
-                      'Phân bổ theo danh mục',
-                      style: Theme.of(context).textTheme.titleMedium,
-                    ),
-                    const SizedBox(height: 8),
-                    tags.when(
-                      loading: () =>
-                          const Center(child: CircularProgressIndicator()),
-                      error: (_, _) => const Text('Không tải được danh mục.'),
-                      data: (items) => _CategoryList(
-                        tags: items
-                            .where((tag) => tag.type == MoneyFlowType.expense)
-                            .toList(),
-                        allocations: _allocations,
-                        onEdit: _editAllocation,
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: FilledButton(
+                        onPressed: _saving ? null : _save,
+                        child: _saving
+                            ? const SizedBox.square(
+                                dimension: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
+                              )
+                            : const Text('Lưu Target'),
                       ),
                     ),
                   ],
                 ),
               ),
-            ),
-            Container(
-              padding: const EdgeInsets.fromLTRB(20, 12, 20, 14),
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.surfaceContainerLowest,
-                boxShadow: const [
-                  BoxShadow(
-                    color: Color(0x14172015),
-                    blurRadius: 18,
-                    offset: Offset(0, -5),
-                  ),
-                ],
-              ),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton(
-                      onPressed: _saving
-                          ? null
-                          : () => Navigator.of(context).pop(),
-                      child: const Text('Hủy'),
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: FilledButton(
-                      onPressed: _saving ? null : _save,
-                      child: _saving
-                          ? const SizedBox.square(
-                              dimension: 20,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            )
-                          : const Text('Lưu Target'),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
   }
 
-  void _changeMonth(({int month, int year}) value) {
+  Future<void> _requestExit() async {
+    if (!await _confirmDiscardChanges()) return;
+    if (!mounted) return;
+    setState(() => _allowPop = true);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) Navigator.of(context).pop();
+    });
+  }
+
+  Future<bool> _confirmDiscardChanges({
+    String message =
+        'Bạn có thay đổi Target chưa được lưu. Nếu rời khỏi trang, các thay đổi này sẽ bị mất.',
+  }) async {
+    if (!_hasUnsavedChanges) return true;
+    if (_discardDialogVisible) return false;
+
+    _discardDialogVisible = true;
+    try {
+      return await showDialog<bool>(
+            context: context,
+            barrierDismissible: false,
+            builder: (dialogContext) => AlertDialog(
+              title: const Text('Thay đổi chưa được lưu'),
+              content: Text(message),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(dialogContext).pop(false),
+                  child: const Text('Tiếp tục chỉnh sửa'),
+                ),
+                FilledButton(
+                  key: const Key('discard-target-changes'),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: Theme.of(dialogContext).colorScheme.error,
+                    foregroundColor: Theme.of(
+                      dialogContext,
+                    ).colorScheme.onError,
+                  ),
+                  onPressed: () => Navigator.of(dialogContext).pop(true),
+                  child: const Text('Bỏ thay đổi'),
+                ),
+              ],
+            ),
+          ) ??
+          false;
+    } finally {
+      _discardDialogVisible = false;
+    }
+  }
+
+  bool _sameAllocations(
+    Map<String, String> current,
+    Map<String, String> saved,
+  ) {
+    final keys = <String>{...current.keys, ...saved.keys};
+    for (final key in keys) {
+      if (_minorUnits(current[key] ?? '') != _minorUnits(saved[key] ?? '')) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  Future<void> _changeMonth(({int month, int year}) value) async {
+    if (_hasUnsavedChanges) {
+      final discard = await _confirmDiscardChanges(
+        message:
+            'Bạn có thay đổi Target chưa được lưu. Nếu chuyển tháng, các thay đổi này sẽ bị mất.',
+      );
+      if (!discard || !mounted) return;
+    }
     setState(() {
       _month = value.month;
       _year = value.year;
-      final allBudgets = ref.read(budgetsProvider).asData?.value ?? widget.budgets;
-      final targetBudgets = allBudgets.where((b) => b.month == _month && b.year == _year);
+      final allBudgets =
+          ref.read(budgetsProvider).asData?.value ?? widget.budgets;
+      final targetBudgets = allBudgets.where(
+        (b) => b.month == _month && b.year == _year,
+      );
       _allocations = {
         for (final budget in targetBudgets)
           if (budget.tagId != null) budget.tagId!: budget.amount,
       };
+      _savedAllocations = Map<String, String>.of(_allocations);
     });
   }
 
@@ -247,14 +359,23 @@ class _BudgetTargetScreenState extends ConsumerState<BudgetTargetScreen> {
                 BudgetAllocation(tagId: entry.key, amount: entry.value),
             ],
           );
-      
-      ref.invalidate(monthlyBudgetDetailsProvider(
-        (month: _month, year: _year),
-      ));
+
+      ref.invalidate(
+        monthlyBudgetDetailsProvider((month: _month, year: _year)),
+      );
       ref.invalidate(annualBudgetSummaryProvider(_year));
-      
+
       if (mounted) {
-        Navigator.of(context).pop((month: _month, year: _year));
+        setState(() {
+          _savedAllocations = Map<String, String>.of(_allocations);
+          _saving = false;
+          _allowPop = true;
+        });
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) {
+            Navigator.of(context).pop((month: _month, year: _year));
+          }
+        });
       }
     } catch (_) {
       if (mounted) {
@@ -287,7 +408,17 @@ class _AmountDialogState extends State<_AmountDialog> {
   @override
   void initState() {
     super.initState();
-    _controller = TextEditingController(text: widget.initialValue);
+    final editableAmount = normalizeEditableMoneyAmount(widget.initialValue);
+    _controller = TextEditingController(text: editableAmount);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || editableAmount.isEmpty) {
+        return;
+      }
+      _controller.selection = TextSelection(
+        baseOffset: 0,
+        extentOffset: editableAmount.length,
+      );
+    });
   }
 
   @override
@@ -304,6 +435,13 @@ class _AmountDialogState extends State<_AmountDialog> {
         controller: _controller,
         autofocus: true,
         keyboardType: const TextInputType.numberWithOptions(decimal: true),
+        inputFormatters: [
+          TextInputFormatter.withFunction((oldValue, newValue) {
+            return RegExp(r'^\d*(\.\d{0,2})?$').hasMatch(newValue.text)
+                ? newValue
+                : oldValue;
+          }),
+        ],
         decoration: const InputDecoration(labelText: 'Số tiền'),
       ),
       actions: [
@@ -312,7 +450,10 @@ class _AmountDialogState extends State<_AmountDialog> {
           child: const Text('Hủy'),
         ),
         FilledButton(
-          onPressed: () => Navigator.pop(context, _controller.text.trim()),
+          onPressed: () => Navigator.pop(
+            context,
+            normalizeEditableMoneyAmount(_controller.text),
+          ),
           child: const Text('Xác nhận'),
         ),
       ],

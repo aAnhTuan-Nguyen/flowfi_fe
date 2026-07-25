@@ -86,6 +86,7 @@ void configureDependencies() {
       () => AuthRepositoryImpl(
         serviceLocator<AuthRemoteDataSource>(),
         serviceLocator<AuthSessionManager>(),
+        serviceLocator<FlowFiLocalStore>(),
       ),
     );
   }

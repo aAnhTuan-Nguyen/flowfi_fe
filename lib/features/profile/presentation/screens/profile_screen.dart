@@ -9,7 +9,6 @@ import '../../../auth/domain/entities/auth_user.dart';
 import '../../../auth/presentation/providers/auth_controller.dart';
 import '../../../shared/presentation/widgets/crud_helpers.dart';
 import '../../../shared/presentation/widgets/feature_states.dart';
-import '../../../shared/presentation/widgets/forui_controls.dart';
 import '../../../tags/presentation/widgets/tag_manager_sheet.dart';
 
 class ProfileScreen extends ConsumerWidget {

@@ -73,6 +73,35 @@ final class FlowFiLocalStore {
     });
   }
 
+  Future<void> replaceTransactionsInRange(
+    List<Transaction> transactions, {
+    required DateTime from,
+    required DateTime to,
+  }) async {
+    final serverIds = transactions
+        .map((transaction) => transaction.id)
+        .toList();
+    await _database.transaction(() async {
+      final delete = _database.delete(_database.localTransactionRows)
+        ..where(
+          (row) =>
+              row.isPendingSync.equals(false) &
+              row.transactionDate.isBiggerOrEqualValue(from) &
+              row.transactionDate.isSmallerOrEqualValue(to),
+        );
+      if (serverIds.isNotEmpty) {
+        delete.where((row) => row.id.isNotIn(serverIds));
+      }
+      await delete.go();
+      await _database.batch((batch) {
+        batch.insertAllOnConflictUpdate(_database.localTransactionRows, [
+          for (final transaction in transactions)
+            _transactionCompanion(transaction, isPendingSync: false),
+        ]);
+      });
+    });
+  }
+
   Future<List<Transaction>> readTransactions() async {
     final rows =
         await (_database.select(_database.localTransactionRows)
@@ -91,6 +120,22 @@ final class FlowFiLocalStore {
               ]))
             .get();
     return rows.map(_transactionFromRow).toList(growable: false);
+  }
+
+  Future<void> deleteTransaction(String id) async {
+    await (_database.delete(
+      _database.localTransactionRows,
+    )..where((row) => row.id.equals(id))).go();
+  }
+
+  Future<void> clearUserData() async {
+    await _database.transaction(() async {
+      await _database.delete(_database.pendingSyncOperationRows).go();
+      await _database.delete(_database.localTransactionRows).go();
+      await _database.delete(_database.localTagRows).go();
+      await _database.delete(_database.localWalletRows).go();
+      await _database.delete(_database.syncMetadataRows).go();
+    });
   }
 
   Future<Transaction> createPendingManualTransaction({

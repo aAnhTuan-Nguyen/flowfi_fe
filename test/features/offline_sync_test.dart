@@ -52,6 +52,82 @@ void main() {
     expect(transactions.single.title, 'Cached coffee');
   });
 
+  test(
+    'calculates offline summary from confirmed cached transactions',
+    () async {
+      await store.cacheTransactions([
+        Transaction(
+          id: 'expense',
+          title: 'Coffee',
+          amount: '50000',
+          type: MoneyFlowType.expense,
+          date: DateTime(2026, 7, 10),
+          status: TransactionStatus.confirmed,
+          inputMethod: TransactionInputMethod.manual,
+        ),
+        Transaction(
+          id: 'income',
+          title: 'Salary',
+          amount: '1000000',
+          type: MoneyFlowType.income,
+          date: DateTime(2026, 7, 20),
+          status: TransactionStatus.confirmed,
+          inputMethod: TransactionInputMethod.manual,
+        ),
+        Transaction(
+          id: 'draft',
+          title: 'Draft receipt',
+          amount: '999999',
+          type: MoneyFlowType.expense,
+          date: DateTime(2026, 7, 21),
+          status: TransactionStatus.draft,
+          inputMethod: TransactionInputMethod.ocr,
+        ),
+      ]);
+      final repository = TransactionRepositoryImpl(
+        _FailingTransactionRemoteDataSource(),
+        localStore: store,
+        networkStatus: _FixedNetworkStatus(isOnline: false),
+      );
+
+      final summary = await repository.getSummary(
+        from: DateTime(2026, 7, 1).toIso8601String(),
+        to: DateTime(
+          2026,
+          8,
+          1,
+        ).subtract(const Duration(milliseconds: 1)).toIso8601String(),
+      );
+
+      expect(summary.totalIncome, '1000000');
+      expect(summary.totalExpense, '50000');
+    },
+  );
+
+  test('does not hide backend validation errors with cached data', () async {
+    await store.cacheTransactions([
+      Transaction(
+        id: 'stale',
+        title: 'Stale transaction',
+        amount: '50000',
+        type: MoneyFlowType.expense,
+        date: DateTime(2026, 7, 10),
+        status: TransactionStatus.confirmed,
+        inputMethod: TransactionInputMethod.manual,
+      ),
+    ]);
+    final repository = TransactionRepositoryImpl(
+      _BackendValidationTransactionRemoteDataSource(),
+      localStore: store,
+      networkStatus: const _FixedNetworkStatus(isOnline: true),
+    );
+
+    await expectLater(
+      repository.listTransactions(),
+      throwsA(isA<DioException>()),
+    );
+  });
+
   test('confirmation caches the confirmed transaction', () async {
     await store.cacheTransactions([
       Transaction(
@@ -113,6 +189,80 @@ void main() {
       cached.first.updatedAt?.millisecondsSinceEpoch,
       latestActivity.millisecondsSinceEpoch,
     );
+  });
+
+  test(
+    'replaces stale cached transactions inside a complete date range',
+    () async {
+      await store.cacheTransactions([
+        Transaction(
+          id: 'kept',
+          title: 'Server transaction',
+          amount: '100000',
+          type: MoneyFlowType.expense,
+          date: DateTime(2026, 7, 10),
+          status: TransactionStatus.confirmed,
+          inputMethod: TransactionInputMethod.manual,
+        ),
+        Transaction(
+          id: 'stale',
+          title: 'Deleted on server',
+          amount: '50000',
+          type: MoneyFlowType.expense,
+          date: DateTime(2026, 7, 11),
+          status: TransactionStatus.confirmed,
+          inputMethod: TransactionInputMethod.manual,
+        ),
+      ]);
+
+      await store.replaceTransactionsInRange(
+        [
+          Transaction(
+            id: 'kept',
+            title: 'Updated server transaction',
+            amount: '120000',
+            type: MoneyFlowType.expense,
+            date: DateTime(2026, 7, 10),
+            status: TransactionStatus.confirmed,
+            inputMethod: TransactionInputMethod.manual,
+          ),
+        ],
+        from: DateTime(2026, 7, 1),
+        to: DateTime(2026, 8, 1).subtract(const Duration(milliseconds: 1)),
+      );
+
+      final cached = await store.readTransactions();
+      expect(cached, hasLength(1));
+      expect(cached.single.id, 'kept');
+      expect(cached.single.amount, '120000');
+    },
+  );
+
+  test('clears account-scoped SQLite data', () async {
+    await store.cacheWallets([
+      const Wallet(
+        id: 'wallet-1',
+        name: 'Cash',
+        type: WalletType.cash,
+        balance: '500000',
+        isDefault: true,
+      ),
+    ]);
+    await store.createPendingManualTransaction(
+      clientId: 'pending-1',
+      walletId: 'wallet-1',
+      tagId: 'tag-1',
+      title: 'Offline coffee',
+      amount: '50000',
+      type: MoneyFlowType.expense,
+      date: DateTime(2026, 7, 10),
+    );
+
+    await store.clearUserData();
+
+    expect(await store.readWallets(), isEmpty);
+    expect(await store.readTransactions(), isEmpty);
+    expect(await store.readPendingOperations(), isEmpty);
   });
 
   test(
@@ -387,6 +537,14 @@ final class _FixedNetworkStatus implements NetworkStatusService {
 final class _FailingTransactionRemoteDataSource
     implements TransactionRemoteDataSource {
   @override
+  Future<TransactionSummary> getSummary({
+    required String from,
+    required String to,
+  }) {
+    throw StateError('offline');
+  }
+
+  @override
   Future<List<TransactionModel>> listTransactions({
     int page = 1,
     int limit = 20,
@@ -446,6 +604,12 @@ final class _FailingTransactionRemoteDataSource
 
 final class _ConfirmingTransactionRemoteDataSource
     implements TransactionRemoteDataSource {
+  @override
+  Future<TransactionSummary> getSummary({
+    required String from,
+    required String to,
+  }) => throw UnimplementedError();
+
   @override
   Future<TransactionModel> confirmTransaction(String id) async {
     return TransactionModel(
@@ -516,6 +680,14 @@ final class _BackendValidationTransactionRemoteDataSource
         statusCode: 400,
       ),
     );
+  }
+
+  @override
+  Future<TransactionSummary> getSummary({
+    required String from,
+    required String to,
+  }) {
+    throw _error();
   }
 
   @override

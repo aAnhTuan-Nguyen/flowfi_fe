@@ -26,6 +26,26 @@ final class TransactionRepositoryImpl implements TransactionRepository {
   final String Function() _clientIdFactory;
 
   @override
+  Future<TransactionSummary> getSummary({
+    required String from,
+    required String to,
+  }) async {
+    final start = DateTime.parse(from);
+    final end = DateTime.parse(to);
+    if (!await _hasNetwork()) {
+      return _summarizeCached(start, end);
+    }
+    try {
+      return await _remoteDataSource.getSummary(from: from, to: to);
+    } on DioException catch (error) {
+      if (_isRetryableOfflineError(error)) {
+        return _summarizeCached(start, end);
+      }
+      rethrow;
+    }
+  }
+
+  @override
   Future<List<Transaction>> listTransactions({
     int page = 1,
     int limit = 20,
@@ -65,20 +85,35 @@ final class TransactionRepositoryImpl implements TransactionRepository {
       final transactions = models
           .map((model) => model.toDomain())
           .toList(growable: false);
-      await _localStore?.cacheTransactions(transactions);
-      return transactions;
-    } catch (_) {
-      final cached = await _localStore?.readTransactions();
-      if (cached != null) {
-        return _filterCached(
-          cached,
-          walletId: walletId,
-          tagId: tagId,
-          transactionType: transactionType,
-          status: status,
-          inputMethod: inputMethod,
-          keyword: keyword,
+      final rangeStart = from == null ? null : DateTime.tryParse(from);
+      final rangeEnd = to == null ? null : DateTime.tryParse(to);
+      if (page == 1 &&
+          transactions.length < limit &&
+          rangeStart != null &&
+          rangeEnd != null) {
+        await _localStore?.replaceTransactionsInRange(
+          transactions,
+          from: rangeStart,
+          to: rangeEnd,
         );
+      } else {
+        await _localStore?.cacheTransactions(transactions);
+      }
+      return transactions;
+    } on DioException catch (error) {
+      if (_isRetryableOfflineError(error)) {
+        final cached = await _localStore?.readTransactions();
+        if (cached != null) {
+          return _filterCached(
+            cached,
+            walletId: walletId,
+            tagId: tagId,
+            transactionType: transactionType,
+            status: status,
+            inputMethod: inputMethod,
+            keyword: keyword,
+          );
+        }
       }
       rethrow;
     }
@@ -157,7 +192,7 @@ final class TransactionRepositoryImpl implements TransactionRepository {
     String? merchantName,
     String? description,
   }) async {
-    return (await _remoteDataSource.updateTransaction(
+    final transaction = (await _remoteDataSource.updateTransaction(
       id,
       tagId: tagId,
       title: title,
@@ -167,11 +202,14 @@ final class TransactionRepositoryImpl implements TransactionRepository {
       merchantName: merchantName,
       description: description,
     )).toDomain();
+    await _localStore?.cacheTransactions([transaction]);
+    return transaction;
   }
 
   @override
-  Future<void> deleteTransaction(String id) {
-    return _remoteDataSource.deleteTransaction(id);
+  Future<void> deleteTransaction(String id) async {
+    await _remoteDataSource.deleteTransaction(id);
+    await _localStore?.deleteTransaction(id);
   }
 
   @override
@@ -222,6 +260,17 @@ final class TransactionRepositoryImpl implements TransactionRepository {
 
   bool _isRetryableOfflineError(DioException error) {
     return error.response == null;
+  }
+
+  Future<TransactionSummary> _summarizeCached(
+    DateTime from,
+    DateTime to,
+  ) async {
+    return summarizeTransactions(
+      await _localStore?.readTransactions() ?? const [],
+      from: from,
+      to: to,
+    );
   }
 }
 

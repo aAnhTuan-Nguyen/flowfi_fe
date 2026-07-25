@@ -117,7 +117,7 @@ class _BudgetsScreenState extends ConsumerState<BudgetsScreen> {
       ),
     );
     ref.invalidate(annualBudgetSummaryProvider(_selectedYear));
-    
+
     if (result != null && context.mounted) {
       _openDetails(
         context,
@@ -192,10 +192,14 @@ class _Header extends StatelessWidget {
           decoration: BoxDecoration(
             color: Theme.of(context).colorScheme.surfaceContainerLowest,
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: Theme.of(context).colorScheme.outlineVariant),
+            border: Border.all(
+              color: Theme.of(context).colorScheme.outlineVariant,
+            ),
             boxShadow: [
               BoxShadow(
-                color: Theme.of(context).colorScheme.shadow.withValues(alpha: 0.06),
+                color: Theme.of(
+                  context,
+                ).colorScheme.shadow.withValues(alpha: 0.06),
                 blurRadius: 18,
                 offset: Offset(0, 6),
               ),
@@ -286,7 +290,6 @@ class _AnnualBudgetContent extends StatelessWidget {
         ),
         const SizedBox(height: 28),
         _AnnualChart(
-          year: year,
           budgetsByMonth: totalsByMonth,
           summaryByMonth: summaryByMonth,
         ),
@@ -313,13 +316,14 @@ class _MonthCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final now = DateTime.now();
-    final isCurrent = now.month == month && now.year == year;
     final isPast = DateTime(
       year,
       month + 1,
     ).isBefore(DateTime(now.year, now.month + 1));
     final hasBudget = amount != null;
-    final isExceeded = summary?.isExceeded ?? false;
+    final percentUsed = summary?.percentUsed ?? 0;
+    final isExceeded = percentUsed > 100;
+    final displayPercent = isExceeded ? percentUsed - 100 : percentUsed;
     final accentColor = isExceeded ? _danger : _forest;
 
     return Material(
@@ -328,24 +332,25 @@ class _MonthCard extends StatelessWidget {
         onTap: onTap,
         borderRadius: BorderRadius.circular(18),
         child: Container(
-          height: isCurrent || isExceeded ? 142 : 116,
+          key: ValueKey('budget-month-$month'),
+          height: hasBudget ? 142 : 116,
           padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
             color: Theme.of(context).colorScheme.surfaceContainerLowest,
             borderRadius: BorderRadius.circular(18),
             border: Border.all(
-              color: isExceeded
-                  ? _danger
-                  : isCurrent
-                  ? _forest
+              color: hasBudget
+                  ? accentColor
                   : !hasBudget && !isPast
                   ? Theme.of(context).colorScheme.outlineVariant
                   : const Color(0xFFEDE8E3),
-              width: isCurrent || isExceeded ? 1.7 : 1,
+              width: hasBudget ? 1.5 : 1,
             ),
             boxShadow: [
               BoxShadow(
-                color: Theme.of(context).colorScheme.shadow.withValues(alpha: 0.06),
+                color: Theme.of(
+                  context,
+                ).colorScheme.shadow.withValues(alpha: 0.06),
                 blurRadius: 18,
                 offset: Offset(0, 7),
               ),
@@ -360,9 +365,7 @@ class _MonthCard extends StatelessWidget {
                   Text(
                     'T$month',
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      color: isCurrent || isExceeded
-                          ? accentColor
-                          : const Color(0xFF514B47),
+                      color: hasBudget ? accentColor : const Color(0xFF514B47),
                       fontSize: 18,
                       fontWeight: FontWeight.w800,
                     ),
@@ -389,44 +392,44 @@ class _MonthCard extends StatelessWidget {
               ),
               const Spacer(),
               if (hasBudget) ...[
-                Text(
-                  isExceeded
-                      ? '+${summary!.exceededPercent.round()}%'
-                      : _compactAmount(amount!),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    color: accentColor,
-                    fontSize: 17,
-                    fontWeight: FontWeight.w800,
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    '${isExceeded ? 'Đã vượt' : 'Đã đạt'} ${displayPercent.round()}%',
+                    key: ValueKey('budget-percent-$month'),
+                    maxLines: 1,
+                    softWrap: false,
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      color: accentColor,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w800,
+                    ),
                   ),
                 ),
                 const SizedBox(height: 3),
                 Text(
-                  isExceeded
-                      ? 'Vượt mức · ${_compactAmount(summary!.spentAmount)}'
-                      : isCurrent
-                      ? 'Mục tiêu tháng này'
-                      : 'Đã thiết lập',
+                  'ngân sách',
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    fontWeight: FontWeight.w500,
+                    color: accentColor,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
-                if (isCurrent || isExceeded) ...[
-                  const SizedBox(height: 9),
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(99),
-                    child: LinearProgressIndicator(
-                      value: math.min((summary?.percentUsed ?? 100) / 100, 1),
-                      minHeight: 7,
-                      color: accentColor,
-                      backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
-                    ),
+                const SizedBox(height: 9),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(99),
+                  child: LinearProgressIndicator(
+                    key: ValueKey('budget-progress-$month'),
+                    value: math.min(percentUsed / 100, 1),
+                    minHeight: 7,
+                    color: accentColor,
+                    backgroundColor: Theme.of(
+                      context,
+                    ).colorScheme.surfaceContainerHighest,
                   ),
-                ],
+                ),
               ] else
                 Center(
                   child: Column(
@@ -459,32 +462,48 @@ class _MonthCard extends StatelessWidget {
 
 class _AnnualChart extends StatelessWidget {
   const _AnnualChart({
-    required this.year,
     required this.budgetsByMonth,
     required this.summaryByMonth,
   });
 
-  final int year;
   final Map<int, String> budgetsByMonth;
   final Map<int, AnnualBudgetMonthSummary> summaryByMonth;
 
   @override
   Widget build(BuildContext context) {
-    final targetValues = [
+    final months = [
       for (var month = 1; month <= 12; month++)
-        _amountValue(
-          summaryByMonth[month]?.targetAmount ?? budgetsByMonth[month],
+        _MonthlyBudgetVariance(
+          month: month,
+          targetMinorUnits: _budgetMinorUnits(
+            summaryByMonth[month]?.targetAmount ?? budgetsByMonth[month] ?? '0',
+          ),
+          spentMinorUnits: _budgetMinorUnits(
+            summaryByMonth[month]?.spentAmount ?? '0',
+          ),
         ),
     ];
-    final spentValues = [
-      for (var month = 1; month <= 12; month++)
-        _amountValue(summaryByMonth[month]?.spentAmount),
-    ];
-    final maxValue = [
-      ...targetValues,
-      ...spentValues,
-    ].fold<double>(0, math.max);
-    final chartMax = maxValue <= 0 ? 10.0 : maxValue * 1.25;
+    final totalSavings = months.fold<BigInt>(
+      BigInt.zero,
+      (sum, month) => month.differenceMinorUnits > BigInt.zero
+          ? sum + month.differenceMinorUnits
+          : sum,
+    );
+    final totalOverspending = months.fold<BigInt>(
+      BigInt.zero,
+      (sum, month) => month.differenceMinorUnits < BigInt.zero
+          ? sum + month.differenceMinorUnits.abs()
+          : sum,
+    );
+    final maxDifference = months.fold<BigInt>(
+      BigInt.zero,
+      (max, month) => month.differenceMinorUnits.abs() > max
+          ? month.differenceMinorUnits.abs()
+          : max,
+    );
+    final chartMax = maxDifference == BigInt.zero
+        ? 1000000.0
+        : (maxDifference.toDouble() / 100) * 1.25;
 
     return Container(
       width: double.infinity,
@@ -504,27 +523,55 @@ class _AnnualChart extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          Text(
+            'Tiết kiệm và Vượt chi',
+            key: const ValueKey('annual-variance-title'),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: Theme.of(
+              context,
+            ).textTheme.titleMedium?.copyWith(fontSize: 17),
+          ),
+          const SizedBox(height: 8),
+          const Align(
+            alignment: Alignment.centerRight,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _ChartLegend(color: _forest, label: 'Tiết kiệm'),
+                SizedBox(width: 12),
+                _ChartLegend(color: _danger, label: 'Vượt chi'),
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
           Row(
             children: [
               Expanded(
-                child: Text(
-                  'Chi tiêu năm $year',
-                  style: Theme.of(
-                    context,
-                  ).textTheme.titleMedium?.copyWith(fontSize: 17),
+                child: _VarianceSummaryCard(
+                  label: 'Tiết kiệm',
+                  value: '+${_compactVarianceAmount(totalSavings)}',
+                  color: _forest,
+                  backgroundColor: const Color(0xFFF0F7EC),
                 ),
               ),
-              _ChartLegend(color: const Color(0xFF9BC27F), label: 'Mục tiêu'),
               const SizedBox(width: 10),
-              const _ChartLegend(color: _forest, label: 'Đã chi'),
+              Expanded(
+                child: _VarianceSummaryCard(
+                  label: 'Vượt chi',
+                  value: '-${_compactVarianceAmount(totalOverspending)}',
+                  color: _danger,
+                  backgroundColor: const Color(0xFFFFF0ED),
+                ),
+              ),
             ],
           ),
           const SizedBox(height: 18),
           SizedBox(
-            height: 210,
+            height: 250,
             child: BarChart(
               BarChartData(
-                minY: 0,
+                minY: -chartMax,
                 maxY: chartMax,
                 alignment: BarChartAlignment.spaceAround,
                 barTouchData: BarTouchData(
@@ -532,12 +579,20 @@ class _AnnualChart extends StatelessWidget {
                   touchTooltipData: BarTouchTooltipData(
                     getTooltipColor: (_) => const Color(0xFF20331D),
                     getTooltipItem: (group, groupIndex, rod, rodIndex) {
-                      final month = group.x + 1;
-                      final label = rodIndex == 0 ? 'Mục tiêu' : 'Đã chi';
+                      final month = months[group.x];
+                      final isSaving =
+                          month.differenceMinorUnits >= BigInt.zero;
+                      final resultLabel = isSaving ? 'Tiết kiệm' : 'Vượt chi';
+                      final resultSign = isSaving ? '+' : '-';
                       return BarTooltipItem(
-                        'T$month\n$label: ${_compactAmount(rod.toY.toStringAsFixed(0))}',
+                        'Tháng ${month.month}\n'
+                        'Mục tiêu: ${_compactVarianceAmount(month.targetMinorUnits)}\n'
+                        'Đã chi: ${_compactVarianceAmount(month.spentMinorUnits)}\n'
+                        '$resultLabel: $resultSign${_compactVarianceAmount(month.differenceMinorUnits.abs())}',
                         TextStyle(
-                          color: Theme.of(context).colorScheme.surfaceContainerLowest,
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.surfaceContainerLowest,
                           fontSize: 11,
                           fontWeight: FontWeight.w600,
                         ),
@@ -547,8 +602,14 @@ class _AnnualChart extends StatelessWidget {
                 ),
                 gridData: FlGridData(
                   drawVerticalLine: false,
-                  getDrawingHorizontalLine: (_) =>
-                      FlLine(color: Theme.of(context).colorScheme.outlineVariant, strokeWidth: 1),
+                  horizontalInterval: chartMax / 3,
+                  getDrawingHorizontalLine: (value) => FlLine(
+                    color: value.abs() < 0.01
+                        ? Theme.of(context).colorScheme.onSurfaceVariant
+                        : Theme.of(context).colorScheme.outlineVariant,
+                    strokeWidth: value.abs() < 0.01 ? 1.5 : 1,
+                    dashArray: value.abs() < 0.01 ? null : [3, 3],
+                  ),
                 ),
                 borderData: FlBorderData(show: false),
                 titlesData: FlTitlesData(
@@ -561,8 +622,8 @@ class _AnnualChart extends StatelessWidget {
                   leftTitles: AxisTitles(
                     sideTitles: SideTitles(
                       showTitles: true,
-                      reservedSize: 38,
-                      interval: chartMax / 4,
+                      reservedSize: 46,
+                      interval: chartMax / 3,
                       getTitlesWidget: (value, meta) => Text(
                         _axisAmount(value),
                         style: Theme.of(context).textTheme.labelSmall?.copyWith(
@@ -582,7 +643,9 @@ class _AnnualChart extends StatelessWidget {
                           'T${value.toInt() + 1}',
                           style: Theme.of(context).textTheme.labelMedium
                               ?.copyWith(
-                                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onSurfaceVariant,
                                 fontSize: 10,
                               ),
                         ),
@@ -596,32 +659,24 @@ class _AnnualChart extends StatelessWidget {
                       x: index,
                       barRods: [
                         BarChartRodData(
-                          toY: targetValues[index],
-                          width: 7,
-                          color: targetValues[index] <= 0
-                              ? const Color(0xFFF4F1ED)
-                              : const Color(0xFF9BC27F),
-                          borderRadius: const BorderRadius.vertical(
-                            top: Radius.circular(4),
-                          ),
-                          borderSide: targetValues[index] <= 0
-                              ? BorderSide(color: Theme.of(context).colorScheme.outlineVariant)
-                              : BorderSide.none,
-                        ),
-                        BarChartRodData(
-                          toY: spentValues[index],
-                          width: 7,
+                          toY:
+                              months[index].differenceMinorUnits.toDouble() /
+                              100,
+                          width: 14,
                           color:
-                              spentValues[index] > targetValues[index] &&
-                                  targetValues[index] > 0
+                              months[index].differenceMinorUnits < BigInt.zero
                               ? _danger
                               : _forest,
-                          borderRadius: const BorderRadius.vertical(
-                            top: Radius.circular(4),
-                          ),
+                          borderRadius:
+                              months[index].differenceMinorUnits < BigInt.zero
+                              ? const BorderRadius.vertical(
+                                  bottom: Radius.circular(5),
+                                )
+                              : const BorderRadius.vertical(
+                                  top: Radius.circular(5),
+                                ),
                         ),
                       ],
-                      barsSpace: 2,
                     ),
                 ],
               ),
@@ -631,10 +686,68 @@ class _AnnualChart extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            'Chạm vào từng cột để xem số tiền chi tiết.',
-            style: Theme.of(
-              context,
-            ).textTheme.labelSmall?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
+            'Chạm vào từng cột để xem chi tiết.',
+            style: Theme.of(context).textTheme.labelSmall?.copyWith(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _MonthlyBudgetVariance {
+  const _MonthlyBudgetVariance({
+    required this.month,
+    required this.targetMinorUnits,
+    required this.spentMinorUnits,
+  });
+
+  final int month;
+  final BigInt targetMinorUnits;
+  final BigInt spentMinorUnits;
+
+  BigInt get differenceMinorUnits => targetMinorUnits == BigInt.zero
+      ? BigInt.zero
+      : targetMinorUnits - spentMinorUnits;
+}
+
+class _VarianceSummaryCard extends StatelessWidget {
+  const _VarianceSummaryCard({
+    required this.label,
+    required this.value,
+    required this.color,
+    required this.backgroundColor,
+  });
+
+  final String label;
+  final String value;
+  final Color color;
+  final Color backgroundColor;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
+      decoration: BoxDecoration(
+        color: backgroundColor,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(label, style: Theme.of(context).textTheme.labelSmall),
+          const SizedBox(height: 4),
+          Text(
+            value,
+            key: ValueKey('annual-variance-$label'),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+              color: color,
+              fontWeight: FontWeight.w800,
+            ),
           ),
         ],
       ),
@@ -831,13 +944,17 @@ double _amountValue(String? value) {
 
 String _axisAmount(double value) {
   if (value == 0) return '0';
-  if (value >= 1000000000) {
-    return '${(value / 1000000000).toStringAsFixed(1)}tỷ';
+  final sign = value < 0 ? '-' : '';
+  final absolute = value.abs();
+  if (absolute >= 1000000000) {
+    return '$sign${(absolute / 1000000000).toStringAsFixed(1)}tỷ';
   }
-  if (value >= 1000000) {
-    return '${(value / 1000000).toStringAsFixed(value >= 10000000 ? 0 : 1)}tr';
+  if (absolute >= 1000000) {
+    return '$sign${(absolute / 1000000).toStringAsFixed(absolute >= 10000000 ? 0 : 1)}tr';
   }
-  if (value >= 1000) return '${(value / 1000).toStringAsFixed(0)}k';
+  if (absolute >= 1000) {
+    return '$sign${(absolute / 1000).toStringAsFixed(0)}k';
+  }
   return value.toStringAsFixed(0);
 }
 
@@ -872,6 +989,11 @@ String _compactAmount(String value) {
     return '${(amount / 1000).toStringAsFixed(0)}k';
   }
   return value;
+}
+
+String _compactVarianceAmount(BigInt minorUnits) {
+  final wholeUnits = minorUnits ~/ BigInt.from(100);
+  return _compactAmount(wholeUnits.toString()).replaceAll('.', ',');
 }
 
 String? _intRange(String? value, int min, int max) {

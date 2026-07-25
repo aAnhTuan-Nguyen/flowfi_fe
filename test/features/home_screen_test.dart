@@ -15,14 +15,31 @@ void main() {
     expect(find.text('Tổng số dư'), findsOneWidget);
     expect(find.text('5.000.000 VND'), findsOneWidget);
     expect(find.text('Chi tiêu tháng này'), findsOneWidget);
-    expect(find.text('120.000 VND'), findsOneWidget);
-    expect(find.byType(PieChart), findsOneWidget);
+    expect(find.text('120.000 VND'), findsWidgets);
+    expect(find.byType(PieChart), findsNothing);
     expect(find.byType(BarChart), findsOneWidget);
-    expect(find.text('Giao dịch gần đây'), findsOneWidget);
-    expect(find.text('Groceries'), findsOneWidget);
-    expect(find.text('Coffee House'), findsNothing);
-    expect(find.text('Ngân sách nổi bật'), findsOneWidget);
-    expect(find.text('Food'), findsOneWidget);
+    expect(find.text('Chi tiêu 7 ngày gần đây'), findsOneWidget);
+    expect(find.text('7 ngày'), findsOneWidget);
+    expect(find.text('Tuần'), findsOneWidget);
+    expect(find.text('T2'), findsOneWidget);
+    expect(find.text('T3'), findsOneWidget);
+    expect(find.text('T4'), findsOneWidget);
+    expect(find.text('T5'), findsOneWidget);
+    expect(find.text('T6'), findsOneWidget);
+    expect(find.text('T7'), findsOneWidget);
+    expect(find.text('CN'), findsOneWidget);
+    final chart = tester.widget<BarChart>(find.byType(BarChart));
+    expect(chart.data.barGroups, hasLength(7));
+    expect(chart.data.barTouchData.enabled, isTrue);
+    expect(find.text('Dòng tiền'), findsNothing);
+    expect(find.text('Dòng tiền gần đây'), findsNothing);
+
+    await tester.ensureVisible(find.text('Tuần'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Tuần'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Xu hướng chi tiêu theo tuần'), findsOneWidget);
   });
 
   testWidgets('home dashboard scrolls on a compact mobile viewport', (
@@ -36,16 +53,47 @@ void main() {
     await pumpFlowFiShell(tester);
     await tester.pumpAndSettle();
 
-    expect(find.text('Ngân sách nổi bật'), findsOneWidget);
-    expect(find.text('Groceries'), findsOneWidget);
+    expect(find.text('Chi tiêu 7 ngày gần đây'), findsOneWidget);
+    expect(find.byType(BarChart), findsOneWidget);
 
     await tester.drag(
       find.byType(SingleChildScrollView),
-      const Offset(0, -320),
+      const Offset(0, -900),
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('Monthly Salary'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('large expense values use readable rounded axis labels', (
+    tester,
+  ) async {
+    final repository = TestTransactionRepository(
+      transactions: [
+        Transaction(
+          id: 'large-expense',
+          title: 'Large expense',
+          amount: '174000000',
+          type: MoneyFlowType.expense,
+          date: DateTime(2026, 7, 23),
+          status: TransactionStatus.confirmed,
+          inputMethod: TransactionInputMethod.manual,
+        ),
+      ],
+    );
+
+    await pumpFlowFiShell(
+      tester,
+      currentDate: DateTime(2026, 7, 23),
+      transactionRepository: repository,
+    );
+    await tester.pumpAndSettle();
+
+    final chart = tester.widget<BarChart>(find.byType(BarChart));
+    expect(chart.data.maxY, 180000000);
+    expect(find.text('60M'), findsOneWidget);
+    expect(find.text('120M'), findsOneWidget);
+    expect(find.text('180M'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 

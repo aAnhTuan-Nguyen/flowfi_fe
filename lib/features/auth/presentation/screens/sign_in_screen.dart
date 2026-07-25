@@ -19,6 +19,13 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  String? _signUpSuccessMessage;
+
+  @override
+  void initState() {
+    super.initState();
+    _emailController.text = ref.read(signInEmailProvider);
+  }
 
   @override
   void dispose() {
@@ -109,6 +116,15 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
                                   ),
                             ),
                           ],
+                          if (_signUpSuccessMessage != null) ...[
+                            const SizedBox(height: 10),
+                            Text(
+                              _signUpSuccessMessage!,
+                              textAlign: TextAlign.center,
+                              style: Theme.of(context).textTheme.labelMedium
+                                  ?.copyWith(color: colors.primary),
+                            ),
+                          ],
                           const SizedBox(height: 18),
                           FlowFiButton(
                             label: 'Đăng nhập',
@@ -140,13 +156,7 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
                           FlowFiButton(
                             label: 'Tạo tài khoản',
                             variant: FlowFiButtonVariant.outline,
-                            onPressed: () {
-                              Navigator.of(context).push(
-                                MaterialPageRoute<void>(
-                                  builder: (_) => const SignUpScreen(),
-                                ),
-                              );
-                            },
+                            onPressed: _openSignUp,
                           ),
                         ],
                       ),
@@ -165,12 +175,25 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
     if (!(_formKey.currentState?.validate() ?? false)) {
       return;
     }
+    final email = _emailController.text.trim();
+    ref.read(signInEmailProvider.notifier).remember(email);
     await ref
         .read(authControllerProvider.notifier)
-        .signIn(
-          email: _emailController.text.trim(),
-          password: _passwordController.text,
-        );
+        .signIn(email: email, password: _passwordController.text);
+  }
+
+  Future<void> _openSignUp() async {
+    final result = await Navigator.of(context).push<SignUpSuccess>(
+      MaterialPageRoute<SignUpSuccess>(builder: (_) => const SignUpScreen()),
+    );
+    if (!mounted || result == null) return;
+    ref.read(signInEmailProvider.notifier).remember(result.email);
+    setState(() {
+      _emailController.text = result.email;
+      _passwordController.clear();
+      _signUpSuccessMessage =
+          'Đăng ký thành công. Vui lòng đăng nhập để tiếp tục.';
+    });
   }
 }
 

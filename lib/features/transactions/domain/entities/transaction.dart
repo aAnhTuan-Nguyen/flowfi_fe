@@ -1,4 +1,5 @@
 import '../../../../core/finance/money_flow_type.dart';
+import '../../../../core/finance/decimal_money.dart';
 
 enum TransactionStatus { draft, confirmed, unknown }
 
@@ -59,6 +60,47 @@ final class Transaction {
   final bool isPendingSync;
 
   DateTime? get activityAt => updatedAt ?? date;
+}
+
+final class TransactionSummary {
+  const TransactionSummary({
+    required this.totalIncome,
+    required this.totalExpense,
+  });
+
+  final String totalIncome;
+  final String totalExpense;
+}
+
+TransactionSummary summarizeTransactions(
+  Iterable<Transaction> transactions, {
+  required DateTime from,
+  required DateTime to,
+}) {
+  var income = BigInt.zero;
+  var expense = BigInt.zero;
+  for (final transaction in transactions) {
+    final date = transaction.date;
+    if (date == null ||
+        date.isBefore(from) ||
+        date.isAfter(to) ||
+        transaction.status != TransactionStatus.confirmed) {
+      continue;
+    }
+    final amount = parseMoneyMinorUnits(transaction.amount);
+    switch (transaction.type) {
+      case MoneyFlowType.income:
+        income += amount;
+      case MoneyFlowType.expense:
+        expense += amount;
+      case MoneyFlowType.unknown:
+        break;
+    }
+  }
+  return TransactionSummary(
+    totalIncome: formatMoneyMinorUnits(income),
+    totalExpense: formatMoneyMinorUnits(expense),
+  );
 }
 
 int compareTransactionActivityDescending(Transaction left, Transaction right) {

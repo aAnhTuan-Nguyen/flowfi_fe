@@ -278,6 +278,18 @@ class TestTransactionRepository implements TransactionRepository {
   String? deletedId;
 
   @override
+  Future<TransactionSummary> getSummary({
+    required String from,
+    required String to,
+  }) async {
+    return summarizeTransactions(
+      transactions,
+      from: DateTime.parse(from),
+      to: DateTime.parse(to),
+    );
+  }
+
+  @override
   Future<List<Transaction>> listTransactions({
     int page = 1,
     int limit = 20,
@@ -520,6 +532,13 @@ class TestBudgetRepository implements BudgetRepository {
       percentUsed: 427.78,
       exceededPercent: 327.78,
     ),
+    const AnnualBudgetMonthSummary(
+      month: 7,
+      targetAmount: '300450000',
+      spentAmount: '192288000',
+      percentUsed: 64,
+      exceededPercent: 0,
+    ),
   ];
 
   @override
@@ -534,9 +553,46 @@ class TestBudgetRepository implements BudgetRepository {
     remainingAmount: '-8850000',
     percentUsed: 427.78,
     transactionCount: 12,
-    topCategoryName: 'Food',
+    topCategoryName: 'Ăn uống',
     topWalletName: 'Cash',
-    categories: const [],
+    categories: const [
+      MonthlyBudgetCategoryDetail(
+        tagId: 'tag-food',
+        tagName: 'Ăn uống',
+        targetAmount: '10000000',
+        spentAmount: '10000000',
+        percentOfSpend: 94,
+        variancePercent: 0,
+      ),
+      MonthlyBudgetCategoryDetail(
+        tagId: 'tag-bills',
+        tagName: 'Bills',
+        targetAmount: '5000000',
+        spentAmount: '0',
+        percentOfSpend: 0,
+        variancePercent: -100,
+      ),
+      MonthlyBudgetCategoryDetail(
+        tagId: '__other__',
+        tagName: 'Khác',
+        targetAmount: '0',
+        spentAmount: '680000',
+        percentOfSpend: 6,
+        variancePercent: 0,
+        unbudgetedCategories: [
+          MonthlyBudgetUnbudgetedCategoryDetail(
+            tagId: 'tag-shopping',
+            tagName: 'Mua sắm',
+            spentAmount: '500000',
+          ),
+          MonthlyBudgetUnbudgetedCategoryDetail(
+            tagId: 'tag-entertainment',
+            tagName: 'Giải trí',
+            spentAmount: '180000',
+          ),
+        ],
+      ),
+    ],
   );
 
   @override
@@ -578,6 +634,15 @@ class TestBudgetRepository implements BudgetRepository {
         year: 2026,
         warningThresholdPercent: 80,
         tagName: 'Transport',
+      ),
+      Budget(
+        id: 'budget-3',
+        tagId: 'tag-food',
+        amount: '300450000',
+        month: 7,
+        year: 2026,
+        warningThresholdPercent: 80,
+        tagName: 'Food',
       ),
     ];
   }

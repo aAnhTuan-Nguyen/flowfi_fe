@@ -1,15 +1,21 @@
 import 'package:dio/dio.dart';
 
 import '../../../../core/auth/auth_session_manager.dart';
+import '../../../../core/local/flowfi_local_store.dart';
 import '../../domain/entities/auth_user.dart';
 import '../../domain/repositories/auth_repository.dart';
 import '../datasources/auth_remote_data_source.dart';
 
 final class AuthRepositoryImpl implements AuthRepository {
-  AuthRepositoryImpl(this._remoteDataSource, this._sessionManager);
+  AuthRepositoryImpl(
+    this._remoteDataSource,
+    this._sessionManager, [
+    this._localStore,
+  ]);
 
   final AuthRemoteDataSource _remoteDataSource;
   final AuthSessionManager _sessionManager;
+  final FlowFiLocalStore? _localStore;
 
   @override
   Future<AuthUser?> bootstrap() async {
@@ -27,6 +33,7 @@ final class AuthRepositoryImpl implements AuthRepository {
           (await _remoteDataSource.me()).toDomain();
     } on DioException {
       await _sessionManager.clear();
+      await _localStore?.clearUserData();
       return null;
     }
   }
@@ -40,6 +47,7 @@ final class AuthRepositoryImpl implements AuthRepository {
       email: email,
       password: password,
     );
+    await _localStore?.clearUserData();
     return _saveSessionAndUser(session);
   }
 
@@ -54,7 +62,16 @@ final class AuthRepositoryImpl implements AuthRepository {
       password: password,
       fullName: fullName,
     );
-    return _saveSessionAndUser(session);
+    try {
+      final user = session.user;
+      if (user == null) {
+        throw const FormatException('Missing user in registration response.');
+      }
+      return user.toDomain();
+    } finally {
+      await _sessionManager.clear();
+      await _localStore?.clearUserData();
+    }
   }
 
   @override
@@ -78,6 +95,7 @@ final class AuthRepositoryImpl implements AuthRepository {
       await _remoteDataSource.logout(refreshToken);
     } finally {
       await _sessionManager.clear();
+      await _localStore?.clearUserData();
     }
   }
 

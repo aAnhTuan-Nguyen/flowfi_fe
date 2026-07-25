@@ -373,6 +373,12 @@ class FakeTransactionRepository implements TransactionRepository {
   final events = <String>[];
 
   @override
+  Future<TransactionSummary> getSummary({
+    required String from,
+    required String to,
+  }) async => const TransactionSummary(totalIncome: '0', totalExpense: '0');
+
+  @override
   Future<List<Transaction>> listTransactions({
     int page = 1,
     int limit = 20,
@@ -494,6 +500,12 @@ class StaleConfirmTransactionRepository implements TransactionRepository {
     inputMethod: TransactionInputMethod.manual,
     updatedAt: DateTime.utc(2026, 7, 21, 8),
   );
+
+  @override
+  Future<TransactionSummary> getSummary({
+    required String from,
+    required String to,
+  }) async => const TransactionSummary(totalIncome: '0', totalExpense: '0');
 
   @override
   Future<List<Transaction>> listTransactions({

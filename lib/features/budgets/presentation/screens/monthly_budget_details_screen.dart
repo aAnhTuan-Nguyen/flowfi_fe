@@ -1,4 +1,3 @@
-import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -9,14 +8,6 @@ import 'budget_target_screen.dart';
 
 const _green = Color(0xFF3D752D);
 const _red = Color(0xFFE43E3E);
-const _palette = [
-  Color(0xFF4A7E35),
-  Color(0xFF6750C7),
-  Color(0xFF2E8588),
-  Color(0xFFFF9A24),
-  Color(0xFFE04747),
-  Color(0xFFB8B8B8),
-];
 
 class MonthlyBudgetDetailsScreen extends ConsumerStatefulWidget {
   const MonthlyBudgetDetailsScreen({
@@ -103,7 +94,8 @@ class _MonthlyBudgetDetailsScreenState
   void _selectMonth(int month) => setState(() => _month = month);
 
   Future<void> _editTarget() async {
-    final allBudgets = ref.read(budgetsProvider).asData?.value ?? widget.budgets;
+    final allBudgets =
+        ref.read(budgetsProvider).asData?.value ?? widget.budgets;
     final budgets = allBudgets
         .where((budget) => budget.month == _month && budget.year == _year)
         .toList();
@@ -146,9 +138,7 @@ class _DetailsContent extends StatelessWidget {
         const SizedBox(height: 12),
         _OverviewCard(details: details),
         const SizedBox(height: 12),
-        _CategorySpendingCard(details: details),
-        const SizedBox(height: 12),
-        _TargetComparisonCard(categories: details.categories),
+        _CategoryTargetProgressCard(categories: details.categories),
         const SizedBox(height: 12),
         _InsightCard(details: details, isSaving: isSaving),
       ],
@@ -180,13 +170,17 @@ class _SummaryCard extends StatelessWidget {
                   vertical: 8,
                 ),
                 decoration: BoxDecoration(
-                  color: isSaving ? Theme.of(context).colorScheme.primaryContainer : Theme.of(context).colorScheme.errorContainer,
+                  color: isSaving
+                      ? Theme.of(context).colorScheme.primaryContainer
+                      : Theme.of(context).colorScheme.errorContainer,
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(
                   '+$differencePercent%  ${isSaving ? 'Tiết kiệm' : 'Vượt mức'}',
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    color: isSaving ? Theme.of(context).colorScheme.onPrimaryContainer : Theme.of(context).colorScheme.onError,
+                    color: isSaving
+                        ? Theme.of(context).colorScheme.onPrimaryContainer
+                        : Theme.of(context).colorScheme.onError,
                   ),
                 ),
               ),
@@ -237,7 +231,9 @@ class _SummaryCard extends StatelessWidget {
                         value: progress,
                         strokeWidth: 10,
                         color: isSaving ? _green : _red,
-                        backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
+                        backgroundColor: Theme.of(
+                          context,
+                        ).colorScheme.surfaceContainerHighest,
                       ),
                     ),
                     Padding(
@@ -246,9 +242,8 @@ class _SummaryCard extends StatelessWidget {
                         fit: BoxFit.scaleDown,
                         child: Text(
                           '${details.percentUsed.round()}%',
-                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
+                          style: Theme.of(context).textTheme.titleLarge
+                              ?.copyWith(fontWeight: FontWeight.bold),
                         ),
                       ),
                     ),
@@ -266,7 +261,9 @@ class _SummaryCard extends StatelessWidget {
                       value: progress,
                       minHeight: 7,
                       color: isSaving ? _green : _red,
-                      backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
+                      backgroundColor: Theme.of(
+                        context,
+                      ).colorScheme.surfaceContainerHighest,
                       borderRadius: BorderRadius.circular(99),
                     ),
                     const SizedBox(height: 7),
@@ -411,172 +408,217 @@ class _OverviewItem extends StatelessWidget {
   );
 }
 
-class _CategorySpendingCard extends StatelessWidget {
-  const _CategorySpendingCard({required this.details});
-  final MonthlyBudgetDetails details;
+class _CategoryTargetProgressCard extends StatelessWidget {
+  const _CategoryTargetProgressCard({required this.categories});
+
+  final List<MonthlyBudgetCategoryDetail> categories;
+
   @override
   Widget build(BuildContext context) {
+    final orderedCategories = [...categories]
+      ..sort((left, right) {
+        final leftHasTarget = _minorUnits(left.targetAmount) > BigInt.zero;
+        final rightHasTarget = _minorUnits(right.targetAmount) > BigInt.zero;
+        if (leftHasTarget == rightHasTarget) return 0;
+        return leftHasTarget ? -1 : 1;
+      });
+
     return _Card(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Chi tiêu theo danh mục',
+            'Tiến độ chi tiêu theo Danh mục',
             style: Theme.of(context).textTheme.titleMedium,
           ),
-          const SizedBox(height: 14),
-          if (details.categories.isEmpty)
-            const Text('Chưa có chi tiêu trong tháng này.')
-          else
-            LayoutBuilder(
-              builder: (context, constraints) {
-                final chart = SizedBox(
-                  width: 150,
-                  height: 150,
-                  child: PieChart(
-                    PieChartData(
-                      centerSpaceRadius: 45,
-                      sectionsSpace: 2,
-                      sections: [
-                        for (
-                          var index = 0;
-                          index < details.categories.length;
-                          index++
-                        )
-                          PieChartSectionData(
-                            value: details.categories[index].percentOfSpend,
-                            title: '',
-                            radius: 22,
-                            color: _palette[index % _palette.length],
-                          ),
-                      ],
-                    ),
-                  ),
-                );
-                final legend = Column(
-                  children: [
-                    for (
-                      var index = 0;
-                      index < details.categories.length;
-                      index++
-                    )
-                      Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 4),
-                        child: Row(
-                          children: [
-                            Container(
-                              width: 12,
-                              height: 12,
-                              decoration: BoxDecoration(
-                                color: _palette[index % _palette.length],
-                                shape: BoxShape.circle,
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: Text(details.categories[index].tagName),
-                            ),
-                            Text(
-                              '${_formatMoney(details.categories[index].spentAmount)}đ',
-                            ),
-                            const SizedBox(width: 8),
-                            SizedBox(
-                              width: 34,
-                              child: Text(
-                                '${details.categories[index].percentOfSpend.round()}%',
-                                textAlign: TextAlign.end,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                  ],
-                );
-                if (constraints.maxWidth < 430) {
-                  return Column(
-                    children: [chart, const SizedBox(height: 8), legend],
-                  );
-                }
-                return Row(
-                  children: [
-                    chart,
-                    const SizedBox(width: 16),
-                    Expanded(child: legend),
-                  ],
-                );
-              },
+          const SizedBox(height: 4),
+          Text(
+            'Theo dõi số đã chi so với Target đã thiết lập',
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
             ),
+          ),
+          const SizedBox(height: 12),
+          if (orderedCategories.isEmpty)
+            const Text('Chưa có Target hoặc chi tiêu trong tháng này.')
+          else
+            for (var index = 0; index < orderedCategories.length; index++) ...[
+              _CategoryTargetProgressRow(category: orderedCategories[index]),
+              if (index < orderedCategories.length - 1)
+                const SizedBox(height: 16),
+            ],
         ],
       ),
     );
   }
 }
 
-class _TargetComparisonCard extends StatelessWidget {
-  const _TargetComparisonCard({required this.categories});
-  final List<MonthlyBudgetCategoryDetail> categories;
+class _CategoryTargetProgressRow extends StatelessWidget {
+  const _CategoryTargetProgressRow({required this.category});
+
+  final MonthlyBudgetCategoryDetail category;
+
   @override
-  Widget build(BuildContext context) => _Card(
-    child: Column(
+  Widget build(BuildContext context) {
+    final hasTarget = _minorUnits(category.targetAmount) > BigInt.zero;
+    final ratio = hasTarget
+        ? _moneyRatio(category.spentAmount, category.targetAmount)
+        : 0.0;
+    final percentage = (ratio * 100).round();
+    final isExceeded = percentage > 100;
+    final progressColor = isExceeded
+        ? _red
+        : hasTarget
+        ? _green
+        : Theme.of(context).colorScheme.outline;
+
+    final content = Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('So với target', style: Theme.of(context).textTheme.titleMedium),
-        const SizedBox(height: 12),
-        if (categories.isEmpty)
-          const Text('Chưa có dữ liệu so sánh.')
-        else
-          for (final category in categories.where(
-            (item) => _minorUnits(item.targetAmount) > BigInt.zero,
-          ))
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 7),
-              child: Row(
-                children: [
-                  Expanded(
-                    flex: 3,
-                    child: Text(
-                      category.tagName,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                  Expanded(
-                    flex: 3,
-                    child: LinearProgressIndicator(
-                      value: (_moneyRatio(
-                        category.spentAmount,
-                        category.targetAmount,
-                      )).clamp(0, 1),
-                      minHeight: 7,
-                      color: category.variancePercent > 0 ? _red : _green,
-                      backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
-                      borderRadius: BorderRadius.circular(99),
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    flex: 3,
-                    child: Text(
-                      '${_formatMoney(category.spentAmount)}đ',
-                      textAlign: TextAlign.end,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  SizedBox(
-                    width: 48,
-                    child: Text(
-                      '${category.variancePercent > 0 ? '+' : ''}${category.variancePercent.round()}%',
-                      textAlign: TextAlign.end,
-                      style: TextStyle(
-                        color: category.variancePercent > 0 ? _red : _green,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ),
-                ],
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                category.tagName,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: Theme.of(
+                  context,
+                ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w700),
               ),
             ),
+            const SizedBox(width: 12),
+            Text(
+              hasTarget ? '$percentage%' : 'Không có Target',
+              style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                color: progressColor,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 7),
+        LinearProgressIndicator(
+          key: ValueKey('category-progress-${category.tagId}'),
+          value: ratio.clamp(0.0, 1.0),
+          minHeight: 10,
+          color: progressColor,
+          backgroundColor: Theme.of(
+            context,
+          ).colorScheme.surfaceContainerHighest,
+          borderRadius: BorderRadius.circular(99),
+        ),
+        const SizedBox(height: 6),
+        Text(
+          hasTarget
+              ? '${_formatMoney(category.spentAmount)}đ / ${_formatMoney(category.targetAmount)}đ'
+              : 'Đã chi ${_formatMoney(category.spentAmount)}đ từ các danh mục chưa thiết lập · Nhấn để xem',
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
+        ),
       ],
+    );
+    if (hasTarget || category.unbudgetedCategories.isEmpty) {
+      return content;
+    }
+    return InkWell(
+      key: const ValueKey('unbudgeted-categories-details'),
+      onTap: () => _showUnbudgetedCategoryDetails(context, category),
+      borderRadius: BorderRadius.circular(12),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 2),
+        child: content,
+      ),
+    );
+  }
+}
+
+Future<void> _showUnbudgetedCategoryDetails(
+  BuildContext context,
+  MonthlyBudgetCategoryDetail category,
+) {
+  return showModalBottomSheet<void>(
+    context: context,
+    showDragHandle: true,
+    isScrollControlled: true,
+    builder: (context) => SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Chi tiết danh mục Khác',
+              style: Theme.of(context).textTheme.titleLarge,
+            ),
+            const SizedBox(height: 4),
+            Text(
+              'Các danh mục có giao dịch nhưng chưa được thiết lập Target',
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+            ),
+            const SizedBox(height: 18),
+            Flexible(
+              child: ListView.separated(
+                shrinkWrap: true,
+                itemCount: category.unbudgetedCategories.length,
+                separatorBuilder: (_, _) => const Divider(height: 24),
+                itemBuilder: (context, index) {
+                  final detail = category.unbudgetedCategories[index];
+                  return Row(
+                    children: [
+                      CircleAvatar(
+                        radius: 18,
+                        backgroundColor: Theme.of(
+                          context,
+                        ).colorScheme.surfaceContainerHighest,
+                        foregroundColor: _green,
+                        child: const Icon(Icons.category_outlined, size: 18),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          detail.tagName,
+                          style: Theme.of(context).textTheme.bodyMedium
+                              ?.copyWith(fontWeight: FontWeight.w600),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Text(
+                        '${_formatMoney(detail.spentAmount)}đ',
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ],
+                  );
+                },
+              ),
+            ),
+            const SizedBox(height: 18),
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    'Tổng chi chưa có Target',
+                    style: Theme.of(context).textTheme.titleSmall,
+                  ),
+                ),
+                Text(
+                  '${_formatMoney(category.spentAmount)}đ',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    color: _green,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
     ),
   );
 }

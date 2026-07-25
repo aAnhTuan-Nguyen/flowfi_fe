@@ -6,6 +6,11 @@ import '../../domain/entities/transaction.dart';
 import '../models/transaction_model.dart';
 
 abstract interface class TransactionRemoteDataSource {
+  Future<TransactionSummary> getSummary({
+    required String from,
+    required String to,
+  });
+
   Future<List<TransactionModel>> listTransactions({
     int page = 1,
     int limit = 20,
@@ -54,6 +59,22 @@ final class DioTransactionRemoteDataSource
   DioTransactionRemoteDataSource(this._dio);
 
   final Dio _dio;
+
+  @override
+  Future<TransactionSummary> getSummary({
+    required String from,
+    required String to,
+  }) async {
+    final response = await _dio.get<Object?>(
+      'transactions/summary',
+      queryParameters: {'from': from, 'to': to},
+    );
+    final data = readApiObject(response.data);
+    return TransactionSummary(
+      totalIncome: data['totalIncome']?.toString() ?? '0',
+      totalExpense: data['totalExpense']?.toString() ?? '0',
+    );
+  }
 
   @override
   Future<List<TransactionModel>> listTransactions({
@@ -157,7 +178,7 @@ final class DioTransactionRemoteDataSource
 
   @override
   Future<TransactionModel> confirmTransaction(String id) async {
-    final response = await _dio.post<Object?>('transactions/$id/confirm');
+    final response = await _dio.patch<Object?>('transactions/$id/confirm');
     return TransactionModel.fromJson(readApiObject(response.data));
   }
 }

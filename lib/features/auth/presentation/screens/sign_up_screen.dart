@@ -5,6 +5,12 @@ import '../../../shared/presentation/widgets/feature_states.dart';
 import '../../../shared/presentation/widgets/forui_controls.dart';
 import '../providers/auth_controller.dart';
 
+final class SignUpSuccess {
+  const SignUpSuccess(this.email);
+
+  final String email;
+}
+
 class SignUpScreen extends ConsumerStatefulWidget {
   const SignUpScreen({super.key});
 
@@ -19,6 +25,8 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
   bool _acceptedTerms = false;
+  bool _showTermsError = false;
+  bool _hasSubmitted = false;
 
   @override
   void dispose() {
@@ -79,6 +87,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                     color: colors.surface,
                     child: Form(
                       key: _formKey,
+                      autovalidateMode: AutovalidateMode.onUserInteraction,
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
@@ -104,6 +113,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                             controller: _nameController,
                             textInputAction: TextInputAction.next,
                             prefixIcon: Icons.person_outline_rounded,
+                            validator: _nameValidator,
                           ),
                           const SizedBox(height: 14),
                           FlowFiTextField(
@@ -113,7 +123,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                             keyboardType: TextInputType.emailAddress,
                             textInputAction: TextInputAction.next,
                             prefixIcon: Icons.mail_outline_rounded,
-                            validator: _required,
+                            validator: _emailValidator,
                           ),
                           const SizedBox(height: 14),
                           FlowFiTextField(
@@ -123,7 +133,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                             obscureText: true,
                             textInputAction: TextInputAction.next,
                             prefixIcon: Icons.lock_outline_rounded,
-                            validator: _required,
+                            validator: _passwordValidator,
                           ),
                           const SizedBox(height: 14),
                           FlowFiTextField(
@@ -134,7 +144,9 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                             prefixIcon: Icons.shield_outlined,
                             validator: (value) {
                               final requiredError = _required(value);
-                              if (requiredError != null) return requiredError;
+                              if (requiredError != null) {
+                                return 'Vui lòng xác nhận mật khẩu';
+                              }
                               if (value != _passwordController.text) {
                                 return 'Mật khẩu xác nhận không khớp';
                               }
@@ -149,13 +161,24 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                             onChanged: (value) {
                               setState(() {
                                 _acceptedTerms = value;
+                                if (value) {
+                                  _showTermsError = false;
+                                }
                               });
                             },
                           ),
-                          if (authValue.hasError) ...[
+                          if (_showTermsError) ...[
+                            const SizedBox(height: 6),
+                            Text(
+                              'Bạn cần đồng ý với Điều khoản và Chính sách riêng tư',
+                              style: Theme.of(context).textTheme.labelMedium
+                                  ?.copyWith(color: colors.error),
+                            ),
+                          ],
+                          if (_hasSubmitted && authValue.hasError) ...[
                             const SizedBox(height: 8),
                             Text(
-                              'Không thể tạo tài khoản. Vui lòng thử lại.',
+                              'Không thể tạo tài khoản. Email có thể đã được sử dụng.',
                               textAlign: TextAlign.center,
                               style: Theme.of(context).textTheme.labelMedium
                                   ?.copyWith(
@@ -166,9 +189,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                           const SizedBox(height: 16),
                           FlowFiButton(
                             label: 'Tạo tài khoản',
-                            onPressed: isLoading || !_acceptedTerms
-                                ? null
-                                : _submit,
+                            onPressed: isLoading ? null : _submit,
                             icon: Icons.arrow_forward_rounded,
                             isLoading: isLoading,
                           ),
@@ -193,18 +214,27 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
   }
 
   Future<void> _submit() async {
-    if (!(_formKey.currentState?.validate() ?? false)) {
+    setState(() {
+      _hasSubmitted = true;
+      _showTermsError = !_acceptedTerms;
+    });
+    final isValid = _formKey.currentState?.validate() ?? false;
+    if (!isValid || !_acceptedTerms) {
       return;
     }
-    await ref
+    final email = _emailController.text.trim();
+    final succeeded = await ref
         .read(authControllerProvider.notifier)
         .signUp(
-          email: _emailController.text.trim(),
+          email: email,
           password: _passwordController.text,
           fullName: _nameController.text.trim().isEmpty
               ? null
               : _nameController.text.trim(),
         );
+    if (succeeded && mounted) {
+      Navigator.of(context).pop(SignUpSuccess(email));
+    }
   }
 
   void _returnToSignIn() {
@@ -215,6 +245,33 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
 String? _required(String? value) {
   if (value == null || value.trim().isEmpty) {
     return 'Bắt buộc';
+  }
+  return null;
+}
+
+String? _nameValidator(String? value) {
+  final name = value?.trim() ?? '';
+  if (name.isNotEmpty && name.length < 2) {
+    return 'Họ tên phải có ít nhất 2 ký tự';
+  }
+  return null;
+}
+
+String? _emailValidator(String? value) {
+  final requiredError = _required(value);
+  if (requiredError != null) return 'Vui lòng nhập email';
+  final email = value!.trim();
+  if (!RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(email)) {
+    return 'Email không đúng định dạng';
+  }
+  return null;
+}
+
+String? _passwordValidator(String? value) {
+  final requiredError = _required(value);
+  if (requiredError != null) return 'Vui lòng nhập mật khẩu';
+  if (value!.length < 8) {
+    return 'Mật khẩu phải có ít nhất 8 ký tự';
   }
   return null;
 }

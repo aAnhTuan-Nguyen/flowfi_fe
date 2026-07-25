@@ -315,6 +315,12 @@ final class FakeTransactionRepository implements TransactionRepository {
   String? deletedId;
 
   @override
+  Future<TransactionSummary> getSummary({
+    required String from,
+    required String to,
+  }) async => const TransactionSummary(totalIncome: '0', totalExpense: '0');
+
+  @override
   Future<List<Transaction>> listTransactions({
     int page = 1,
     int limit = 20,
